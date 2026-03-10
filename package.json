@@ -1,0 +1,44 @@
+{
+  "name": "jarvis-ai",
+  "version": "20.3.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint",
+    "type-check": "tsc --noEmit --strict"
+  },
+  "dependencies": {
+    "next": "14.2.29",
+    "react": "18.2.0",
+    "react-dom": "18.2.0",
+    "typescript": "5.4.5",
+    "dexie": "^3.2.4",
+    "react-markdown": "^9.0.1",
+    "remark-gfm": "^4.0.0",
+    "react-syntax-highlighter": "^15.5.0",
+    "framer-motion": "^11.0.0",
+    "lucide-react": "^0.400.0",
+    "canvas-confetti": "^1.9.2",
+    "fuse.js": "^7.0.0",
+    "pdfjs-dist": "^3.11.174",
+    "pdf-lib": "^1.17.1",
+    "jspdf": "^2.5.1",
+    "tesseract.js": "^5.0.5",
+    "compromise": "^14.10.0",
+    "react-swipeable": "^7.0.1"
+  },
+  "devDependencies": {
+    "@types/node": "^20",
+    "@types/react": "^18",
+    "@types/react-dom": "^18",
+    "@types/canvas-confetti": "^1.6.0",
+    "@types/react-syntax-highlighter": "^15.5.0",
+    "autoprefixer": "^10.0.1",
+    "postcss": "^8",
+    "tailwindcss": "^3.3.0",
+    "eslint": "^8",
+    "eslint-config-next": "14.2.29"
+  }
+}
