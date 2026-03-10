@@ -107,6 +107,7 @@ function getMaxHistory(mode: RouterMode, msgCount: number): number {
 const P = {
   groq8b:    { url: 'https://api.groq.com/openai/v1/chat/completions',                                          model: 'llama-3.1-8b-instant',                             key: () => process.env.GROQ_API_KEY,        name: 'groq' },
   groq70b:   { url: 'https://api.groq.com/openai/v1/chat/completions',                                          model: 'llama-3.3-70b-versatile',                          key: () => process.env.GROQ_API_KEY,        name: 'groq' },
+  groqR1:    { url: 'https://api.groq.com/openai/v1/chat/completions',                                          model: 'deepseek-r1-distill-llama-70b',                    key: () => process.env.GROQ_API_KEY,        name: 'groq' },
   gemFlash:  { url: 'https://generativelanguage.googleapis.com/v1beta/openai/chat/completions',                  model: 'gemini-2.0-flash',                                 key: () => process.env.GEMINI_API_KEY,      name: 'gemini' },
   gemThink:  { url: 'https://generativelanguage.googleapis.com/v1beta/openai/chat/completions',                  model: 'gemini-2.0-flash-thinking-exp',                    key: () => process.env.GEMINI_API_KEY,      name: 'gemini' },
   together:  { url: 'https://api.together.xyz/v1/chat/completions',                                              model: 'meta-llama/Llama-3-70b-chat-hf',                   key: () => process.env.TOGETHER_API_KEY,    name: 'together' },
@@ -208,12 +209,13 @@ export async function smartRouter(
   let cascade: CascadeEntry[];
 
   if (mode === 'think' || mode === 'deep') {
-    // Quality-first cascade
+    // Reasoning-first cascade — DeepSeek R1 pehle (Groq pe free)
     cascade = [
-      ['OpenRouter', 'DeepSeek-R1',      () => callOAI(P.openroute, trimmedMsgs, maxTokens, signal)],
-      ['Gemini',     'Flash-Thinking',   () => callOAI(P.gemThink,  trimmedMsgs, maxTokens, signal)],
-      ['Together',   'Llama-3-70B',      () => callOAI(P.together,  trimmedMsgs, maxTokens, signal)],
-      ['Gemini',     'Flash',            () => callOAI(P.gemFlash,  trimmedMsgs, maxTokens, signal)],
+      ['Groq',        'DeepSeek-R1',     () => callOAI(P.groqR1,    trimmedMsgs, maxTokens, signal)],
+      ['OpenRouter',  'DeepSeek-R1',     () => callOAI(P.openroute, trimmedMsgs, maxTokens, signal)],
+      ['Gemini',      'Flash-Thinking',  () => callOAI(P.gemThink,  trimmedMsgs, maxTokens, signal)],
+      ['Together',    'Llama-3-70B',     () => callOAI(P.together,  trimmedMsgs, maxTokens, signal)],
+      ['Gemini',      'Flash',           () => callOAI(P.gemFlash,  trimmedMsgs, maxTokens, signal)],
       ['Pollinations','openai',          () => callPollinations(trimmedMsgs, maxTokens, signal)],
     ];
   } else {
