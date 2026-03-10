@@ -1,0 +1,232 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --bg: #0a0a0f;
+  --card: #111118;
+  --border: #1e1e2e;
+  --text: #e0e0ff;
+  --muted: #6b7280;
+  --jarvis-blue: #c8e8ff;
+  --jarvis-cyan: #00d4ff;
+  --jarvis-glow: rgba(0, 212, 255, 0.15);
+  --user-cyan: #00d4ff;
+}
+
+* {
+  box-sizing: border-box;
+  -webkit-tap-highlight-color: transparent;
+}
+
+html, body {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  font-size: 16px;
+  overflow: hidden;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Scrollbar */
+::-webkit-scrollbar { width: 4px; height: 4px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: #333; border-radius: 4px; }
+::-webkit-scrollbar-thumb:hover { background: #555; }
+
+/* Selection */
+::selection { background: rgba(0, 212, 255, 0.2); }
+
+/* Noto Color Emoji for emojis */
+@font-face {
+  font-family: 'Noto Color Emoji';
+  src: url('https://fonts.gstatic.com/s/notocoloremoji/v25/Yq6P-KqIXTD0t4D9z1ESnKM3-HpFab5s79iz64w.woff2') format('woff2');
+}
+
+/* KaTeX CDN loaded in layout.tsx */
+
+/* JARVIS Message Styles */
+.jarvis-message {
+  color: var(--jarvis-blue);
+  background: none;
+  border: none;
+  padding: 0;
+  line-height: 1.7;
+}
+
+.user-bubble {
+  background: linear-gradient(135deg, #006488, #003d54);
+  color: #fff;
+  border-radius: 18px 18px 4px 18px;
+  padding: 10px 14px;
+  max-width: 80%;
+  margin-left: auto;
+  border: 1px solid rgba(0, 212, 255, 0.2);
+}
+
+/* Markdown inside JARVIS messages */
+.jarvis-message h1, .jarvis-message h2, .jarvis-message h3 {
+  color: var(--jarvis-cyan);
+  margin: 0.75em 0 0.4em;
+  font-weight: 600;
+}
+.jarvis-message p { margin: 0.4em 0; }
+.jarvis-message ul, .jarvis-message ol { padding-left: 1.2em; margin: 0.4em 0; }
+.jarvis-message li { margin: 0.2em 0; }
+.jarvis-message code {
+  background: rgba(0, 212, 255, 0.1);
+  border: 1px solid rgba(0, 212, 255, 0.2);
+  border-radius: 4px;
+  padding: 2px 6px;
+  font-size: 0.88em;
+  font-family: 'Fira Code', 'Consolas', monospace;
+}
+.jarvis-message pre {
+  background: #0d0d1a;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  overflow-x: auto;
+  padding: 12px;
+  margin: 8px 0;
+}
+.jarvis-message pre code {
+  background: none;
+  border: none;
+  padding: 0;
+}
+.jarvis-message table {
+  border-collapse: collapse;
+  width: 100%;
+  margin: 8px 0;
+  font-size: 0.9em;
+}
+.jarvis-message th {
+  background: rgba(0, 212, 255, 0.1);
+  color: var(--jarvis-cyan);
+  padding: 6px 10px;
+  border: 1px solid var(--border);
+  text-align: left;
+}
+.jarvis-message td {
+  padding: 6px 10px;
+  border: 1px solid var(--border);
+}
+.jarvis-message blockquote {
+  border-left: 3px solid var(--jarvis-cyan);
+  padding-left: 12px;
+  margin: 8px 0;
+  color: var(--muted);
+  font-style: italic;
+}
+.jarvis-message a { color: var(--jarvis-cyan); text-decoration: underline; }
+
+/* Rich card styles */
+.rich-card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  overflow: hidden;
+  margin: 8px 0;
+  max-width: 340px;
+}
+.rich-card-image { width: 100%; aspect-ratio: 16/9; object-fit: cover; }
+.rich-card-body { padding: 12px; }
+.rich-card-title { color: var(--jarvis-cyan); font-weight: 600; font-size: 0.95em; margin-bottom: 4px; }
+.rich-card-sub { color: var(--muted); font-size: 0.82em; }
+
+/* Glow effects */
+.glow-cyan { box-shadow: 0 0 20px rgba(0, 212, 255, 0.3); }
+.glow-text { text-shadow: 0 0 10px rgba(0, 212, 255, 0.5); }
+
+/* Bottom strip */
+.bottom-strip {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 4px 12px;
+  font-size: 11px;
+  color: var(--muted);
+  background: var(--bg);
+  border-top: 1px solid var(--border);
+  min-height: 26px;
+}
+
+/* Typing indicator */
+.typing-dot {
+  width: 6px; height: 6px;
+  background: var(--jarvis-cyan);
+  border-radius: 50%;
+  animation: typing-bounce 1.2s infinite ease-in-out;
+}
+.typing-dot:nth-child(2) { animation-delay: 0.2s; }
+.typing-dot:nth-child(3) { animation-delay: 0.4s; }
+
+@keyframes typing-bounce {
+  0%, 60%, 100% { transform: translateY(0); opacity: 0.5; }
+  30% { transform: translateY(-6px); opacity: 1; }
+}
+
+/* Nav drawer */
+.nav-drawer {
+  position: fixed;
+  bottom: 0; left: 0; right: 0;
+  background: #0d0d1a;
+  border-top: 1px solid var(--border);
+  border-radius: 20px 20px 0 0;
+  z-index: 100;
+  padding: 20px 0 env(safe-area-inset-bottom);
+  transform: translateY(100%);
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.nav-drawer.open { transform: translateY(0); }
+
+/* Animations */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.fade-in { animation: fadeIn 0.25s ease; }
+
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.slide-up { animation: slideUp 0.3s ease; }
+
+@keyframes pulse-glow {
+  0%, 100% { box-shadow: 0 0 5px rgba(0, 212, 255, 0.3); }
+  50% { box-shadow: 0 0 20px rgba(0, 212, 255, 0.6); }
+}
+.pulse-glow { animation: pulse-glow 2s infinite; }
+
+/* Page container */
+.page-container {
+  height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  background: var(--bg);
+  max-width: 600px;
+  margin: 0 auto;
+  position: relative;
+}
+
+/* Toast */
+.toast {
+  position: fixed;
+  top: 16px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 10px 18px;
+  font-size: 13px;
+  z-index: 9999;
+  white-space: nowrap;
+  animation: fadeIn 0.2s ease;
+}
+.toast-ok { border-color: #22c55e; color: #22c55e; }
+.toast-err { border-color: #ef4444; color: #ef4444; }
