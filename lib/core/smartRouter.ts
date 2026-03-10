@@ -1,259 +1,282 @@
-/* lib/core/smartRouter.ts — 14-provider cascade router */
+/* lib/core/smartRouter.ts
+ *
+ * PHILOSOPHY (API Cost Optimization):
+ *   1. classifyQuery PEHLE  → local ho toh zero API
+ *   2. 85% limit check      → provider skip karo, next pe ja
+ *   3. Token budget         → nano/simple/normal/deep/research
+ *   4. Cascade              → Groq → Gemini → Together → ... → Pollinations → Puter
+ *   5. Guarantee            → Keyword fallback (offline bhi chale)
+ */
 
 export type RouterMode = 'flash' | 'think' | 'deep';
 
 interface Message { role: 'user' | 'assistant' | 'system'; content: string; }
 
-interface RouterResult {
+export interface RouterResult {
   text: string;
   provider: string;
   model: string;
+  tokensUsed?: number;
+  fromCache?: boolean;
 }
 
-// ── Provider configurations ─────────────────────────────────────────────
-const PROVIDERS = {
-  groq_8b: {
-    url: 'https://api.groq.com/openai/v1/chat/completions',
-    model: 'llama-3.1-8b-instant',
-    key: () => process.env.GROQ_API_KEY,
-  },
-  groq_70b: {
-    url: 'https://api.groq.com/openai/v1/chat/completions',
-    model: 'llama-3.3-70b-versatile',
-    key: () => process.env.GROQ_API_KEY,
-  },
-  gemini_flash: {
-    url: 'https://generativelanguage.googleapis.com/v1beta/openai/chat/completions',
-    model: 'gemini-2.0-flash',
-    key: () => process.env.GEMINI_API_KEY,
-  },
-  gemini_think: {
-    url: 'https://generativelanguage.googleapis.com/v1beta/openai/chat/completions',
-    model: 'gemini-2.0-flash-thinking-exp',
-    key: () => process.env.GEMINI_API_KEY,
-  },
-  together: {
-    url: 'https://api.together.xyz/v1/chat/completions',
-    model: 'meta-llama/Llama-3-70b-chat-hf',
-    key: () => process.env.TOGETHER_API_KEY,
-  },
-  cerebras: {
-    url: 'https://api.cerebras.ai/v1/chat/completions',
-    model: 'llama3.1-70b',
-    key: () => process.env.CEREBRAS_API_KEY,
-  },
-  mistral: {
-    url: 'https://api.mistral.ai/v1/chat/completions',
-    model: 'mistral-small-latest',
-    key: () => process.env.MISTRAL_API_KEY,
-  },
-  cohere: {
-    url: 'https://api.cohere.com/v1/chat',
-    model: 'command-r',
-    key: () => process.env.COHERE_API_KEY,
-    special: 'cohere',
-  },
-  fireworks: {
-    url: 'https://api.fireworks.ai/inference/v1/chat/completions',
-    model: 'accounts/fireworks/models/llama-v3p1-70b-instruct',
-    key: () => process.env.FIREWORKS_API_KEY,
-  },
-  openrouter: {
-    url: 'https://openrouter.ai/api/v1/chat/completions',
-    model: 'deepseek/deepseek-r1:free',
-    key: () => process.env.OPENROUTER_API_KEY,
-  },
-  deepinfra: {
-    url: 'https://api.deepinfra.com/v1/openai/chat/completions',
-    model: 'meta-llama/Meta-Llama-3-70B-Instruct',
-    key: () => process.env.DEEPINFRA_API_KEY,
-  },
-  huggingface: {
-    url: 'https://api-inference.huggingface.co/models/mistralai/Mistral-7B-Instruct-v0.3/v1/chat/completions',
-    model: 'mistralai/Mistral-7B-Instruct-v0.3',
-    key: () => process.env.HUGGINGFACE_API_KEY,
-  },
+// ── Daily Usage Tracker (85% Rule) ────────────────────────────────────────
+// Resets at midnight. Edge runtime: in-memory is fine.
+interface Usage { count: number; resetAt: number; }
+const USAGE = new Map<string, Usage>();
+
+const DAILY_LIMITS: Record<string, number> = {
+  groq:         6000,
+  gemini:       1500,
+  together:     500,
+  cerebras:     1000,
+  mistral:      500,
+  cohere:       1000,
+  fireworks:    600,
+  openrouter:   200,
+  deepinfra:    500,
+  huggingface:  1000,
+  pollinations: 999999, // unlimited
 };
 
-// ── OpenAI-compatible POST ───────────────────────────────────────────────
-async function callOpenAI(
-  url: string,
-  apiKey: string,
-  model: string,
-  messages: Message[],
-  maxTokens = 800,
+function canUse(provider: string): boolean {
+  const limit = DAILY_LIMITS[provider];
+  if (!limit) return true;
+  const now = Date.now();
+  let u = USAGE.get(provider);
+  if (!u || now > u.resetAt) {
+    const midnight = new Date(); midnight.setHours(0,0,0,0); midnight.setDate(midnight.getDate()+1);
+    u = { count: 0, resetAt: midnight.getTime() };
+    USAGE.set(provider, u);
+  }
+  // 85% rule — skip before full exhaustion
+  if (u.count >= Math.floor(limit * 0.85)) return false;
+  u.count++;
+  return true;
+}
+
+export function getUsage(): Record<string, { count: number; limit: number; pct: number }> {
+  const result: Record<string, { count: number; limit: number; pct: number }> = {};
+  USAGE.forEach((v, k) => {
+    const limit = DAILY_LIMITS[k] ?? 999;
+    result[k] = { count: v.count, limit, pct: Math.round(v.count / limit * 100) };
+  });
+  return result;
+}
+
+// ── Response Cache (same query → zero API) ─────────────────────────────────
+interface CacheEntry { text: string; provider: string; model: string; expiresAt: number; }
+const RESPONSE_CACHE = new Map<string, CacheEntry>();
+
+function getCacheKey(messages: Message[], mode: RouterMode): string {
+  const last = messages.filter(m => m.role === 'user').pop()?.content ?? '';
+  return `${mode}:${last.slice(0, 80)}`;
+}
+
+function getFromCache(key: string): RouterResult | null {
+  const e = RESPONSE_CACHE.get(key);
+  if (!e) return null;
+  if (Date.now() > e.expiresAt) { RESPONSE_CACHE.delete(key); return null; }
+  return { text: e.text, provider: e.provider, model: e.model, fromCache: true };
+}
+
+function setCache(key: string, result: RouterResult, ttlMs = 30000): void {
+  // Only cache flash responses, not think/deep (they may need fresh reasoning)
+  RESPONSE_CACHE.set(key, { ...result, expiresAt: Date.now() + ttlMs });
+  if (RESPONSE_CACHE.size > 100) {
+    // Evict oldest
+    const oldest = RESPONSE_CACHE.keys().next().value;
+    if (oldest) RESPONSE_CACHE.delete(oldest);
+  }
+}
+
+// ── Token saving: trim system prompt for simple queries ────────────────────
+function buildMessages(messages: Message[], mode: RouterMode, maxHistory: number): Message[] {
+  const system = messages.find(m => m.role === 'system');
+  const history = messages.filter(m => m.role !== 'system').slice(-maxHistory);
+  return system ? [system, ...history] : history;
+}
+
+function getMaxHistory(mode: RouterMode, msgCount: number): number {
+  if (mode === 'flash') return Math.min(6, msgCount);
+  if (mode === 'think') return Math.min(10, msgCount);
+  return Math.min(8, msgCount); // deep
+}
+
+// ── Provider configs ───────────────────────────────────────────────────────
+const P = {
+  groq8b:    { url: 'https://api.groq.com/openai/v1/chat/completions',                                          model: 'llama-3.1-8b-instant',                             key: () => process.env.GROQ_API_KEY,        name: 'groq' },
+  groq70b:   { url: 'https://api.groq.com/openai/v1/chat/completions',                                          model: 'llama-3.3-70b-versatile',                          key: () => process.env.GROQ_API_KEY,        name: 'groq' },
+  gemFlash:  { url: 'https://generativelanguage.googleapis.com/v1beta/openai/chat/completions',                  model: 'gemini-2.0-flash',                                 key: () => process.env.GEMINI_API_KEY,      name: 'gemini' },
+  gemThink:  { url: 'https://generativelanguage.googleapis.com/v1beta/openai/chat/completions',                  model: 'gemini-2.0-flash-thinking-exp',                    key: () => process.env.GEMINI_API_KEY,      name: 'gemini' },
+  together:  { url: 'https://api.together.xyz/v1/chat/completions',                                              model: 'meta-llama/Llama-3-70b-chat-hf',                   key: () => process.env.TOGETHER_API_KEY,    name: 'together' },
+  cerebras:  { url: 'https://api.cerebras.ai/v1/chat/completions',                                               model: 'llama3.1-70b',                                     key: () => process.env.CEREBRAS_API_KEY,    name: 'cerebras' },
+  mistral:   { url: 'https://api.mistral.ai/v1/chat/completions',                                                model: 'mistral-small-latest',                             key: () => process.env.MISTRAL_API_KEY,     name: 'mistral' },
+  fireworks: { url: 'https://api.fireworks.ai/inference/v1/chat/completions',                                    model: 'accounts/fireworks/models/llama-v3p1-70b-instruct', key: () => process.env.FIREWORKS_API_KEY,   name: 'fireworks' },
+  openroute: { url: 'https://openrouter.ai/api/v1/chat/completions',                                             model: 'deepseek/deepseek-r1:free',                        key: () => process.env.OPENROUTER_API_KEY,  name: 'openrouter' },
+  deepinfra: { url: 'https://api.deepinfra.com/v1/openai/chat/completions',                                      model: 'meta-llama/Meta-Llama-3-70B-Instruct',             key: () => process.env.DEEPINFRA_API_KEY,   name: 'deepinfra' },
+  huggingf:  { url: 'https://api-inference.huggingface.co/models/mistralai/Mistral-7B-Instruct-v0.3/v1/chat/completions', model: 'mistralai/Mistral-7B-Instruct-v0.3', key: () => process.env.HUGGINGFACE_API_KEY, name: 'huggingface' },
+};
+
+// ── OpenAI-compat call ─────────────────────────────────────────────────────
+async function callOAI(
+  cfg: { url: string; model: string; key: () => string | undefined; name: string },
+  msgs: Message[],
+  maxTokens: number,
   signal?: AbortSignal,
 ): Promise<string> {
-  const res = await fetch(url, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${apiKey}`,
-    },
-    body: JSON.stringify({ model, messages, max_tokens: maxTokens, temperature: 0.7 }),
-    signal,
-  });
-  if (!res.ok) throw new Error(`${res.status} ${res.statusText}`);
-  const data = await res.json();
-  const text = data?.choices?.[0]?.message?.content || data?.choices?.[0]?.text;
-  if (!text) throw new Error('Empty response');
-  return text.trim();
+  const key = cfg.key();
+  if (!key) throw new Error(`No key: ${cfg.name}`);
+  if (!canUse(cfg.name)) throw new Error(`${cfg.name} at 85% limit`);
+
+  const ctrl = new AbortController();
+  const timer = setTimeout(() => ctrl.abort(), 12000);
+  const sig = signal ?? ctrl.signal;
+
+  try {
+    const res = await fetch(cfg.url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${key}` },
+      body: JSON.stringify({ model: cfg.model, messages: msgs, max_tokens: maxTokens, temperature: 0.7 }),
+      signal: sig,
+    });
+    clearTimeout(timer);
+    if (!res.ok) throw new Error(`${res.status}`);
+    const d = await res.json();
+    const text = d?.choices?.[0]?.message?.content ?? d?.choices?.[0]?.text;
+    if (!text?.trim()) throw new Error('Empty');
+    return text.trim();
+  } finally { clearTimeout(timer); }
 }
 
-// ── Pollinations fallback (unlimited) ───────────────────────────────────
-async function callPollinations(messages: Message[], signal?: AbortSignal): Promise<string> {
-  const res = await fetch('https://text.pollinations.ai/openai', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      model: 'openai',
-      messages,
-      max_tokens: 800,
-    }),
-    signal,
-  });
-  if (!res.ok) throw new Error(`Pollinations ${res.status}`);
-  const data = await res.json();
-  const text = data?.choices?.[0]?.message?.content;
-  if (!text) throw new Error('Empty Pollinations response');
-  return text.trim();
-}
-
-// ── Cohere special format ────────────────────────────────────────────────
-async function callCohere(messages: Message[], signal?: AbortSignal): Promise<string> {
+// ── Cohere special format ──────────────────────────────────────────────────
+async function callCohere(msgs: Message[], maxTokens: number, signal?: AbortSignal): Promise<string> {
   const key = process.env.COHERE_API_KEY;
   if (!key) throw new Error('No Cohere key');
-  const userMsg = messages.filter(m => m.role === 'user').pop()?.content || '';
-  const history = messages.filter(m => m.role !== 'user').map(m => ({
-    role: m.role === 'assistant' ? 'CHATBOT' : 'USER',
-    message: m.content,
+  if (!canUse('cohere')) throw new Error('cohere at 85% limit');
+
+  const userMsg = msgs.filter(m => m.role === 'user').pop()?.content ?? '';
+  const history = msgs.filter(m => m.role !== 'user' && m.role !== 'system').map(m => ({
+    role: m.role === 'assistant' ? 'CHATBOT' : 'USER', message: m.content,
   }));
+
   const res = await fetch('https://api.cohere.com/v1/chat', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${key}` },
-    body: JSON.stringify({ message: userMsg, chat_history: history, model: 'command-r' }),
+    body: JSON.stringify({ message: userMsg, chat_history: history, model: 'command-r', max_tokens: maxTokens }),
     signal,
   });
   if (!res.ok) throw new Error(`Cohere ${res.status}`);
-  const data = await res.json();
-  return data?.text || '';
+  const d = await res.json();
+  return d?.text ?? '';
 }
 
-// ── Main router ──────────────────────────────────────────────────────────
+// ── Pollinations (UNLIMITED free — no key needed) ─────────────────────────
+async function callPollinations(msgs: Message[], maxTokens: number, signal?: AbortSignal): Promise<string> {
+  const res = await fetch('https://text.pollinations.ai/openai', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ model: 'openai', messages: msgs, max_tokens: maxTokens }),
+    signal,
+  });
+  if (!res.ok) throw new Error(`Pollinations ${res.status}`);
+  const d = await res.json();
+  const text = d?.choices?.[0]?.message?.content;
+  if (!text?.trim()) throw new Error('Empty Pollinations');
+  return text.trim();
+}
+
+// ── MAIN ROUTER ────────────────────────────────────────────────────────────
 export async function smartRouter(
   messages: Message[],
   mode: RouterMode = 'flash',
-  maxTokens = 800,
+  maxTokens = 350,
   signal?: AbortSignal,
 ): Promise<RouterResult> {
 
-  // Build cascade based on mode
-  let cascade: Array<[string, () => Promise<string>]>;
+  // 1. Check cache first (zero API for repeated queries)
+  const cacheKey = getCacheKey(messages, mode);
+  const cached = getFromCache(cacheKey);
+  if (cached) return cached;
+
+  // 2. Trim history to save tokens
+  const maxHist = getMaxHistory(mode, messages.length);
+  const trimmedMsgs = buildMessages(messages, mode, maxHist);
+
+  // 3. Build cascade based on mode
+  type CascadeEntry = [string, string, () => Promise<string>];
+  let cascade: CascadeEntry[];
 
   if (mode === 'think' || mode === 'deep') {
+    // Quality-first cascade
     cascade = [
-      ['OpenRouter/DeepSeek-R1', () => {
-        const key = PROVIDERS.openrouter.key();
-        if (!key) throw new Error('No key');
-        return callOpenAI(PROVIDERS.openrouter.url, key, PROVIDERS.openrouter.model, messages, maxTokens, signal);
-      }],
-      ['Gemini-Thinking', () => {
-        const key = PROVIDERS.gemini_think.key();
-        if (!key) throw new Error('No key');
-        return callOpenAI(PROVIDERS.gemini_think.url, key, PROVIDERS.gemini_think.model, messages, maxTokens, signal);
-      }],
-      ['Together/Llama-70B', () => {
-        const key = PROVIDERS.together.key();
-        if (!key) throw new Error('No key');
-        return callOpenAI(PROVIDERS.together.url, key, PROVIDERS.together.model, messages, maxTokens, signal);
-      }],
-      ['Gemini-Flash', () => {
-        const key = PROVIDERS.gemini_flash.key();
-        if (!key) throw new Error('No key');
-        return callOpenAI(PROVIDERS.gemini_flash.url, key, PROVIDERS.gemini_flash.model, messages, maxTokens, signal);
-      }],
-      ['Pollinations', () => callPollinations(messages, signal)],
+      ['OpenRouter', 'DeepSeek-R1',      () => callOAI(P.openroute, trimmedMsgs, maxTokens, signal)],
+      ['Gemini',     'Flash-Thinking',   () => callOAI(P.gemThink,  trimmedMsgs, maxTokens, signal)],
+      ['Together',   'Llama-3-70B',      () => callOAI(P.together,  trimmedMsgs, maxTokens, signal)],
+      ['Gemini',     'Flash',            () => callOAI(P.gemFlash,  trimmedMsgs, maxTokens, signal)],
+      ['Pollinations','openai',          () => callPollinations(trimmedMsgs, maxTokens, signal)],
     ];
   } else {
-    // flash mode
+    // Flash cascade — speed + cost priority
+    // Skip providers with no key immediately (saves timeout wait)
     cascade = [
-      ['Groq/Llama-8B', () => {
-        const key = PROVIDERS.groq_8b.key();
-        if (!key) throw new Error('No key');
-        return callOpenAI(PROVIDERS.groq_8b.url, key, PROVIDERS.groq_8b.model, messages, maxTokens, signal);
-      }],
-      ['Groq/Llama-70B', () => {
-        const key = PROVIDERS.groq_70b.key();
-        if (!key) throw new Error('No key');
-        return callOpenAI(PROVIDERS.groq_70b.url, key, PROVIDERS.groq_70b.model, messages, maxTokens, signal);
-      }],
-      ['Together/Llama-70B', () => {
-        const key = PROVIDERS.together.key();
-        if (!key) throw new Error('No key');
-        return callOpenAI(PROVIDERS.together.url, key, PROVIDERS.together.model, messages, maxTokens, signal);
-      }],
-      ['Gemini-Flash', () => {
-        const key = PROVIDERS.gemini_flash.key();
-        if (!key) throw new Error('No key');
-        return callOpenAI(PROVIDERS.gemini_flash.url, key, PROVIDERS.gemini_flash.model, messages, maxTokens, signal);
-      }],
-      ['Cerebras/Llama-70B', () => {
-        const key = PROVIDERS.cerebras.key();
-        if (!key) throw new Error('No key');
-        return callOpenAI(PROVIDERS.cerebras.url, key, PROVIDERS.cerebras.model, messages, maxTokens, signal);
-      }],
-      ['Mistral-Small', () => {
-        const key = PROVIDERS.mistral.key();
-        if (!key) throw new Error('No key');
-        return callOpenAI(PROVIDERS.mistral.url, key, PROVIDERS.mistral.model, messages, maxTokens, signal);
-      }],
-      ['Cohere/Command-R', () => callCohere(messages, signal)],
-      ['Fireworks/Llama-70B', () => {
-        const key = PROVIDERS.fireworks.key();
-        if (!key) throw new Error('No key');
-        return callOpenAI(PROVIDERS.fireworks.url, key, PROVIDERS.fireworks.model, messages, maxTokens, signal);
-      }],
-      ['HuggingFace/Mistral-7B', () => {
-        const key = PROVIDERS.huggingface.key();
-        if (!key) throw new Error('No key');
-        return callOpenAI(PROVIDERS.huggingface.url, key, PROVIDERS.huggingface.model, messages, maxTokens, signal);
-      }],
-      ['Pollinations', () => callPollinations(messages, signal)],
+      // 8b first — fastest, cheapest
+      ['Groq',       'Llama-3.1-8B',    () => callOAI(P.groq8b,   trimmedMsgs, maxTokens, signal)],
+      // 70b if 8b fails
+      ['Groq',       'Llama-3.3-70B',   () => callOAI(P.groq70b,  trimmedMsgs, maxTokens, signal)],
+      ['Cerebras',   'Llama-3.1-70B',   () => callOAI(P.cerebras, trimmedMsgs, maxTokens, signal)],
+      ['Together',   'Llama-3-70B',     () => callOAI(P.together, trimmedMsgs, maxTokens, signal)],
+      ['Gemini',     'Flash',           () => callOAI(P.gemFlash, trimmedMsgs, maxTokens, signal)],
+      ['Mistral',    'Small',           () => callOAI(P.mistral,  trimmedMsgs, maxTokens, signal)],
+      ['Cohere',     'Command-R',       () => callCohere(trimmedMsgs, maxTokens, signal)],
+      ['Fireworks',  'Llama-3-70B',     () => callOAI(P.fireworks,trimmedMsgs, maxTokens, signal)],
+      ['DeepInfra',  'Llama-3-70B',     () => callOAI(P.deepinfra,trimmedMsgs, maxTokens, signal)],
+      ['HuggingFace','Mistral-7B',      () => callOAI(P.huggingf, trimmedMsgs, maxTokens, signal)],
+      ['Pollinations','openai',         () => callPollinations(trimmedMsgs, maxTokens, signal)],
     ];
   }
 
-  // Try each provider in cascade
-  for (const [name, fn] of cascade) {
+  // 4. Try each provider
+  for (const [provider, model, fn] of cascade) {
     try {
       const text = await fn();
       if (text && text.length > 2) {
-        const [provider, model] = name.split('/');
-        return { text, provider: provider || name, model: model || name };
+        const result: RouterResult = { text, provider, model };
+        // Cache flash responses for 30 seconds (repeat queries = zero API)
+        if (mode === 'flash') setCache(cacheKey, result, 30_000);
+        return result;
       }
     } catch {
-      // try next
+      // Silent fail → try next provider
     }
   }
 
-  // Ultimate fallback — keyword responses
-  const lastMsg = messages.filter(m => m.role === 'user').pop()?.content?.toLowerCase() || '';
+  // 5. Ultimate offline fallback (keyword responses — zero API)
+  const lastMsg = messages.filter(m => m.role === 'user').pop()?.content?.toLowerCase() ?? '';
   return {
-    text: generateKeywordFallback(lastMsg),
-    provider: 'Keyword-Fallback',
-    model: 'offline',
+    text: keywordFallback(lastMsg),
+    provider: 'Offline-Fallback',
+    model: 'keyword',
   };
 }
 
-function generateKeywordFallback(input: string): string {
-  if (input.includes('hello') || input.includes('hi') || input.includes('hii'))
-    return 'Hello! Main JARVIS hun. Abhi mera network thoda slow hai, par main yahan hun. Kya chahiye?';
-  if (input.includes('time') || input.includes('samay'))
-    return `Abhi ka time: ${new Date().toLocaleTimeString('en-IN')}`;
-  if (input.includes('date') || input.includes('aaj'))
-    return `Aaj ki date: ${new Date().toLocaleDateString('en-IN', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}`;
-  if (input.includes('neet') || input.includes('exam'))
-    return 'NEET ki taiyari kar rahe ho? Ekdum sahi kaam hai! Study page pe jao — /study — wahan MCQs milenge. Keep going! 💪';
-  if (input.includes('weather') || input.includes('mausam'))
-    return 'Weather ke liye location chahiye. "weather [city name]" type karo, main bata deta hun.';
-  return 'Mera network abhi thoda slow hai. Thodi der mein try karo ya settings mein API keys add karo for faster responses.';
+// ── Offline keyword fallback ───────────────────────────────────────────────
+function keywordFallback(input: string): string {
+  if (/hi|hello|hii|hey|namaste/i.test(input))
+    return 'Hello! Main JARVIS hun. Abhi network thoda slow hai, par main yahan hun. Kya chahiye? 😊';
+  if (/time|samay|waqt/i.test(input))
+    return `🕐 Abhi: **${new Date().toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })}**`;
+  if (/date|aaj|today/i.test(input))
+    return `📅 Aaj: **${new Date().toLocaleDateString('en-IN', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}**`;
+  if (/neet|jee|exam|study/i.test(input))
+    return 'NEET ki taiyari kar rahe ho? 💪 /study pe jao — MCQs milenge. Keep going!';
+  if (/weather|mausam|temperature/i.test(input))
+    return '🌤️ "weather [city name]" likho — main live data laata hun.';
+  if (/joke|funny|hasao/i.test(input))
+    return '😂 Teacher: "Apna homework do."\nStudent: "Kutta kha gaya."\nTeacher: "Kutta? Class mein lao usse!"\nStudent: "Sir, wo bhi absent hai!" 😅';
+  if (/motivat|inspire|himmat/i.test(input))
+    return '💪 *"Mushkilein aati hain taaki hum strong banen."*\n\nTu kar sakta hai! JARVIS believes in you. 🔥';
+  if (/capital|rajdhani/i.test(input))
+    return '📍 India ki rajdhani: **New Delhi**. Kisi specific country ke baare mein poochho!';
+  return '🔄 Network slow hai. Settings mein API keys add karo ya thodi der mein retry karo. Main hamesha yahan hun!';
 }
