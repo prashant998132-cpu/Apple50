@@ -10,6 +10,8 @@ import { saveMessage, createSession, getMessages, getSessions, updateSessionTitl
 import { speakText, stopSpeaking } from '@/lib/tts';
 import { ToastContainer, useToast } from '@/components/shared/Toast';
 import { usePWA } from '@/lib/hooks/usePWA';
+import { learnFromMessage, buildMemoryContext, getProactiveSuggestion } from '@/lib/memory/proactive';
+import { detectAppIntent, executeCommand, compressUserMessage, type CompressLevel } from '@/lib/core/appController';
 
 const NavDrawer = dynamic(() => import('@/components/shared/NavDrawer'), { ssr: false });
 const PinLock   = dynamic(() => import('@/components/shared/PinLock'),   { ssr: false });
@@ -306,17 +308,25 @@ export default function Home() {
     })));
   }, []);
 
-  // ── App Commands ──────────────────────────────────────────────────────
+  // ── App Commands — full controller ────────────────────────────────────
   const execAppCommand = useCallback((cmd: string) => {
-    if (cmd.startsWith('navigate:'))   window.location.href = cmd.replace('navigate:', '');
-    else if (cmd.startsWith('toast:'))    showToast(cmd.replace('toast:', ''));
-    else if (cmd.startsWith('toastOk:'))  toastOk(cmd.replace('toastOk:', ''));
-    else if (cmd.startsWith('toastErr:')) toastErr(cmd.replace('toastErr:', ''));
-    else if (cmd === 'clearChat')         setMsgs([]);
-    else if (cmd === 'openNav')           setNavOpen(true);
-    else if (cmd === 'closeNav')          setNavOpen(false);
-    else if (cmd.startsWith('setInput:')) setInput(cmd.replace('setInput:', ''));
-  }, [showToast, toastOk, toastErr]);
+    executeCommand(cmd, {
+      navigate:     (path) => { window.location.href = path; },
+      showToast:    (msg, type) => showToast(msg, (type as any) || 'default'),
+      clearChat:    () => setMsgs([]),
+      openNav:      () => setNavOpen(true),
+      closeNav:     () => setNavOpen(false),
+      openHistory:  () => setHistoryOpen(true),
+      openSettings: () => { window.location.href = '/settings'; },
+      openApps:     () => setAppsOpen(true),
+      setMode:      (m) => setMode(m as Mode),
+      setInput:     (t) => setInput(t),
+      stopSpeaking: () => stopSpeaking(),
+      newChat:      () => { setMsgs([]); createSession('New Chat').then(id => setSessionId(id)); },
+      scrollTop:    () => { document.querySelector('[data-chat]')?.scrollTo(0, 0); },
+      scrollBottom: () => { bottomRef.current?.scrollIntoView({ behavior: 'smooth' }); },
+    });
+  }, [showToast, stopSpeaking]);
 
   // ── Session title generation (instant keyword → Groq background) ──────
   const generateTitle = useCallback(async (firstMsg: string, sid: string) => {
@@ -352,6 +362,19 @@ export default function Home() {
     if (!text.trim() || loading) return;
     setPlusOpen(false);
 
+    // 1. Check if it's a direct app command (zero API)
+    const appCmd = detectAppIntent(text);
+    if (appCmd) {
+      execAppCommand(appCmd);
+      // Still show user message for UX
+      setMsgs(prev => [...prev,
+        { id: `u_${Date.now()}`, role: 'user', content: text.trim(), timestamp: Date.now() },
+        { id: `a_${Date.now()}`, role: 'assistant', content: '✅ Done!', timestamp: Date.now() },
+      ]);
+      setInput('');
+      return;
+    }
+
     const isFirstMsg = msgs.filter(m => m.role === 'user').length === 0;
     const userMsg: Msg = { id: `u_${Date.now()}`, role: 'user', content: text.trim(), timestamp: Date.now() };
 
@@ -359,10 +382,17 @@ export default function Home() {
     setInput('');
     setLoading(true);
 
+    // 2. Learn from message (background, silent)
+    learnFromMessage(text.trim()).catch(() => {});
+
     if (sessionId) {
       saveMessage({ sessionId, role: 'user', content: text.trim(), timestamp: Date.now() });
       if (isFirstMsg) generateTitle(text.trim(), sessionId);
     }
+
+    // 3. Build memory context for system prompt
+    const memCtx = await buildMemoryContext().catch(() => '');
+    const systemPrompt = `You are JARVIS, a smart Hinglish AI assistant. Be concise and helpful.${memCtx ? `\n\n${memCtx}` : ''}`;
 
     const history = msgs.slice(-8).map(m => ({ role: m.role, content: m.content }));
     history.push({ role: 'user', content: text.trim() });
@@ -525,23 +555,38 @@ export default function Home() {
         <div ref={bottomRef} />
       </div>
 
-      {/* Bottom strip */}
+      {/* Bottom strip — Compress = USER ka typed message compress karo */}
       <div className="bottom-strip">
-        <span>
+        <span style={{ fontSize: 11, color: '#555' }}>
           {mode === 'auto'
             ? `🤖 Auto → ${effectiveMode.charAt(0).toUpperCase() + effectiveMode.slice(1)}`
             : `${mode === 'flash' ? '⚡' : mode === 'think' ? '🧠' : '🔬'} ${mode.charAt(0).toUpperCase() + mode.slice(1)}`}
         </span>
-        <button onClick={() => {
-          const last = msgs.filter(m => m.role === 'assistant').pop();
-          if (last) {
-            const short = last.content.slice(0, 500) + (last.content.length > 500 ? '...' : '');
-            send(`Iska summary do 3 lines mein: "${short}"`);
-          }
-        }}
-          style={{ background: 'none', border: '1px solid #2a2a4a', borderRadius: 6, color: '#555', fontSize: 10, padding: '2px 8px', cursor: 'pointer' }}>
-          🗜️ Compress
-        </button>
+
+        {/* Compress dropdown — input mein likhi hua shorten karo */}
+        {input.trim().length > 20 && (
+          <div style={{ display: 'flex', gap: 4 }}>
+            <span style={{ color: '#444', fontSize: 10, alignSelf: 'center' }}>🗜️</span>
+            {(['tiny', 'short', 'medium'] as CompressLevel[]).map(level => (
+              <button
+                key={level}
+                onClick={() => {
+                  const compressed = compressUserMessage(input, level);
+                  setInput(compressed);
+                  toastInfo(`✂️ ${level}: ${compressed.split(' ').length} words`);
+                }}
+                style={{
+                  background: 'none', border: '1px solid #2a2a4a',
+                  borderRadius: 6, color: '#555', fontSize: 10,
+                  padding: '2px 7px', cursor: 'pointer',
+                  transition: 'all 0.15s',
+                }}
+              >
+                {level}
+              </button>
+            ))}
+          </div>
+        )}
       </div>
 
       {/* Input bar */}
