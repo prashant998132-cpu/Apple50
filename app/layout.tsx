@@ -39,6 +39,11 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           src="https://js.puter.com/v2/"
           defer
         />
+        <script dangerouslySetInnerHTML={{ __html: `
+          if('serviceWorker' in navigator){
+            window.addEventListener('load',()=>navigator.serviceWorker.register('/sw.js').catch(()=>{}));
+          }
+        `}} />
       </head>
       <body suppressHydrationWarning>
         {children}
