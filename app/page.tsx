@@ -19,6 +19,8 @@ import { checkProactive, trackHabit } from '@/lib/proactive/engine';
 import { parseSlashCommand, SLASH_COMMANDS } from '@/lib/chat/slashCommands';
 import { initTheme, toggleTheme, getTheme, type Theme } from '@/lib/theme';
 import { useOnlineStatus, cacheAIResponse, getOfflineFallback, getStaticOfflineReply } from '@/lib/offline/status';
+import { startWakeWord, stopWakeWord } from '@/lib/voice/wakeWord';
+import { detectAutomationIntent, triggerMacro, sendLocalNotification } from '@/lib/automation/bridge';
 const NavDrawer = dynamic(() => import('@/components/shared/NavDrawer'), { ssr: false });
 const PinLock   = dynamic(() => import('@/components/shared/PinLock'),   { ssr: false });
 
@@ -249,6 +251,7 @@ export default function Home() {
   const [theme, setThemeState]    = useState<Theme>('dark');
   const [slashOpen, setSlashOpen] = useState(false);
   const [slashFilter, setSlashFilter] = useState('');
+  const [wakeActive, setWakeActive] = useState(false);
 
   const bottomRef   = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -394,11 +397,22 @@ export default function Home() {
     if (!text.trim() || loading) return;
     setPlusOpen(false);
 
+    // 0. Phone automation check (MacroDroid bridge)
+    const autoAction = detectAutomationIntent(text);
+    if (autoAction) {
+      const result = await triggerMacro(autoAction);
+      setMsgs(prev => [...prev,
+        { id: `u_${Date.now()}`, role: 'user', content: text.trim(), timestamp: Date.now() },
+        { id: `a_${Date.now()}`, role: 'assistant', content: result.msg, timestamp: Date.now() },
+      ]);
+      setInput('');
+      return;
+    }
+
     // 1. Check if it's a direct app command (zero API)
     const appCmd = detectAppIntent(text);
     if (appCmd) {
       execAppCommand(appCmd);
-      // Still show user message for UX
       setMsgs(prev => [...prev,
         { id: `u_${Date.now()}`, role: 'user', content: text.trim(), timestamp: Date.now() },
         { id: `a_${Date.now()}`, role: 'assistant', content: '✅ Done!', timestamp: Date.now() },
@@ -574,6 +588,26 @@ export default function Home() {
         </div>
 
         <div style={{ display: 'flex', gap: 6 }}>
+          {/* Wake Word toggle */}
+          <button
+            onClick={() => {
+              if (wakeActive) {
+                stopWakeWord();
+                setWakeActive(false);
+                toastInfo('Wake word off');
+              } else {
+                const ok = startWakeWord(() => {
+                  // Wake word detected — open mic
+                  toastOk('🎙️ JARVIS sun raha hai...');
+                  setInput('');
+                  textareaRef.current?.focus();
+                });
+                if (ok) { setWakeActive(true); toastOk('🎙️ Wake word active — "Hey JARVIS" bolo'); }
+                else toastErr('Mic permission chahiye');
+              }
+            }}
+            style={{ background: 'none', border: 'none', fontSize: 18, cursor: 'pointer', color: wakeActive ? '#00d4ff' : '#555', filter: wakeActive ? 'drop-shadow(0 0 4px #00d4ff)' : 'none' }}
+            title="Wake Word">🎙️</button>
           {/* Theme toggle */}
           <button onClick={() => { const t = toggleTheme(); setThemeState(t); toastInfo(`Theme: ${t}`); }}
             style={{ background: 'none', border: 'none', color: '#555', fontSize: 18, cursor: 'pointer' }}
