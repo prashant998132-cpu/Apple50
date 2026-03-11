@@ -190,8 +190,8 @@ function localConverter(value: number, from: string, to: string): string {
     miles: { km: 1.60934, m: 1609.34 },
     kg:    { lb: 2.20462, g: 1000, oz: 35.274 },
     lb:    { kg: 0.453592 },
-    c:     { f: (v: number) => v * 9/5 + 32, k: (v: number) => v + 273.15 },
-    f:     { c: (v: number) => (v - 32) * 5/9 },
+    c:     { f: (v: number) => v * 9/5 + 32, k: (v: number) => v + 273.15 } as any,
+    f:     { c: (v: number) => (v - 32) * 5/9 } as any,
     l:     { ml: 1000, gallon: 0.264172 },
   };
   const fromLower = from.toLowerCase();
