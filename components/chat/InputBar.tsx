@@ -57,7 +57,7 @@ export default function InputBar({ onSend, onModeChange, mode, disabled, inputVa
   };
 
   const handleFileAttach = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = Array.from(e.target.files || []);
+    const files = Array.from(e.target.files || []) as File[];
     if (files.length) onSend(`[Attached: ${files.map(f => f.name).join(', ')}]`, files);
     e.target.value = '';
     setPlusOpen(false);
