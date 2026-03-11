@@ -65,6 +65,7 @@ export default function SettingsPage() {
     { key: 'keys', label: 'API Keys', icon: '🔑' },
     { key: 'security', label: 'Security', icon: '🔒' },
     { key: 'about', label: 'About', icon: 'ℹ️' },
+    { key: 'automation' as any, label: 'Automation', icon: '📱' },
   ];
 
   return (
@@ -237,22 +238,67 @@ export default function SettingsPage() {
             ))}
 
             <div style={{ marginTop: 20, textAlign: 'center' }}>
-              <a
-                href="https://github.com/prashant998132-cpu/AppleV20"
-                target="_blank"
-                rel="noopener noreferrer"
-                style={{ color: '#00d4ff', fontSize: 13, display: 'block', marginBottom: 8 }}
-              >
-                GitHub Repo ↗
-              </a>
-              <a
-                href="https://apple-v20.vercel.app"
-                target="_blank"
-                rel="noopener noreferrer"
-                style={{ color: '#00d4ff', fontSize: 13 }}
-              >
-                Live App ↗
-              </a>
+              <a href="https://github.com/prashant998132-cpu/AppleV20" target="_blank" rel="noopener noreferrer"
+                style={{ color: '#00d4ff', fontSize: 13, display: 'block', marginBottom: 8 }}>GitHub Repo ↗</a>
+              <a href="https://apple-v20.vercel.app" target="_blank" rel="noopener noreferrer"
+                style={{ color: '#00d4ff', fontSize: 13 }}>Live App ↗</a>
+            </div>
+          </div>
+        )}
+
+        {/* Automation tab */}
+        {(tab as any) === 'automation' && (
+          <div>
+            <div style={{ color: '#00d4ff', fontWeight: 700, marginBottom: 12 }}>📱 Phone Automation</div>
+
+            {/* MacroDroid */}
+            <div style={{ background: '#0e0e1a', border: '1px solid #1e1e2e', borderRadius: 12, padding: 14, marginBottom: 12 }}>
+              <div style={{ color: '#e0e0ff', fontWeight: 600, marginBottom: 4 }}>🤖 MacroDroid Bridge</div>
+              <div style={{ color: '#555', fontSize: 11, marginBottom: 10 }}>JARVIS se phone automate karo — WiFi, Bluetooth, Apps, Alarms</div>
+              <label style={{ color: '#444', fontSize: 10, display: 'block', marginBottom: 3 }}>MACRODROID DEVICE ID</label>
+              <input
+                type="text"
+                placeholder="MacroDroid → Menu → Account → Device ID"
+                defaultValue={typeof window !== 'undefined' ? localStorage.getItem('jarvis_macrodroid_id') || '' : ''}
+                onChange={e => { try { localStorage.setItem('jarvis_macrodroid_id', e.target.value) } catch {} }}
+                style={{ width: '100%', background: '#080810', border: '1px solid #1e1e2e', borderRadius: 8, padding: '9px 12px', color: '#e0e0ff', fontSize: 13, outline: 'none', marginBottom: 8 }}
+              />
+              <div style={{ color: '#444', fontSize: 10, lineHeight: 1.8 }}>
+                Setup steps:<br/>
+                1. MacroDroid install karo (free, Play Store)<br/>
+                2. New Macro → Trigger: Webhook<br/>
+                3. Identifier: <code style={{ color: '#00d4ff' }}>jarvis_wifi_on</code><br/>
+                4. Action: WiFi Enable<br/>
+                5. Apna Device ID yahan paste karo<br/>
+                6. JARVIS mein bol: "WiFi on karo" ✅
+              </div>
+            </div>
+
+            {/* Notifications */}
+            <div style={{ background: '#0e0e1a', border: '1px solid #1e1e2e', borderRadius: 12, padding: 14, marginBottom: 12 }}>
+              <div style={{ color: '#e0e0ff', fontWeight: 600, marginBottom: 4 }}>🔔 Notifications</div>
+              <button
+                onClick={async () => {
+                  const perm = await Notification.requestPermission()
+                  if (perm === 'granted') {
+                    setToast('✅ Notifications enabled!')
+                    new Notification('JARVIS', { body: 'Notifications active! 🤖', icon: '/icons/icon-192.png' })
+                  } else {
+                    setToast('❌ Permission denied')
+                  }
+                }}
+                style={{ background: 'linear-gradient(135deg,#00d4ff,#0066cc)', border: 'none', borderRadius: 8, color: '#000', padding: '10px 16px', cursor: 'pointer', fontWeight: 700, fontSize: 13 }}>
+                Enable Notifications
+              </button>
+            </div>
+
+            {/* Wake Word */}
+            <div style={{ background: '#0e0e1a', border: '1px solid #1e1e2e', borderRadius: 12, padding: 14 }}>
+              <div style={{ color: '#e0e0ff', fontWeight: 600, marginBottom: 4 }}>🎙️ Wake Word</div>
+              <div style={{ color: '#555', fontSize: 11, marginBottom: 6 }}>Main chat page pe "Hey JARVIS" bol ke activate karo</div>
+              <div style={{ color: '#444', fontSize: 10 }}>
+                Supported words: <span style={{ color: '#00d4ff' }}>"Hey JARVIS"</span>, <span style={{ color: '#00d4ff' }}>"JARVIS"</span>, <span style={{ color: '#00d4ff' }}>"OK JARVIS"</span>
+              </div>
             </div>
           </div>
         )}
