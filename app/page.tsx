@@ -13,6 +13,12 @@ import { usePWA } from '@/lib/hooks/usePWA';
 import { learnFromMessage, buildMemoryContext, getProactiveSuggestion } from '@/lib/memory/proactive';
 import { detectAppIntent, executeCommand, compressUserMessage, type CompressLevel } from '@/lib/core/appController';
 
+import { buildSystemPrompt, parseLearnTags, cleanResponse, getTimeSuggestion } from '@/lib/personality';
+import { processAndSave } from '@/lib/memory/extractor';
+import { checkProactive, trackHabit } from '@/lib/proactive/engine';
+import { parseSlashCommand, SLASH_COMMANDS } from '@/lib/chat/slashCommands';
+import { initTheme, toggleTheme, getTheme, type Theme } from '@/lib/theme';
+import { useOnlineStatus, cacheAIResponse, getOfflineFallback, getStaticOfflineReply } from '@/lib/offline/status';
 const NavDrawer = dynamic(() => import('@/components/shared/NavDrawer'), { ssr: false });
 const PinLock   = dynamic(() => import('@/components/shared/PinLock'),   { ssr: false });
 
@@ -75,7 +81,7 @@ function RichCard({ card }: { card: any }) {
   );
 }
 
-function MsgItem({ msg }: { msg: Msg }) {
+function MsgItem({ msg }: { msg: Msg; [key: string]: any }) {
   const isUser = msg.role === 'user';
   return (
     <div className="fade-in" style={{ display: 'flex', justifyContent: isUser ? 'flex-end' : 'flex-start', marginBottom: 12, padding: '0 12px' }}>
@@ -240,6 +246,9 @@ export default function Home() {
   const [sessionId, setSessionId] = useState('');
   const [showPin, setShowPin]     = useState(false);
   const [location, setLocation]   = useState('');
+  const [theme, setThemeState]    = useState<Theme>('dark');
+  const [slashOpen, setSlashOpen] = useState(false);
+  const [slashFilter, setSlashFilter] = useState('');
 
   const bottomRef   = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -247,6 +256,7 @@ export default function Home() {
 
   const { toasts, hideToast, toastOk, toastErr, toastInfo, showToast } = useToast();
   const { canInstall, isIOS, install } = usePWA();
+  const { online, reconnected } = useOnlineStatus();
 
   const effectiveMode = mode === 'auto' ? autoRouteMode(input) : mode;
 
@@ -254,6 +264,10 @@ export default function Home() {
   useEffect(() => {
     // PIN check
     if (localStorage.getItem('jarvis_pin_hash')) setShowPin(true);
+
+    // Theme init
+    initTheme();
+    setThemeState(getTheme());
 
     // Puter preload
     loadPuter().catch(() => {});
@@ -281,10 +295,28 @@ export default function Home() {
       });
     }, 30000);
 
-    // Welcome
+    // Proactive check (once on load)
+    checkProactive().then(event => {
+      if (event?.message) {
+        setTimeout(() => {
+          setMsgs(prev => [...prev, {
+            id: `proactive_${Date.now()}`, role: 'assistant', timestamp: Date.now(),
+            content: event.message,
+          }]);
+        }, 2000);
+      }
+    }).catch(() => {});
+
+    // Time-based suggestion from personality
+    const timeSug = getTimeSuggestion();
+    if (timeSug) {
+      setTimeout(() => toastInfo(timeSug), 4000);
+    }
+
+    // Welcome message
     setMsgs([{
       id: 'welcome', role: 'assistant', timestamp: Date.now(),
-      content: `Hello! Main **JARVIS** hun 🤖\n\nMain tumhara personal AI assistant hun — NEET prep, weather, news, math, code aur bahut kuch help kar sakta hun.\n\nAaj kya karna hai? 💬`,
+      content: `Hello! Main **JARVIS** hun — *Jons Bhai* 🤖\n\nHinglish mein baat karo, main samajh lunga. NEET, code, weather, news, math — sab kar sakta hun.\n\n💡 Tip: \`/nasa\`, \`/joke\`, \`/wiki topic\`, \`/shayari\` try karo!`,
     }]);
 
     return () => clearInterval(ri);
@@ -382,17 +414,19 @@ export default function Home() {
     setInput('');
     setLoading(true);
 
-    // 2. Learn from message (background, silent)
+    // Learn + habit tracking (background, silent)
     learnFromMessage(text.trim()).catch(() => {});
+    trackHabit(text.trim()).catch(() => {});
 
     if (sessionId) {
       saveMessage({ sessionId, role: 'user', content: text.trim(), timestamp: Date.now() });
       if (isFirstMsg) generateTitle(text.trim(), sessionId);
     }
 
-    // 3. Build memory context for system prompt
-    const memCtx = await buildMemoryContext().catch(() => '');
-    const systemPrompt = `You are JARVIS, a smart Hinglish AI assistant. Be concise and helpful.${memCtx ? `\n\n${memCtx}` : ''}`;
+    // Rich personality system prompt (Jons Bhai + memory + time context)
+    const systemPrompt = await buildSystemPrompt().catch(() =>
+      `You are JARVIS — "Jons Bhai". Hinglish mein baat karo. Short answers. Never "As an AI".`
+    );
 
     const history = msgs.slice(-8).map(m => ({ role: m.role, content: m.content }));
     history.push({ role: 'user', content: text.trim() });
@@ -466,15 +500,39 @@ export default function Home() {
 
     setLoading(false);
     if (sessionId && fullText) saveMessage({ sessionId, role: 'assistant', content: fullText, timestamp: Date.now(), provider, card });
+
+    // Post-response: [LEARN:] tags + cache for offline + processAndSave
+    if (fullText && fullText.length > 10) {
+      const clean = cleanResponse(fullText);
+      if (clean !== fullText) {
+        setMsgs(prev => prev.map(m => m.id === assistantId ? { ...m, content: clean } : m));
+      }
+      cacheAIResponse(text.trim(), clean || fullText, eMode);
+      processAndSave(text.trim(), fullText).catch(() => {});
+    }
   };
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send(input); }
+    if (e.key === 'Escape') setSlashOpen(false);
+    if (e.key === 'Tab' && slashOpen) {
+      e.preventDefault();
+      const filtered = SLASH_COMMANDS.filter(c => c.cmd.includes(slashFilter));
+      if (filtered[0]) { setInput(filtered[0].cmd + ' '); setSlashOpen(false); }
+    }
   };
   const handleTextChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-    setInput(e.target.value);
+    const val = e.target.value;
+    setInput(val);
     e.target.style.height = 'auto';
     e.target.style.height = Math.min(e.target.scrollHeight, 120) + 'px';
+    // Slash command autocomplete
+    if (val.startsWith('/')) {
+      setSlashFilter(val.toLowerCase());
+      setSlashOpen(true);
+    } else {
+      setSlashOpen(false);
+    }
   };
 
   if (showPin) return <PinLock onUnlock={() => setShowPin(false)} />;
@@ -506,13 +564,22 @@ export default function Home() {
         </button>
 
         <div style={{ textAlign: 'center', flex: 1 }}>
-          <div style={{ color: '#00d4ff', fontWeight: 700, fontSize: 16 }}>JARVIS</div>
+          <div style={{ color: '#00d4ff', fontWeight: 700, fontSize: 16 }}>
+            JARVIS {!online && <span style={{ fontSize: 10, color: '#ef4444', marginLeft: 4 }}>● Offline</span>}
+            {reconnected && <span style={{ fontSize: 10, color: '#22c55e', marginLeft: 4 }}>● Back online</span>}
+          </div>
           <div style={{ color: '#444', fontSize: 9 }}>
-            {location ? `📍 ${location}` : 'v20.4 · ₹0/month'}
+            {location ? `📍 ${location}` : 'v20.8 · ₹0/month'}
           </div>
         </div>
 
         <div style={{ display: 'flex', gap: 6 }}>
+          {/* Theme toggle */}
+          <button onClick={() => { const t = toggleTheme(); setThemeState(t); toastInfo(`Theme: ${t}`); }}
+            style={{ background: 'none', border: 'none', color: '#555', fontSize: 18, cursor: 'pointer' }}
+            title="Toggle theme">
+            {theme === 'dark' ? '🌑' : theme === 'light' ? '☀️' : theme === 'amoled' ? '⬛' : '🌊'}
+          </button>
           {/* Chat history */}
           <button onClick={() => setHistoryOpen(true)}
             style={{ background: 'none', border: 'none', color: '#555', fontSize: 18, cursor: 'pointer' }}
@@ -554,6 +621,24 @@ export default function Home() {
         {loading && <div style={{ padding: '0 12px' }}><TypingDots /></div>}
         <div ref={bottomRef} />
       </div>
+
+      {/* Slash Command Autocomplete */}
+      {slashOpen && (
+        <div style={{ position: 'absolute', bottom: 120, left: 12, right: 12, background: '#0d0d18', border: '1px solid #1e1e2e', borderRadius: 12, zIndex: 9000, maxHeight: 220, overflowY: 'auto', boxShadow: '0 -4px 20px rgba(0,0,0,0.5)' }}>
+          <div style={{ padding: '6px 12px', color: '#444', fontSize: 10, borderBottom: '1px solid #1a1a2a' }}>⚡ Slash Commands — Tab se select karo</div>
+          {SLASH_COMMANDS.filter(c => c.cmd.startsWith(slashFilter) || c.desc.toLowerCase().includes(slashFilter.slice(1))).slice(0, 8).map(c => (
+            <button key={c.cmd}
+              onClick={() => { setInput(c.cmd + ' '); setSlashOpen(false); textareaRef.current?.focus(); }}
+              style={{ width: '100%', background: 'none', border: 'none', padding: '8px 12px', display: 'flex', alignItems: 'center', gap: 10, cursor: 'pointer', borderBottom: '1px solid #0f0f18', textAlign: 'left' }}>
+              <span style={{ fontSize: 16 }}>{c.icon}</span>
+              <div>
+                <div style={{ color: '#00d4ff', fontSize: 12, fontFamily: 'monospace' }}>{c.cmd}</div>
+                <div style={{ color: '#444', fontSize: 10 }}>{c.desc}</div>
+              </div>
+            </button>
+          ))}
+        </div>
+      )}
 
       {/* Bottom strip — Compress = USER ka typed message compress karo */}
       <div className="bottom-strip">
