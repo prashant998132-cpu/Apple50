@@ -1,5 +1,11 @@
 /* lib/tools/intent.ts — Intent detection for tool routing */
 
+export type ToolCategory =
+  | 'weather' | 'time' | 'news' | 'finance' | 'knowledge' | 'location'
+  | 'india' | 'education' | 'entertainment' | 'image_gen' | 'productivity'
+  | 'science' | 'health' | 'sports' | 'food' | 'fun' | 'search' | 'travel'
+  | 'books' | 'dev' | 'media' | 'music' | 'none';
+
 export interface IntentResult {
   categories: string[];
   confidence: number;
