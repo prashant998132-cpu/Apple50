@@ -100,7 +100,7 @@ class JarvisDB extends Dexie {
 
   constructor() {
     super('jarvis_v10');
-    this.version(1).stores({
+    (this as any).version(1).stores({
       chats:    '++id, sessionId, updatedAt',
       messages: '++id, sessionId, timestamp',
       memory:   '++id, key, importance',
