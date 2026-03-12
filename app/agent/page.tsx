@@ -1,5 +1,5 @@
 'use client'
-import React, { useState, useRef, useEffect } from 'react'
+import React, { useState, useRef, useEffect, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { createPlan, type AgentPlan, type AgentStep } from '@/lib/agent/planner'
 import { executePlan } from '@/lib/agent/executor'
@@ -14,7 +14,7 @@ const STATUS_COLOR: Record<string, string> = {
   pending: '#444', running: '#00d4ff', done: '#22c55e', failed: '#ef4444',
 }
 
-export default function AgentPage() {
+function AgentPageInner() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const [goal, setGoal] = useState('')
@@ -194,5 +194,17 @@ export default function AgentPage() {
         <div ref={bottomRef} />
       </div>
     </div>
+  )
+}
+
+export default function AgentPage() {
+  return (
+    <Suspense fallback={
+      <div style={{ background: '#060610', minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#00d4ff', fontFamily: 'monospace' }}>
+        ⚡ Loading Agent...
+      </div>
+    }>
+      <AgentPageInner />
+    </Suspense>
   )
 }
