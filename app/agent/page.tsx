@@ -1,6 +1,6 @@
 'use client'
 import React, { useState, useRef, useEffect } from 'react'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { createPlan, type AgentPlan, type AgentStep } from '@/lib/agent/planner'
 import { executePlan } from '@/lib/agent/executor'
 import { enqueue, getAllPlans, deletePlan, type QueuedPlan } from '@/lib/agent/queue'
@@ -16,6 +16,7 @@ const STATUS_COLOR: Record<string, string> = {
 
 export default function AgentPage() {
   const router = useRouter()
+  const searchParams = useSearchParams()
   const [goal, setGoal] = useState('')
   const [phase, setPhase] = useState<'idle' | 'planning' | 'running' | 'done'>('idle')
   const [plan, setPlan] = useState<AgentPlan | null>(null)
@@ -27,14 +28,23 @@ export default function AgentPage() {
   useEffect(() => { getAllPlans().then(setHistory).catch(() => {}) }, [])
   useEffect(() => { bottomRef.current?.scrollIntoView({ behavior: 'smooth' }) }, [plan?.steps])
 
-  const run = async () => {
-    if (!goal.trim() || phase === 'running') return
+  // Auto-run if goal came from main chat
+  useEffect(() => {
+    const urlGoal = searchParams.get('goal')
+    if (urlGoal && phase === 'idle') {
+      setGoal(urlGoal)
+      setTimeout(() => runGoal(urlGoal), 300)
+    }
+  }, [searchParams])
+
+  const runGoal = async (targetGoal: string) => {
+    if (!targetGoal.trim() || phase === 'running') return
     setPhase('planning')
     setFinalResult('')
     setPlan(null)
 
-    const newPlan = await createPlan(goal)
-    const queued = await enqueue(newPlan).catch(() => null)
+    const newPlan = await createPlan(targetGoal)
+    await enqueue(newPlan).catch(() => null)
     setPlan(newPlan)
     setPhase('running')
 
@@ -42,10 +52,7 @@ export default function AgentPage() {
       newPlan,
       (step) => {
         setActiveStep(step.id)
-        setPlan(p => p ? {
-          ...p,
-          steps: p.steps.map(s => s.id === step.id ? step : s)
-        } : p)
+        setPlan(p => p ? { ...p, steps: p.steps.map(s => s.id === step.id ? step : s) } : p)
       },
       (donePlan) => {
         setPlan(donePlan)
@@ -53,11 +60,13 @@ export default function AgentPage() {
         setActiveStep(null)
         const lastDone = donePlan.steps.filter(s => s.status === 'done').pop()
         setFinalResult(lastDone?.output || 'Done!')
-        if (queued) getAllPlans().then(setHistory).catch(() => {})
+        getAllPlans().then(setHistory).catch(() => {})
       },
       (err) => { setPhase('done'); setFinalResult('Error: ' + err) }
     )
   }
+
+  const run = () => runGoal(goal)
 
   const QUICK = [
     'YouTube ke liye ek script banao',
