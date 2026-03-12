@@ -50,20 +50,26 @@ function AgentPageInner() {
 
     await executePlan(
       newPlan,
-      (step) => {
-        setActiveStep(step.id)
-        setPlan(p => p ? { ...p, steps: p.steps.map(s => s.id === step.id ? step : s) } : p)
-      },
-      (donePlan) => {
-        setPlan(donePlan)
-        setPhase('done')
-        setActiveStep(null)
-        const lastDone = donePlan.steps.filter(s => s.status === 'done').pop()
-        setFinalResult(lastDone?.output || 'Done!')
-        getAllPlans().then(setHistory).catch(() => {})
-      },
-      (err) => { setPhase('done'); setFinalResult('Error: ' + err) }
-    )
+      (stepId, status, output) => {
+        setActiveStep(stepId)
+        setPlan(p => p ? {
+          ...p,
+          steps: p.steps.map(s => s.id === stepId ? {
+            ...s,
+            status: status === 'error' ? 'failed' : status === 'done' ? 'done' : 'running',
+            output: output,
+          } : s)
+        } : p)
+      }
+    ).then((result) => {
+      setPhase('done')
+      setActiveStep(null)
+      setFinalResult(result.finalOutput || 'Done!')
+      getAllPlans().then(setHistory).catch(() => {})
+    }).catch((err) => {
+      setPhase('done')
+      setFinalResult('Error: ' + err)
+    })
   }
 
   const run = () => runGoal(goal)
