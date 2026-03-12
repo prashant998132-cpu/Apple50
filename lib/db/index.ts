@@ -516,3 +516,222 @@ export async function markSessionCompressed(id: string, summary: string): Promis
     await db.sessions.update(id, { compressed: true, summary, messages: [] })
   } catch {}
 }
+
+// ════════════════════════════════════════════════════════════
+// JARVIS BRAIN v2 — Result Storage + Behavioral Learning
+// ════════════════════════════════════════════════════════════
+
+// ── Saved Results (generated content) ────────────────────
+export interface SavedResult {
+  id?: number
+  title: string          // auto-generated from content
+  content: string        // full AI output
+  type: 'plan' | 'script' | 'image' | 'note' | 'research' | 'chat' | 'other'
+  tags: string[]         // extracted keywords
+  userQuery: string      // what user asked
+  starred: boolean
+  createdAt: number
+  usedCount: number
+}
+
+let _resultsDB: any = null
+async function getResultsDB() {
+  if (_resultsDB) return _resultsDB
+  if (typeof window === 'undefined') return null
+  const Dexie = (await import('dexie')).default
+  class ResultsDB extends Dexie {
+    results!: any
+    behavior!: any
+    constructor() {
+      super('JarvisResults_v1')
+      this.version(1).stores({
+        results:  '++id, type, createdAt, starred, *tags',
+        behavior: 'key',
+      })
+    }
+  }
+  _resultsDB = new ResultsDB()
+  return _resultsDB
+}
+
+// Auto-detect content type from text
+function detectResultType(query: string, content: string): SavedResult['type'] {
+  const q = query.toLowerCase()
+  const c = content.toLowerCase()
+  if (/plan|schedule|timetable|routine/.test(q) || /plan|schedule/.test(c)) return 'plan'
+  if (/script|video|youtube|reel/.test(q)) return 'script'
+  if (/image|photo|generate.*img|!\[/.test(c)) return 'image'
+  if (/research|news|search|summarize/.test(q)) return 'research'
+  if (/note|save|yaad rakh/.test(q)) return 'note'
+  return 'other'
+}
+
+// Extract title from content (first meaningful line)
+function extractTitle(query: string, content: string): string {
+  const firstLine = content.split('\n').find(l => l.trim().length > 5 && !l.startsWith('!'))
+  if (firstLine) return firstLine.replace(/[#*_`]/g, '').trim().slice(0, 60)
+  return query.slice(0, 60)
+}
+
+// Extract tags from content
+function extractTags(text: string): string[] {
+  const words = text.toLowerCase().match(/\b[a-zA-Z\u0900-\u097F]{4,}\b/g) || []
+  const stopWords = new Set(['karo','karna','hai','hain','mein','aur','yeh','woh','toh','nahi','bhi','isko','uska'])
+  const freq: Record<string, number> = {}
+  words.forEach(w => { if (!stopWords.has(w)) freq[w] = (freq[w] || 0) + 1 })
+  return Object.entries(freq).sort((a,b) => b[1]-a[1]).slice(0,8).map(e => e[0])
+}
+
+// Save any AI-generated result
+export async function saveResult(userQuery: string, content: string, forceType?: SavedResult['type']): Promise<void> {
+  if (!content || content.length < 50) return // too short to save
+  try {
+    const db = await getResultsDB()
+    if (!db) return
+    const type = forceType || detectResultType(userQuery, content)
+    const title = extractTitle(userQuery, content)
+    const tags = extractTags(userQuery + ' ' + content.slice(0, 200))
+    await db.results.add({
+      title, content, type, tags,
+      userQuery: userQuery.slice(0, 200),
+      starred: false,
+      createdAt: Date.now(),
+      usedCount: 0,
+    })
+    // Keep max 200 results — delete oldest non-starred
+    const count = await db.results.count()
+    if (count > 200) {
+      const oldest = await db.results.where('starred').equals(0).sortBy('createdAt')
+      if (oldest.length > 0) await db.results.delete(oldest[0].id)
+    }
+  } catch {}
+}
+
+export async function getResults(type?: SavedResult['type'], limit = 30): Promise<SavedResult[]> {
+  try {
+    const db = await getResultsDB()
+    if (!db) return []
+    let q = db.results.orderBy('createdAt').reverse()
+    if (type) q = db.results.where('type').equals(type)
+    return await q.limit(limit).toArray()
+  } catch { return [] }
+}
+
+export async function searchResults(query: string): Promise<SavedResult[]> {
+  try {
+    const db = await getResultsDB()
+    if (!db) return []
+    const q = query.toLowerCase()
+    const all = await db.results.orderBy('createdAt').reverse().limit(100).toArray()
+    return all.filter((r: SavedResult) =>
+      r.title.toLowerCase().includes(q) ||
+      r.userQuery.toLowerCase().includes(q) ||
+      r.tags.some((t: string) => t.includes(q))
+    ).slice(0, 20)
+  } catch { return [] }
+}
+
+export async function starResult(id: number, starred: boolean): Promise<void> {
+  try { const db = await getResultsDB(); await db?.results.update(id, { starred }) } catch {}
+}
+
+export async function deleteResult(id: number): Promise<void> {
+  try { const db = await getResultsDB(); await db?.results.delete(id) } catch {}
+}
+
+// ── Behavioral Learning ───────────────────────────────────
+export interface BehaviorProfile {
+  topTopics: string[]          // Most asked topics
+  activeHours: number[]        // [0-23] frequency
+  totalSessions: number
+  avgSessionLength: number     // minutes
+  likedResponseTypes: string[] // What kind of responses user likes
+  lastSessionTopics: string[]  // For continuity greeting
+  lastActiveAt: number
+  longestStreak: number
+  preferredMode: 'flash' | 'think' | 'deep'
+}
+
+export async function getBehavior(): Promise<BehaviorProfile> {
+  try {
+    const db = await getResultsDB()
+    const r = await db?.behavior.get('profile')
+    return r?.value ?? {
+      topTopics: [], activeHours: Array(24).fill(0),
+      totalSessions: 0, avgSessionLength: 0,
+      likedResponseTypes: [], lastSessionTopics: [],
+      lastActiveAt: 0, longestStreak: 0, preferredMode: 'flash',
+    }
+  } catch {
+    return {
+      topTopics: [], activeHours: Array(24).fill(0),
+      totalSessions: 0, avgSessionLength: 0,
+      likedResponseTypes: [], lastSessionTopics: [],
+      lastActiveAt: 0, longestStreak: 0, preferredMode: 'flash',
+    }
+  }
+}
+
+export async function trackInteraction(userMsg: string, mode?: string): Promise<void> {
+  try {
+    const db = await getResultsDB()
+    if (!db) return
+    const profile = await getBehavior()
+    const hour = new Date().getHours()
+    const hours = [...(profile.activeHours || Array(24).fill(0))]
+    hours[hour] = (hours[hour] || 0) + 1
+
+    // Extract topic from message
+    const topic = userMsg.toLowerCase().match(/\b(physics|chemistry|maths|history|news|code|python|javascript|study|image|video|youtube|whatsapp)\b/)?.[0]
+
+    const topics = [...(profile.lastSessionTopics || [])]
+    if (topic && !topics.includes(topic)) topics.unshift(topic)
+
+    const topTopics = [...(profile.topTopics || [])]
+    if (topic) {
+      const idx = topTopics.indexOf(topic)
+      if (idx === -1) topTopics.unshift(topic)
+      else { topTopics.splice(idx, 1); topTopics.unshift(topic) }
+    }
+
+    await db.behavior.put({
+      key: 'profile',
+      value: {
+        ...profile,
+        activeHours: hours,
+        topTopics: topTopics.slice(0, 10),
+        lastSessionTopics: topics.slice(0, 5),
+        lastActiveAt: Date.now(),
+        totalSessions: (profile.totalSessions || 0) + 1,
+        preferredMode: (mode as any) || profile.preferredMode || 'flash',
+      }
+    })
+  } catch {}
+}
+
+// Proactive greeting based on behavior
+export async function getSmartGreeting(): Promise<string | null> {
+  try {
+    const profile = await getBehavior()
+    const now = Date.now()
+    const hoursSince = (now - (profile.lastActiveAt || 0)) / 3600000
+    const hour = new Date().getHours()
+
+    // Was active recently (< 1 hour) — no greeting needed
+    if (hoursSince < 1) return null
+
+    const topics = profile.lastSessionTopics || []
+    const timeGreet = hour < 12 ? 'Subah' : hour < 17 ? 'Dopahar' : hour < 21 ? 'Shaam' : 'Raat'
+
+    if (hoursSince < 24 && topics.length > 0) {
+      return `${timeGreet} again! Kal tu **${topics[0]}** ke baare mein pooch raha tha — continue karein? 👀`
+    }
+    if (hoursSince >= 24 && topics.length > 0) {
+      return `Arre wapas aa gaya! **${topics[0]}** pe kaam adhoora tha — kahan se shuru karein?`
+    }
+    if (hour >= 22) {
+      return `Raat ko kya chal raha hai? 🌙 Kuch chahiye toh bol.`
+    }
+    return null
+  } catch { return null }
+}
