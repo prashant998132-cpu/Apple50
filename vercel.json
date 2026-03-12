@@ -1,0 +1,42 @@
+{
+  "functions": {
+    "app/api/stream/route.ts": {
+      "maxDuration": 30
+    },
+    "app/api/jarvis/deep-stream/route.ts": {
+      "maxDuration": 30
+    },
+    "app/api/stt/route.ts": {
+      "maxDuration": 30
+    },
+    "app/api/jarvis/route.ts": {
+      "maxDuration": 30
+    }
+  },
+  "headers": [
+    {
+      "source": "/api/(.*)",
+      "headers": [
+        { "key": "Access-Control-Allow-Origin", "value": "*" },
+        { "key": "Cache-Control", "value": "no-store" }
+      ]
+    },
+    {
+      "source": "/sw.js",
+      "headers": [
+        { "key": "Cache-Control", "value": "public, max-age=0, must-revalidate" },
+        { "key": "Service-Worker-Allowed", "value": "/" }
+      ]
+    },
+    {
+      "source": "/(.*)",
+      "headers": [
+        { "key": "X-Content-Type-Options", "value": "nosniff" },
+        { "key": "X-Frame-Options", "value": "SAMEORIGIN" }
+      ]
+    }
+  ],
+  "rewrites": [
+    { "source": "/jarvis/:path*", "destination": "/api/jarvis/:path*" }
+  ]
+}
