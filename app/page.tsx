@@ -22,6 +22,7 @@ import { initTheme, toggleTheme, getTheme, type Theme } from '@/lib/theme';
 import { useOnlineStatus, cacheAIResponse, getOfflineFallback, getStaticOfflineReply } from '@/lib/offline/status';
 import { startWakeWord, stopWakeWord } from '@/lib/voice/wakeWord';
 import { detectAutomationIntent, triggerMacro, sendLocalNotification } from '@/lib/automation/bridge';
+import { saveResult, trackInteraction, getSmartGreeting } from '@/lib/db';
 
 // Agent intent keywords — yeh queries agent mode mein jayenge
 function isAgentIntent(text: string): boolean {
@@ -325,11 +326,20 @@ export default function Home() {
       setTimeout(() => toastInfo(timeSug), 4000);
     }
 
-    // Welcome message
-    setMsgs([{
-      id: 'welcome', role: 'assistant', timestamp: Date.now(),
-      content: `Hello! Main **JARVIS** hun — *Jons Bhai* 🤖\n\nHinglish mein baat karo, main samajh lunga. NEET, code, weather, news, math — sab kar sakta hun.\n\n💡 Tip: \`/nasa\`, \`/joke\`, \`/wiki topic\`, \`/shayari\` try karo!`,
-    }]);
+
+    // Smart context-aware greeting
+    getSmartGreeting().then(smartGreet => {
+      const baseWelcome = `Kya haal hai! Main **JARVIS** hun 🤖\n\nHinglish mein bol, main samajh lunga. Slash commands: \`/nasa\` \`/joke\` \`/wiki topic\` \`/shayari\``;
+      setMsgs([{
+        id: 'welcome', role: 'assistant', timestamp: Date.now(),
+        content: smartGreet ? `${smartGreet}\n\n_Kuch naya poochna ho toh bhi bol._` : baseWelcome,
+      }]);
+    }).catch(() => {
+      setMsgs([{
+        id: 'welcome', role: 'assistant', timestamp: Date.now(),
+        content: `Kya haal hai! Main **JARVIS** hun 🤖\n\nHinglish mein bol, main samajh lunga. \`/nasa\` \`/joke\` \`/wiki topic\` try karo!`,
+      }]);
+    });
 
     return () => clearInterval(ri);
   }, []);
@@ -533,7 +543,7 @@ export default function Home() {
     setLoading(false);
     if (sessionId && fullText) saveMessage({ sessionId, role: 'assistant', content: fullText, timestamp: Date.now(), provider, card });
 
-    // Post-response: [LEARN:] tags + cache for offline + processAndSave
+    // Post-response: [LEARN:] tags + cache for offline + processAndSave + RESULT SAVE
     if (fullText && fullText.length > 10) {
       const clean = cleanResponse(fullText);
       if (clean !== fullText) {
@@ -541,6 +551,12 @@ export default function Home() {
       }
       cacheAIResponse(text.trim(), clean || fullText, eMode);
       processAndSave(text.trim(), fullText).catch(() => {});
+      // Save substantial responses (plans, scripts, research etc) to result storage
+      if (fullText.length > 150) {
+        saveResult(text.trim(), clean || fullText).catch(() => {});
+      }
+      // Track user behavior
+      trackInteraction(text.trim(), eMode).catch(() => {});
     }
   };
 
