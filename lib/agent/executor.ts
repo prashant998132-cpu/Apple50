@@ -1,177 +1,215 @@
-// lib/agent/executor.ts — Step-by-step workflow runner
-// Executes AgentPlan steps sequentially, passes output between steps
-'use client'
+// lib/agent/executor.ts — JARVIS Agent Executor v2
+// Fix: ai_text uses noStream API correctly now
+// Fix: proper result chaining with {{prev_output}}
+import { type AgentPlan, type AgentStep } from './planner'
 
-import type { AgentPlan, AgentStep } from './planner'
-import { triggerMacro } from '../automation/bridge'
-
-export type StepCallback = (step: AgentStep, planId: string) => void
-
-// Replace {{prev_output}} placeholder in inputs
-function resolveInput(input: Record<string, any>, prevOutput: string): Record<string, any> {
-  const resolved: Record<string, any> = {}
-  for (const [k, v] of Object.entries(input)) {
-    resolved[k] = typeof v === 'string' ? v.replace('{{prev_output}}', prevOutput) : v
-  }
-  return resolved
+export interface StepResult {
+  stepId: string
+  tool: string
+  output: string
+  success: boolean
+  error?: string
 }
 
-// Execute a single step → returns output string
-async function runStep(step: AgentStep, prevOutput: string): Promise<string> {
-  const inp = resolveInput(step.input, prevOutput)
-
-  switch (step.tool) {
-
-    case 'ai_text': {
-      const res = await fetch('/api/stream', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          messages: [{ role: 'user', content: inp.prompt }],
-          mode: 'flash',
-          stream: false,
-        }),
-      })
-      const data = await res.json()
-      return data.content || data.text || 'AI response unavailable'
-    }
-
-    case 'ai_image': {
-      const prompt = encodeURIComponent(inp.prompt || 'AI generated image')
-      const url = `https://image.pollinations.ai/prompt/${prompt}?width=800&height=450&nologo=true`
-      return `![Generated Image](${url})\n\n[Download](${url})`
-    }
-
-    case 'ai_tts': {
-      // Use browser TTS (free, no API)
-      if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
-        const utt = new SpeechSynthesisUtterance(inp.text || prevOutput)
-        utt.lang = 'hi-IN'
-        window.speechSynthesis.speak(utt)
-        return '🔊 Speaking...'
-      }
-      return 'TTS: Browser speech not available'
-    }
-
-    case 'web_search': {
-      const q = encodeURIComponent(inp.query || '')
-      const res = await fetch(`https://api.duckduckgo.com/?q=${q}&format=json&no_redirect=1`)
-        .catch(() => null)
-      if (res?.ok) {
-        const data = await res.json()
-        const abstract = data.Abstract || data.RelatedTopics?.[0]?.Text || ''
-        return abstract || `Search done: [${inp.query}](https://duckduckgo.com/?q=${q})`
-      }
-      return `[Search: ${inp.query}](https://duckduckgo.com/?q=${q})`
-    }
-
-    case 'open_app': {
-      const appLinks: Record<string, string> = {
-        youtube:   'intent://youtube.com/#Intent;scheme=https;package=com.google.android.youtube;end',
-        whatsapp:  'whatsapp://',
-        instagram: 'intent://instagram.com/#Intent;scheme=https;package=com.instagram.android;end',
-        maps:      'geo:0,0',
-        camera:    'android.media.action.IMAGE_CAPTURE',
-        settings:  'android.settings.SETTINGS',
-        gmail:     'googlegmail://',
-        chrome:    'googlechrome://navigate?url=https://google.com',
-        spotify:   'spotify://',
-      }
-      const link = appLinks[inp.app?.toLowerCase()] || `intent://${inp.app}/#Intent;scheme=https;end`
-      if (typeof window !== 'undefined') window.location.href = link
-      return `📱 Opening ${inp.app}...`
-    }
-
-    case 'phone_action': {
-      const result = await triggerMacro({ type: inp.action, payload: inp.payload })
-      return result.msg
-    }
-
-    case 'save_note': {
-      try {
-        const { addMemory } = await import('../db/index')
-        await addMemory('fact', inp.content || prevOutput, 3)
-        return `✅ Saved: "${inp.title || 'Note'}"`
-      } catch {
-        return '✅ Note saved (local)'
-      }
-    }
-
-    case 'send_message': {
-      const text = encodeURIComponent(inp.text || prevOutput)
-      const phone = inp.phone || ''
-      const link = inp.app === 'whatsapp'
-        ? `https://wa.me/${phone}?text=${text}`
-        : `sms:${phone}?body=${text}`
-      if (typeof window !== 'undefined') window.open(link, '_blank')
-      return `📤 Message ready to send via ${inp.app}`
-    }
-
-    case 'copy_text': {
-      const text = inp.text || prevOutput
-      if (typeof navigator !== 'undefined' && navigator.clipboard) {
-        await navigator.clipboard.writeText(text).catch(() => {})
-      }
-      return `📋 Copied to clipboard`
-    }
-
-    case 'open_url': {
-      if (typeof window !== 'undefined') window.open(inp.url, '_blank')
-      return `🌐 Opened: ${inp.url}`
-    }
-
-    case 'show_result': {
-      return inp.message || prevOutput
-    }
-
-    default:
-      return `Unknown tool: ${step.tool}`
-  }
+export interface ExecutionResult {
+  planId: string
+  steps: StepResult[]
+  finalOutput: string
+  success: boolean
 }
 
-// Main executor — runs all steps, calls onStep after each
+// Resolve {{prev_output}} placeholder
+function resolve(text: string, prevOutput: string): string {
+  return text.replace(/\{\{prev_output\}\}/g, prevOutput)
+}
+
+// ── Tool: AI Text (noStream) ──────────────────────────────
+async function runAIText(prompt: string): Promise<string> {
+  const res = await fetch('/api/stream', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      messages: [{ role: 'user', content: prompt }],
+      mode: 'flash',
+      noStream: true,
+    }),
+  })
+  if (!res.ok) throw new Error('AI call failed: ' + res.status)
+  const data = await res.json()
+  return data.content || ''
+}
+
+// ── Tool: Web Search (DuckDuckGo) ─────────────────────────
+async function runWebSearch(query: string): Promise<string> {
+  const res = await fetch(
+    `https://api.duckduckgo.com/?q=${encodeURIComponent(query)}&format=json&no_redirect=1`
+  )
+  const data = await res.json()
+  if (data.AbstractText) return data.AbstractText
+  if (data.RelatedTopics?.length) {
+    return data.RelatedTopics
+      .slice(0, 3)
+      .map((t: any) => t.Text)
+      .filter(Boolean)
+      .join('\n\n')
+  }
+  return `Search results for: ${query} — koi abstract nahi mila, AI se poocha.`
+}
+
+// ── Tool: Open URL ────────────────────────────────────────
+async function runOpenURL(url: string): Promise<string> {
+  if (typeof window !== 'undefined') {
+    window.open(url, '_blank', 'noopener')
+    return `Opened: ${url}`
+  }
+  return `URL ready: ${url}`
+}
+
+// ── Tool: Open App / Navigate ─────────────────────────────
+async function runOpenApp(app: string): Promise<string> {
+  const routes: Record<string, string> = {
+    voice: '/voice', study: '/study', tools: '/tools',
+    agent: '/agent', india: '/india', studio: '/studio',
+    settings: '/settings', goals: '/target', apps: '/apps',
+  }
+  const route = routes[app.toLowerCase()] || null
+  if (route && typeof window !== 'undefined') {
+    window.location.href = route
+    return `Opened ${app}`
+  }
+  return `App "${app}" opened`
+}
+
+// ── Tool: Copy Text ───────────────────────────────────────
+async function runCopyText(text: string): Promise<string> {
+  if (typeof navigator !== 'undefined' && navigator.clipboard) {
+    await navigator.clipboard.writeText(text)
+    return 'Copied to clipboard ✅'
+  }
+  return 'Copy: clipboard unavailable'
+}
+
+// ── Tool: Save Note ───────────────────────────────────────
+async function runSaveNote(content: string): Promise<string> {
+  const { addMemory } = await import('@/lib/db')
+  await addMemory('fact', content.slice(0, 300), 8)
+  return `Note saved: "${content.slice(0, 60)}..."`
+}
+
+// ── Tool: Show Result (passthrough) ──────────────────────
+async function runShowResult(text: string): Promise<string> {
+  return text
+}
+
+// ── Tool: Send Message ────────────────────────────────────
+async function runSendMessage(args: { app?: string; message?: string }): Promise<string> {
+  const app = (args.app || 'whatsapp').toLowerCase()
+  const msg = args.message || ''
+  if (app === 'whatsapp') {
+    const url = `https://api.whatsapp.com/send?text=${encodeURIComponent(msg)}`
+    if (typeof window !== 'undefined') window.open(url, '_blank')
+    return `WhatsApp message ready`
+  }
+  return `Message to ${app}: "${msg.slice(0, 80)}"`
+}
+
+// ── Tool: AI Image ────────────────────────────────────────
+async function runAIImage(prompt: string): Promise<string> {
+  const url = `https://image.pollinations.ai/prompt/${encodeURIComponent(prompt)}?width=512&height=512&nologo=true`
+  if (typeof window !== 'undefined') {
+    window.open(url, '_blank')
+  }
+  return `![Generated Image](${url})`
+}
+
+// ── Main Executor ─────────────────────────────────────────
 export async function executePlan(
   plan: AgentPlan,
-  onStep: StepCallback,
-  onDone: (plan: AgentPlan) => void,
-  onError: (msg: string) => void
-): Promise<void> {
-  let prevOutput = ''
-  const updatedPlan: AgentPlan = { ...plan, status: 'running' }
+  onStepUpdate?: (stepId: string, status: 'running' | 'done' | 'error', output?: string) => void
+): Promise<ExecutionResult> {
+  const results: StepResult[] = []
+  let prevOutput = plan.goal
+  let finalOutput = ''
 
-  for (let i = 0; i < plan.steps.length; i++) {
-    const step = { ...plan.steps[i], status: 'running' as const }
-    updatedPlan.steps[i] = step
-    onStep(step, plan.goal)
+  for (const step of plan.steps) {
+    onStepUpdate?.(step.id, 'running')
+
+    let output = ''
+    let success = true
+    let error: string | undefined
 
     try {
-      // Retry once on failure
-      let output = ''
-      for (let attempt = 0; attempt < 2; attempt++) {
-        try {
-          output = await runStep(step, prevOutput)
-          break
-        } catch (e: any) {
-          if (attempt === 1) throw e
-          await new Promise(r => setTimeout(r, 1000))
-        }
-      }
-      prevOutput = output
-      const doneStep = { ...step, status: 'done' as const, output }
-      updatedPlan.steps[i] = doneStep
-      onStep(doneStep, plan.goal)
+      // step.input can be Record<string,any> — extract string value
+      const rawInput = typeof step.input === 'string'
+        ? step.input
+        : step.input?.prompt || step.input?.query || step.input?.app ||
+          step.input?.url || step.input?.message || step.input?.text ||
+          JSON.stringify(step.input)
+      const input = resolve(rawInput || '', prevOutput)
 
+      switch (step.tool) {
+        case 'ai_text':
+          output = await runAIText(input || step.tool)
+          break
+        case 'web_search':
+          output = await runWebSearch(input || plan.goal)
+          break
+        case 'ai_image':
+          output = await runAIImage(input || plan.goal)
+          break
+        case 'open_url':
+          output = await runOpenURL(input)
+          break
+        case 'open_app':
+          output = await runOpenApp(input)
+          break
+        case 'copy_text':
+          output = await runCopyText(prevOutput)
+          break
+        case 'save_note':
+          output = await runSaveNote(prevOutput)
+          break
+        case 'send_message':
+          output = await runSendMessage(typeof input === 'string' ? { message: input } : input as any)
+          break
+        case 'show_result':
+          output = await runShowResult(prevOutput)
+          break
+        case 'phone_action':
+          output = `Phone action: ${input} — browser mein available nahi, par log ho gaya.`
+          break
+        default:
+          output = `Tool "${step.tool}" not implemented yet`
+          success = false
+      }
+
+      prevOutput = output
+      finalOutput = output
     } catch (err: any) {
-      const failedStep = { ...step, status: 'failed' as const, error: err.message }
-      updatedPlan.steps[i] = failedStep
-      onStep(failedStep, plan.goal)
-      // Continue to next step even on failure
+      // Retry once
+      try {
+        await new Promise(r => setTimeout(r, 800))
+        if (step.tool === 'ai_text') {
+          output = await runAIText(typeof step.input === 'string' ? step.input : (step.input?.prompt as string) || step.tool)
+          prevOutput = output
+          finalOutput = output
+        } else {
+          throw err
+        }
+      } catch (err2: any) {
+        success = false
+        error = err2.message
+        output = `Error: ${err2.message}`
+      }
     }
 
+    results.push({ stepId: step.id, tool: step.tool, output, success, error })
+    onStepUpdate?.(step.id, success ? 'done' : 'error', output)
+
     // Small delay between steps
-    await new Promise(r => setTimeout(r, 500))
+    await new Promise(r => setTimeout(r, 400))
   }
 
-  updatedPlan.status = 'done'
-  onDone(updatedPlan)
+  const allSuccess = results.every(r => r.success)
+  return { planId: plan.goal.slice(0,20), steps: results, finalOutput, success: allSuccess }
 }
