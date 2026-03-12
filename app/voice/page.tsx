@@ -2,6 +2,7 @@
 import React, { useState, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { speakText, stopSpeaking } from '@/lib/tts';
+import { buildSystemPrompt } from '@/lib/personality';
 
 export default function VoicePage() {
   const router = useRouter();
@@ -125,10 +126,13 @@ export default function VoicePage() {
     if (!text.trim()) return;
     setLoading(true);
     try {
+      const systemPrompt = await buildSystemPrompt().catch(() =>
+        `You are JARVIS. Hinglish mein baat karo. Concise, witty. Voice response ke liye short rakho.`
+      );
       const res = await fetch('/api/stream', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ messages: [{ role: 'user', content: text }], mode: 'flash' }),
+        body: JSON.stringify({ messages: [{ role: 'user', content: text }], mode: 'flash', systemPrompt }),
       });
 
       const reader = res.body!.getReader();
