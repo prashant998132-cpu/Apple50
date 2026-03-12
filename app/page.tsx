@@ -5,13 +5,12 @@ import { useRouter } from 'next/navigation';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { loadPuter, puterChat } from '@/lib/providers/puter';
-import { autoRouteMode } from '@/lib/tools/intent';
 import { checkAndFireReminders } from '@/lib/reminders';
 import { saveMessage, createSession, getMessages, getSessions, updateSessionTitle, type ChatSession } from '@/lib/storage';
 import { speakText, stopSpeaking } from '@/lib/tts';
 import { ToastContainer, useToast } from '@/components/shared/Toast';
 import { usePWA } from '@/lib/hooks/usePWA';
-import { learnFromMessage, buildMemoryContext, getProactiveSuggestion } from '@/lib/memory/proactive';
+import { learnFromMessage, buildMemoryContext } from '@/lib/memory/proactive';
 import { detectAppIntent, executeCommand, compressUserMessage, type CompressLevel } from '@/lib/core/appController';
 
 import { buildSystemPrompt, parseLearnTags, cleanResponse, getTimeSuggestion } from '@/lib/personality';
@@ -23,6 +22,7 @@ import { useOnlineStatus, cacheAIResponse, getOfflineFallback, getStaticOfflineR
 import { startWakeWord, stopWakeWord } from '@/lib/voice/wakeWord';
 import { detectAutomationIntent, triggerMacro, sendLocalNotification } from '@/lib/automation/bridge';
 import { saveResult, trackInteraction, getSmartGreeting } from '@/lib/db';
+import { getProactiveSuggestion, autoRouteMode } from '@/lib/core/smartRouter';
 
 // Agent intent keywords — yeh queries agent mode mein jayenge
 function isAgentIntent(text: string): boolean {
@@ -488,7 +488,7 @@ export default function Home() {
       const res = await fetch(endpoint, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ messages: history, mode: eMode, sessionId, location }),
+        body: JSON.stringify({ messages: history, mode: eMode, sessionId, location, systemPrompt }),
         signal: controller.signal,
       });
 
@@ -557,6 +557,18 @@ export default function Home() {
       }
       // Track user behavior
       trackInteraction(text.trim(), eMode).catch(() => {});
+      // Proactive suggestion — JARVIS suggests without being asked
+      const suggestion = getProactiveSuggestion(text.trim());
+      if (suggestion) {
+        setTimeout(() => {
+          setMsgs(prev => [...prev, {
+            id: `suggest_${Date.now()}`,
+            role: 'assistant',
+            content: `💡 ${suggestion}`,
+            timestamp: Date.now(),
+          }]);
+        }, 1800);
+      }
     }
   };
 
