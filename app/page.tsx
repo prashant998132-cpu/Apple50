@@ -1,6 +1,7 @@
 'use client';
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import dynamic from 'next/dynamic';
+import { useRouter } from 'next/navigation';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { loadPuter, puterChat } from '@/lib/providers/puter';
@@ -21,6 +22,13 @@ import { initTheme, toggleTheme, getTheme, type Theme } from '@/lib/theme';
 import { useOnlineStatus, cacheAIResponse, getOfflineFallback, getStaticOfflineReply } from '@/lib/offline/status';
 import { startWakeWord, stopWakeWord } from '@/lib/voice/wakeWord';
 import { detectAutomationIntent, triggerMacro, sendLocalNotification } from '@/lib/automation/bridge';
+
+// Agent intent keywords — yeh queries agent mode mein jayenge
+function isAgentIntent(text: string): boolean {
+  const t = text.toLowerCase()
+  return /study plan|schedule bana|research kar|image bana|generate image|todo list|task list|news summarize|video script|workflow|step by step|automatically kar|auto.*karo/.test(t)
+    && t.split(' ').length > 3 // sirf complex queries, 1-2 word nahi
+}
 const NavDrawer = dynamic(() => import('@/components/shared/NavDrawer'), { ssr: false });
 const PinLock   = dynamic(() => import('@/components/shared/PinLock'),   { ssr: false });
 
@@ -237,6 +245,7 @@ function ConnectedAppsPanel({ open, onClose }: { open: boolean; onClose: () => v
 
 // ── Main Page ─────────────────────────────────────────────────────────────
 export default function Home() {
+  const router = useRouter();
   const [msgs, setMsgs]           = useState<Msg[]>([]);
   const [input, setInput]         = useState('');
   const [mode, setMode]           = useState<Mode>('auto');
@@ -409,7 +418,16 @@ export default function Home() {
       return;
     }
 
-    // 1. Check if it's a direct app command (zero API)
+    // 0.5 Agent mode — complex multi-step tasks
+    if (isAgentIntent(text)) {
+      setMsgs(prev => [...prev,
+        { id: `u_${Date.now()}`, role: 'user', content: text.trim(), timestamp: Date.now() },
+        { id: `a_${Date.now()}`, role: 'assistant', content: `⚡ **Agent Mode** activate ho raha hai...\n\n"${text.trim().slice(0,60)}" — yeh ek multi-step task hai. Main Agent page pe execute karunga.\n\n[👉 Agent page pe dekho →](/agent)`, timestamp: Date.now() },
+      ]);
+      setInput('');
+      setTimeout(() => router.push(`/agent?goal=${encodeURIComponent(text.trim())}`), 1200);
+      return;
+    }
     const appCmd = detectAppIntent(text);
     if (appCmd) {
       execAppCommand(appCmd);
