@@ -79,6 +79,38 @@ const PLAN_TEMPLATES: Array<{
       { tool: 'show_result', input: { message: 'Morning routine set! Alarm bhi lag gaya.' }, status: 'pending' },
     ]
   },
+  {
+    match: [/study plan|study schedule|padhai plan|padhna hai|study time|subjects.*plan|plan.*subjects/i],
+    plan: (input) => [
+      { tool: 'ai_text', input: { prompt: `User ne kaha: "${input}"\n\nEk detailed study plan banao. Include:\n1. Subjects/topics list (agar mention kiya ho)\n2. Daily time slots (morning/afternoon/evening)\n3. Weekly schedule\n4. Short breaks\n5. Revision days\n\nHinglish mein likho, practical aur achievable banao.` }, status: 'pending' },
+      { tool: 'save_note', input: { title: 'Study Plan', content: '{{prev_output}}' }, status: 'pending' },
+      { tool: 'show_result', input: { message: '{{prev_output}}' }, status: 'pending' },
+    ]
+  },
+  {
+    match: [/todo|task list|kya karna hai|aaj ka kaam|checklist|plan for today/i],
+    plan: (input) => [
+      { tool: 'ai_text', input: { prompt: `"${input}" — Iske liye ek clear actionable todo list banao. Numbered, short points, priority order mein. Hinglish mein.` }, status: 'pending' },
+      { tool: 'copy_text', input: { text: '{{prev_output}}' }, status: 'pending' },
+      { tool: 'show_result', input: { message: '{{prev_output}}' }, status: 'pending' },
+    ]
+  },
+  {
+    match: [/remind|reminder|yaad dilao|alarm set|schedule.*remind/i],
+    plan: (input) => [
+      { tool: 'ai_text', input: { prompt: `Parse this reminder request: "${input}". Extract: what to remind, when. Reply in format: "⏰ Reminder: [what] at [time]"` }, status: 'pending' },
+      { tool: 'phone_action', input: { action: 'alarm', payload: {} }, status: 'pending' },
+      { tool: 'show_result', input: { message: '{{prev_output}} — Set kar diya!' }, status: 'pending' },
+    ]
+  },
+  {
+    match: [/news|khabar|aaj ki news|latest.*news|news.*summarize/i],
+    plan: (input) => [
+      { tool: 'web_search', input: { query: input.replace(/bata(o)?|dedo|lao/gi, '').trim() || 'today latest news India' }, status: 'pending' },
+      { tool: 'ai_text', input: { prompt: 'Search results ke basis pe 5 main news points banao. Bullet points mein, Hinglish mein, short aur clear.' }, status: 'pending' },
+      { tool: 'show_result', input: { message: '{{prev_output}}' }, status: 'pending' },
+    ]
+  },
 ]
 
 // AI-based planner for unknown requests
