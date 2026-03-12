@@ -1,0 +1,158 @@
+// lib/agent/planner.ts — AI Task Planner
+// Natural language → structured step list
+// Uses existing smartRouter providers — zero extra cost
+'use client'
+
+export interface AgentStep {
+  id: string
+  tool: AgentTool
+  input: Record<string, any>
+  status: 'pending' | 'running' | 'done' | 'failed'
+  output?: string
+  error?: string
+}
+
+export type AgentTool =
+  | 'ai_text'        // Generate text via AI
+  | 'ai_image'       // Generate image via Pollinations
+  | 'ai_tts'         // Text to speech
+  | 'web_search'     // DuckDuckGo search
+  | 'open_app'       // MacroDroid: open app
+  | 'phone_action'   // MacroDroid: WiFi/BT/alarm etc
+  | 'save_note'      // Save to IndexedDB
+  | 'send_message'   // WhatsApp/SMS deep link
+  | 'open_url'       // Open URL in browser
+  | 'copy_text'      // Copy to clipboard
+  | 'show_result'    // Display final result to user
+
+export interface AgentPlan {
+  goal: string
+  steps: AgentStep[]
+  status: 'planning' | 'running' | 'done' | 'failed'
+  createdAt: number
+}
+
+// Predefined plan templates (fast, no AI call needed)
+const PLAN_TEMPLATES: Array<{
+  match: RegExp[]
+  plan: (input: string) => Omit<AgentStep, 'id'>[]
+}> = [
+  {
+    match: [/youtube video.*upload|upload.*youtube|video bana/i],
+    plan: () => [
+      { tool: 'ai_text',    input: { prompt: 'Write a 60-second YouTube script on the requested topic. Include hook, main content, and CTA.' }, status: 'pending' },
+      { tool: 'ai_image',   input: { prompt: 'YouTube thumbnail, vibrant, eye-catching' }, status: 'pending' },
+      { tool: 'show_result',input: { message: 'Script + thumbnail ready! Manual upload steps: 1) Copy script 2) Record video 3) Use thumbnail' }, status: 'pending' },
+      { tool: 'open_app',   input: { app: 'youtube' }, status: 'pending' },
+    ]
+  },
+  {
+    match: [/whatsapp.*bhej|message.*send|send.*message/i],
+    plan: (input) => [
+      { tool: 'ai_text',    input: { prompt: `Write a short WhatsApp message for: ${input}` }, status: 'pending' },
+      { tool: 'copy_text',  input: { text: '{{prev_output}}' }, status: 'pending' },
+      { tool: 'open_app',   input: { app: 'whatsapp' }, status: 'pending' },
+    ]
+  },
+  {
+    match: [/research|research kar|find out about/i],
+    plan: (input) => [
+      { tool: 'web_search', input: { query: input }, status: 'pending' },
+      { tool: 'ai_text',    input: { prompt: 'Summarize the search results in 5 bullet points' }, status: 'pending' },
+      { tool: 'save_note',  input: { title: `Research: ${input.slice(0,40)}` }, status: 'pending' },
+      { tool: 'show_result',input: { message: '{{prev_output}}' }, status: 'pending' },
+    ]
+  },
+  {
+    match: [/image.*bana|generate image|create image/i],
+    plan: (input) => [
+      { tool: 'ai_text',    input: { prompt: `Create a detailed image generation prompt for: ${input}` }, status: 'pending' },
+      { tool: 'ai_image',   input: { prompt: '{{prev_output}}' }, status: 'pending' },
+      { tool: 'show_result',input: { message: 'Image generated!' }, status: 'pending' },
+    ]
+  },
+  {
+    match: [/morning routine|din shuru|good morning routine/i],
+    plan: () => [
+      { tool: 'ai_text',    input: { prompt: 'Give me a 5-step morning routine with timing' }, status: 'pending' },
+      { tool: 'phone_action',input: { action: 'alarm', payload: { time: '6:00am' } }, status: 'pending' },
+      { tool: 'show_result', input: { message: 'Morning routine set! Alarm bhi lag gaya.' }, status: 'pending' },
+    ]
+  },
+]
+
+// AI-based planner for unknown requests
+export async function planWithAI(goal: string): Promise<Omit<AgentStep, 'id'>[]> {
+  const TOOLS_DESC = `
+Available tools (use exact names):
+- ai_text: Generate any text content. Input: { prompt: string }
+- ai_image: Generate an image. Input: { prompt: string }
+- web_search: Search the web. Input: { query: string }
+- open_app: Open Android app. Input: { app: "youtube"|"whatsapp"|"instagram"|"maps"|"camera"|"settings" }
+- phone_action: Phone automation. Input: { action: "wifi_on"|"wifi_off"|"alarm"|"volume_up", payload?: {} }
+- save_note: Save to memory. Input: { title: string }
+- send_message: Send via deep link. Input: { app: "whatsapp", text: string, phone?: string }
+- copy_text: Copy to clipboard. Input: { text: string }
+- open_url: Open URL. Input: { url: string }
+- show_result: Show final result. Input: { message: string }
+`
+
+  const prompt = `You are a task planner for JARVIS AI assistant.
+Convert this user goal into 2-6 sequential steps using available tools.
+
+Goal: "${goal}"
+
+${TOOLS_DESC}
+
+Respond ONLY with a JSON array. No markdown, no explanation. Example:
+[{"tool":"web_search","input":{"query":"AI news today"}},{"tool":"show_result","input":{"message":"{{prev_output}}"}}]`
+
+  try {
+    // Use Groq (fastest) via our existing API
+    const res = await fetch('/api/stream', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        messages: [{ role: 'user', content: prompt }],
+        mode: 'flash',
+        stream: false,
+      }),
+    })
+    const data = await res.json()
+    const text = data.content || data.text || ''
+    const jsonMatch = text.match(/\[[\s\S]*\]/)
+    if (jsonMatch) {
+      const steps = JSON.parse(jsonMatch[0])
+      return steps.map((s: any) => ({ ...s, status: 'pending' as const }))
+    }
+  } catch {}
+
+  // Fallback: generic 2-step plan
+  return [
+    { tool: 'ai_text',    input: { prompt: goal }, status: 'pending' },
+    { tool: 'show_result',input: { message: '{{prev_output}}' }, status: 'pending' },
+  ]
+}
+
+export async function createPlan(goal: string): Promise<AgentPlan> {
+  // Try templates first (instant, no AI call)
+  for (const tmpl of PLAN_TEMPLATES) {
+    if (tmpl.match.some(r => r.test(goal))) {
+      const rawSteps = tmpl.plan(goal)
+      return {
+        goal,
+        steps: rawSteps.map((s, i) => ({ ...s, id: `step_${i}_${Date.now()}` })),
+        status: 'planning',
+        createdAt: Date.now(),
+      }
+    }
+  }
+  // AI planner for everything else
+  const rawSteps = await planWithAI(goal)
+  return {
+    goal,
+    steps: rawSteps.map((s, i) => ({ ...s, id: `step_${i}_${Date.now()}` })),
+    status: 'planning',
+    createdAt: Date.now(),
+  }
+}
