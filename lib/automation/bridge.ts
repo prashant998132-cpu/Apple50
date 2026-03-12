@@ -93,7 +93,7 @@ export async function sendLocalNotification(title: string, body: string, icon = 
   try {
     const reg = await navigator.serviceWorker.getRegistration()
     if (reg) {
-      await reg.showNotification(title, { body, icon, badge: icon, vibrate: [200, 100, 200] })
+      await (reg as any).showNotification(title, { body, icon, badge: icon, vibrate: [200, 100, 200] })
     } else {
       new Notification(title, { body, icon })
     }
