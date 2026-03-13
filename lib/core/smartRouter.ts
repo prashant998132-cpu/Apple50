@@ -141,33 +141,26 @@ function getMaxTokens(messages: Message[], mode: RouterMode): number {
 
 // ── Provider configs — ordered by: speed → quality → cost ─
 const P = {
-  // Groq: fastest inference, generous free tier (14.4K RPD)
-  groq8b:    { url: 'https://api.groq.com/openai/v1/chat/completions',    model: 'llama-3.1-8b-instant',         key: () => process.env.GROQ_API_KEY,        name: 'groq' },
-  groq70b:   { url: 'https://api.groq.com/openai/v1/chat/completions',    model: 'llama-3.3-70b-versatile',      key: () => process.env.GROQ_API_KEY,        name: 'groq' },
-  groqR1:    { url: 'https://api.groq.com/openai/v1/chat/completions',    model: 'deepseek-r1-distill-llama-70b', key: () => process.env.GROQ_API_KEY,       name: 'groq' },
-  // Gemini: great quality, 1500 RPD free
-  gemFlash:  { url: 'https://generativelanguage.googleapis.com/v1beta/openai/chat/completions', model: 'gemini-2.0-flash', key: () => process.env.GEMINI_API_KEY, name: 'gemini' },
-  gemThink:  { url: 'https://generativelanguage.googleapis.com/v1beta/openai/chat/completions', model: 'gemini-2.5-flash-preview-04-17', key: () => process.env.GEMINI_API_KEY, name: 'gemini' },
-  // Cerebras: fast inference
-  cerebras:  { url: 'https://api.cerebras.ai/v1/chat/completions',        model: 'llama-3.3-70b',                key: () => process.env.CEREBRAS_API_KEY,    name: 'cerebras' },
-  // Together: good variety
-  together:  { url: 'https://api.together.xyz/v1/chat/completions',       model: 'meta-llama/Llama-3.3-70B-Instruct-Turbo', key: () => process.env.TOGETHER_API_KEY, name: 'together' },
-  // Mistral: reliable
-  mistral:   { url: 'https://api.mistral.ai/v1/chat/completions',         model: 'mistral-small-latest',         key: () => process.env.MISTRAL_API_KEY,     name: 'mistral' },
-  // OpenRouter: free DeepSeek R1
-  openroute: { url: 'https://openrouter.ai/api/v1/chat/completions',      model: 'deepseek/deepseek-r1:free',    key: () => process.env.OPENROUTER_API_KEY,  name: 'openrouter' },
-  // Others
-  fireworks: { url: 'https://api.fireworks.ai/inference/v1/chat/completions', model: 'accounts/fireworks/models/llama-v3p3-70b-instruct', key: () => process.env.FIREWORKS_API_KEY, name: 'fireworks' },
-  deepinfra: { url: 'https://api.deepinfra.com/v1/openai/chat/completions', model: 'meta-llama/Meta-Llama-3.1-70B-Instruct', key: () => process.env.DEEPINFRA_API_KEY, name: 'deepinfra' },
-  huggingf:  { url: 'https://api-inference.huggingface.co/models/mistralai/Mistral-7B-Instruct-v0.3/v1/chat/completions', model: 'mistralai/Mistral-7B-Instruct-v0.3', key: () => process.env.HUGGINGFACE_API_KEY, name: 'huggingface' },
+  groq8b:    { url: 'https://api.groq.com/openai/v1/chat/completions',    model: 'llama-3.1-8b-instant',         name: 'groq' },
+  groq70b:   { url: 'https://api.groq.com/openai/v1/chat/completions',    model: 'llama-3.3-70b-versatile',      name: 'groq' },
+  groqR1:    { url: 'https://api.groq.com/openai/v1/chat/completions',    model: 'deepseek-r1-distill-llama-70b', name: 'groq' },
+  gemFlash:  { url: 'https://generativelanguage.googleapis.com/v1beta/openai/chat/completions', model: 'gemini-2.0-flash', name: 'gemini' },
+  gemThink:  { url: 'https://generativelanguage.googleapis.com/v1beta/openai/chat/completions', model: 'gemini-2.5-flash-preview-04-17', name: 'gemini' },
+  cerebras:  { url: 'https://api.cerebras.ai/v1/chat/completions',        model: 'llama-3.3-70b',                name: 'cerebras' },
+  together:  { url: 'https://api.together.xyz/v1/chat/completions',       model: 'meta-llama/Llama-3.3-70B-Instruct-Turbo', name: 'together' },
+  mistral:   { url: 'https://api.mistral.ai/v1/chat/completions',         model: 'mistral-small-latest',         name: 'mistral' },
+  openroute: { url: 'https://openrouter.ai/api/v1/chat/completions',      model: 'deepseek/deepseek-r1:free',    name: 'openrouter' },
+  fireworks: { url: 'https://api.fireworks.ai/inference/v1/chat/completions', model: 'accounts/fireworks/models/llama-v3p3-70b-instruct', name: 'fireworks' },
+  deepinfra: { url: 'https://api.deepinfra.com/v1/openai/chat/completions', model: 'meta-llama/Meta-Llama-3.1-70B-Instruct', name: 'deepinfra' },
+  huggingf:  { url: 'https://api-inference.huggingface.co/models/mistralai/Mistral-7B-Instruct-v0.3/v1/chat/completions', model: 'mistralai/Mistral-7B-Instruct-v0.3', name: 'huggingface' },
 }
 
 // ── OpenAI-compatible provider call ───────────────────────
 async function callOAI(
-  cfg: { url: string; model: string; key: () => string | undefined; name: string },
-  msgs: Message[], maxTokens: number,
+  cfg: { url: string; model: string; name: string },
+  msgs: Message[], maxTokens: number, resolvedKey: string,
 ): Promise<string> {
-  const key = cfg.key()
+  const key = resolvedKey
   if (!key) throw new Error(`No key: ${cfg.name}`)
   if (!canUse(cfg.name)) throw new Error(`${cfg.name} at 85% limit`)
 
@@ -185,10 +178,10 @@ async function callOAI(
 }
 
 // ── Cohere (different format) ──────────────────────────────
-async function callCohere(msgs: Message[], maxTokens: number): Promise<string> {
-  const key = process.env.COHERE_API_KEY
-  if (!key) throw new Error('No Cohere key')
+async function callCohere(msgs: Message[], maxTokens: number, cohereKey: string): Promise<string> {
+  if (!cohereKey) throw new Error('No Cohere key')
   if (!canUse('cohere')) throw new Error('cohere at 85%')
+  const key = cohereKey
   const userMsg = msgs.filter(m => m.role === 'user').pop()?.content ?? ''
   const history = msgs
     .filter(m => m.role !== 'user' && m.role !== 'system')
@@ -228,7 +221,19 @@ export async function smartRouter(
   messages: Message[],
   mode: RouterMode = 'flash',
   maxTokens?: number,
+  clientKeys: Record<string, string> = {},
 ): Promise<RouterResult> {
+  // Merge client keys into process.env override
+  const getKey = (name: string): string | undefined => {
+    const keyMap: Record<string, string> = {
+      groq: 'GROQ_API_KEY', gemini: 'GEMINI_API_KEY', cerebras: 'CEREBRAS_API_KEY',
+      together: 'TOGETHER_API_KEY', mistral: 'MISTRAL_API_KEY', cohere: 'COHERE_API_KEY',
+      fireworks: 'FIREWORKS_API_KEY', openrouter: 'OPENROUTER_API_KEY',
+      deepinfra: 'DEEPINFRA_API_KEY', huggingface: 'HUGGINGFACE_API_KEY',
+    }
+    const envName = keyMap[name]
+    return envName ? (clientKeys[envName] || (process.env as any)[envName]) : undefined
+  }
   const t0 = Date.now()
 
   // 1. Cache check — zero API, zero Vercel invocation cost
@@ -250,37 +255,37 @@ export async function smartRouter(
 
   if (mode === 'think') {
     cascade = [
-      ['Groq',         'DeepSeek-R1-70B',    () => callOAI(P.groqR1,    trimmed, tokens)],
-      ['OpenRouter',   'DeepSeek-R1:free',   () => callOAI(P.openroute, trimmed, tokens)],
-      ['Gemini',       '2.5-Flash',          () => callOAI(P.gemThink,  trimmed, tokens)],
-      ['Groq',         'Llama-3.3-70B',      () => callOAI(P.groq70b,   trimmed, tokens)],
-      ['Together',     'Llama-3.3-70B-Turbo',() => callOAI(P.together,  trimmed, tokens)],
-      ['Cerebras',     'Llama-3.3-70B',      () => callOAI(P.cerebras,  trimmed, tokens)],
-      ['Gemini',       'Flash',              () => callOAI(P.gemFlash,  trimmed, tokens)],
+      ['Groq',         'DeepSeek-R1-70B',    () => callOAI(P.groqR1,    trimmed, tokens, getKey('groq'))],
+      ['OpenRouter',   'DeepSeek-R1:free',   () => callOAI(P.openroute, trimmed, tokens, getKey('openrouter'))],
+      ['Gemini',       '2.5-Flash',          () => callOAI(P.gemThink,  trimmed, tokens, getKey('gemini'))],
+      ['Groq',         'Llama-3.3-70B',      () => callOAI(P.groq70b,   trimmed, tokens, getKey('groq'))],
+      ['Together',     'Llama-3.3-70B-Turbo',() => callOAI(P.together,  trimmed, tokens, getKey('together'))],
+      ['Cerebras',     'Llama-3.3-70B',      () => callOAI(P.cerebras,  trimmed, tokens, getKey('cerebras'))],
+      ['Gemini',       'Flash',              () => callOAI(P.gemFlash,  trimmed, tokens, getKey('gemini'))],
       ['Pollinations', 'openai',             () => callPollinations(trimmed, tokens)],
     ]
   } else if (mode === 'deep') {
     cascade = [
-      ['Gemini',       'Flash',              () => callOAI(P.gemFlash,  trimmed, tokens)],
-      ['Groq',         'Llama-3.3-70B',      () => callOAI(P.groq70b,   trimmed, tokens)],
-      ['Cerebras',     'Llama-3.3-70B',      () => callOAI(P.cerebras,  trimmed, tokens)],
-      ['Together',     'Llama-3.3-70B-Turbo',() => callOAI(P.together,  trimmed, tokens)],
-      ['Mistral',      'Small',              () => callOAI(P.mistral,   trimmed, tokens)],
+      ['Gemini',       'Flash',              () => callOAI(P.gemFlash,  trimmed, tokens, getKey('gemini'))],
+      ['Groq',         'Llama-3.3-70B',      () => callOAI(P.groq70b,   trimmed, tokens, getKey('groq'))],
+      ['Cerebras',     'Llama-3.3-70B',      () => callOAI(P.cerebras,  trimmed, tokens, getKey('cerebras'))],
+      ['Together',     'Llama-3.3-70B-Turbo',() => callOAI(P.together,  trimmed, tokens, getKey('together'))],
+      ['Mistral',      'Small',              () => callOAI(P.mistral,   trimmed, tokens, getKey('mistral'))],
       ['Pollinations', 'openai',             () => callPollinations(trimmed, tokens)],
     ]
   } else {
     // Flash — speed > quality
     cascade = [
-      ['Groq',         'Llama-3.1-8B',       () => callOAI(P.groq8b,    trimmed, tokens)],
-      ['Groq',         'Llama-3.3-70B',      () => callOAI(P.groq70b,   trimmed, tokens)],
-      ['Cerebras',     'Llama-3.3-70B',      () => callOAI(P.cerebras,  trimmed, tokens)],
-      ['Gemini',       'Flash',              () => callOAI(P.gemFlash,  trimmed, tokens)],
-      ['Together',     'Llama-3.3-70B-Turbo',() => callOAI(P.together,  trimmed, tokens)],
-      ['Mistral',      'Small',              () => callOAI(P.mistral,   trimmed, tokens)],
-      ['Cohere',       'Command-R',          () => callCohere(trimmed, tokens)],
-      ['Fireworks',    'Llama-3.3-70B',      () => callOAI(P.fireworks, trimmed, tokens)],
-      ['DeepInfra',    'Llama-3.1-70B',      () => callOAI(P.deepinfra, trimmed, tokens)],
-      ['HuggingFace',  'Mistral-7B',         () => callOAI(P.huggingf,  trimmed, tokens)],
+      ['Groq',         'Llama-3.1-8B',       () => callOAI(P.groq8b,    trimmed, tokens, getKey('groq'))],
+      ['Groq',         'Llama-3.3-70B',      () => callOAI(P.groq70b,   trimmed, tokens, getKey('groq'))],
+      ['Cerebras',     'Llama-3.3-70B',      () => callOAI(P.cerebras,  trimmed, tokens, getKey('cerebras'))],
+      ['Gemini',       'Flash',              () => callOAI(P.gemFlash,  trimmed, tokens, getKey('gemini'))],
+      ['Together',     'Llama-3.3-70B-Turbo',() => callOAI(P.together,  trimmed, tokens, getKey('together'))],
+      ['Mistral',      'Small',              () => callOAI(P.mistral,   trimmed, tokens, getKey('mistral'))],
+      ['Cohere',       'Command-R',          () => callCohere(trimmed, tokens, getKey('cohere') ?? '')],
+      ['Fireworks',    'Llama-3.3-70B',      () => callOAI(P.fireworks, trimmed, tokens, getKey('fireworks'))],
+      ['DeepInfra',    'Llama-3.1-70B',      () => callOAI(P.deepinfra, trimmed, tokens, getKey('deepinfra'))],
+      ['HuggingFace',  'Mistral-7B',         () => callOAI(P.huggingf,  trimmed, tokens, getKey('huggingface'))],
       ['Pollinations', 'openai',             () => callPollinations(trimmed, tokens)],
     ]
   }
