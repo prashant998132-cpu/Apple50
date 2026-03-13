@@ -18,7 +18,7 @@ Format nicely with markdown. Be smart and synthesize the tool data into a useful
 export async function POST(req: NextRequest) {
   const encoder = new TextEncoder();
   const body = await req.json().catch(() => ({}));
-  const { messages = [], intent: intentHint, systemPrompt } = body;
+  const { messages = [], intent: intentHint, systemPrompt, clientKeys = {} } = body;
   const lastUserMsg = messages.filter((m: any) => m.role === 'user').pop()?.content || '';
   const DEEP_SYSTEM = systemPrompt || SYSTEM_PROMPT;
 
@@ -58,7 +58,7 @@ export async function POST(req: NextRequest) {
           { role: 'user', content: contextMsg },
         ];
 
-        const result = await smartRouter(fullMessages as any, 'think', 1000);
+        const result = await smartRouter(fullMessages as any, 'think', 1000, clientKeys);
 
         // Stream response
         const words = result.text.split(' ');
