@@ -14,6 +14,8 @@ const NAV = [
   { icon: '📱', label: 'Apps', route: '/apps' },
   { icon: '📡', label: 'Briefing', route: '/briefing' },
   { icon: '🌐', label: 'System', route: '/system' },
+  { icon: '🖌️', label: 'Canva', route: '/canva' },
+  { icon: '🎵', label: 'Media', route: '/media' },
   { icon: '⚙️', label: 'Settings', route: '/settings' },
 ];
 
