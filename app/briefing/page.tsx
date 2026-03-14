@@ -32,26 +32,14 @@ async function fetchWeather(): Promise<string> {
 
 async function fetchNews(): Promise<string[]> {
   try {
-    const res = await fetch(
-      'https://gnews.io/api/v4/top-headlines?lang=en&country=in&max=4&token=' +
-      (process.env.NEXT_PUBLIC_GNEWS_KEY || ''),
-      { signal: AbortSignal.timeout(5000) }
-    )
-    const d = await res.json()
-    if (d.articles?.length) return d.articles.slice(0, 4).map((a: any) => a.title)
-    throw new Error('no articles')
-  } catch {
-    // Fallback: HN
-    try {
-      const r2 = await fetch('https://hacker-news.firebaseio.com/v0/topstories.json', { signal: AbortSignal.timeout(4000) })
-      const ids = await r2.json()
-      const stories = await Promise.all(ids.slice(0, 3).map(async (id: number) => {
-        const r = await fetch(`https://hacker-news.firebaseio.com/v0/item/${id}.json`)
-        return (await r.json())?.title ?? ''
-      }))
-      return stories.filter(Boolean)
-    } catch { return ['News unavailable'] }
-  }
+    const r = await fetch('https://hacker-news.firebaseio.com/v0/topstories.json', { signal: AbortSignal.timeout(5000) })
+    const ids = await r.json()
+    const stories = await Promise.all(ids.slice(0, 5).map(async (id: number) => {
+      const r2 = await fetch(`https://hacker-news.firebaseio.com/v0/item/${id}.json`, { signal: AbortSignal.timeout(3000) })
+      return (await r2.json())?.title ?? ''
+    }))
+    return stories.filter(Boolean)
+  } catch { return ['News unavailable'] }
 }
 
 const NEET_TIPS = [
