@@ -475,6 +475,22 @@ export default function Home() {
       return;
     }
 
+    // ── Direct Image Generation — bypass AI refusal ──────────
+    const imgMatch = text.match(/(?:image|img|photo|pic|wallpaper|banner|poster|draw|paint|sketch)\s+(?:bana|banao|generate|create|make|de|do|chahiye|of|ki|ka)\s*(.+)/i)
+      || text.match(/(.+)\s+(?:ki|ka|ke|wala|wali)\s+image/i)
+    if (imgMatch) {
+      const imgPrompt = (imgMatch[1] || imgMatch[0]).trim()
+      const safePrompt = imgPrompt.replace(/(nude|naked|nsfw|explicit|sex|porn)/gi, 'person')
+      const imgUrl = 'https://image.pollinations.ai/prompt/' + encodeURIComponent(safePrompt + ', high quality, detailed') + '?width=1024&height=1024&nologo=true&seed=' + Date.now()
+      setMsgs(prev => [...prev,
+        { id: 'u_' + Date.now(), role: 'user', content: text.trim(), timestamp: Date.now() },
+        { id: 'a_' + Date.now(), role: 'assistant', content: '🎨 Generating: "' + safePrompt + '"...', timestamp: Date.now(),
+          card: { type: 'image', imageUrl: imgUrl, title: safePrompt } },
+      ])
+      setInput('')
+      return
+    }
+
     const isFirstMsg = msgs.filter(m => m.role === 'user').length === 0;
     const userMsg: Msg = { id: `u_${Date.now()}`, role: 'user', content: text.trim(), timestamp: Date.now() };
 
