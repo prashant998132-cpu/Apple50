@@ -1,28 +1,39 @@
 {
-  "name": "JARVIS AI Assistant",
+  "name": "JARVIS — Jons Bhai",
   "short_name": "JARVIS",
-  "description": "Your personal Iron Man AI — Hinglish mein",
+  "description": "Tony Stark ka AI — Hinglish mein, full power",
   "start_url": "/",
   "display": "standalone",
+  "display_override": ["window-controls-overlay", "standalone", "minimal-ui"],
   "background_color": "#060610",
   "theme_color": "#00d4ff",
-  "orientation": "portrait",
+  "orientation": "portrait-primary",
   "scope": "/",
-  "lang": "hi",
-  "categories": ["productivity", "utilities"],
+  "lang": "hi-IN",
+  "categories": ["productivity", "utilities", "personalization"],
+  "iarc_rating_id": "",
   "icons": [
     { "src": "/icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any maskable" },
     { "src": "/icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
   ],
-  "screenshots": [],
+  "screenshots": [
+    { "src": "/icons/icon-512.png", "sizes": "512x512", "type": "image/png", "form_factor": "narrow" }
+  ],
   "shortcuts": [
-    { "name": "Chat", "url": "/", "description": "Open JARVIS chat" },
-    { "name": "Voice", "url": "/voice", "description": "Voice mode" },
-    { "name": "Study", "url": "/study", "description": "NEET Study" }
+    { "name": "Chat", "short_name": "Chat", "url": "/", "description": "JARVIS se baat karo", "icons": [{"src":"/icons/icon-192.png","sizes":"192x192"}] },
+    { "name": "Voice Mode", "short_name": "Voice", "url": "/voice", "description": "Voice se bolo", "icons": [{"src":"/icons/icon-192.png","sizes":"192x192"}] },
+    { "name": "Study", "short_name": "Study", "url": "/study", "description": "NEET Study Hub", "icons": [{"src":"/icons/icon-192.png","sizes":"192x192"}] },
+    { "name": "Phone Control", "short_name": "Control", "url": "/macrodroid", "description": "Phone control karo", "icons": [{"src":"/icons/icon-192.png","sizes":"192x192"}] }
   ],
   "share_target": {
     "action": "/",
     "method": "GET",
-    "params": { "text": "q" }
-  }
+    "params": { "text": "q", "url": "url", "title": "title" }
+  },
+  "handle_links": "preferred",
+  "launch_handler": { "client_mode": "focus-existing" },
+  "protocol_handlers": [
+    { "protocol": "web+jarvis", "url": "/?q=%s" }
+  ],
+  "edge_side_panel": { "preferred_width": 400 }
 }
