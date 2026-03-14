@@ -470,8 +470,31 @@ export default function Home() {
       `You are JARVIS — "Jons Bhai". Hinglish mein baat karo. Short answers. Never "As an AI".`
     );
 
+    // Load user-saved API keys from localStorage → send to server
+    const clientKeys: Record<string, string> = {}
+    if (typeof window !== 'undefined') {
+      const keyNames = ['GROQ_API_KEY','GEMINI_API_KEY','CEREBRAS_API_KEY','TOGETHER_API_KEY','MISTRAL_API_KEY','COHERE_API_KEY','FIREWORKS_API_KEY','OPENROUTER_API_KEY','DEEPINFRA_API_KEY','HUGGINGFACE_API_KEY']
+      keyNames.forEach(k => { const v = localStorage.getItem(`jarvis_key_${k}`); if (v) clientKeys[k] = v })
+    }
+
     const history = msgs.slice(-8).map(m => ({ role: m.role, content: m.content }));
-    history.push({ role: 'user', content: text.trim() });
+
+    // Web search injection — for factual/search queries, fetch real data first
+    const searchTrigger = /latest|news|khabar|price|stock|weather|score|result|who is|kya hai|batao|search|find|current|today|2024|2025/.test(text.toLowerCase())
+    let searchContext = ''
+    if (searchTrigger && text.length > 5) {
+      try {
+        const sr = await fetch('/api/search?q=' + encodeURIComponent(text.slice(0, 100)), { signal: AbortSignal.timeout(4000) })
+        const sd = await sr.json()
+        if (sd.results?.length) {
+          const topResults = sd.results.slice(0, 3).map((r: any) => '[' + r.source + '] ' + r.title + ': ' + (r.text || '').slice(0, 200)).join(' | ')
+          searchContext = ' [SEARCH: ' + topResults + ']'
+        }
+      } catch {}
+    }
+
+    history.push({ role: 'user', content: text.trim() + searchContext });
+
     const eMode = mode === 'auto' ? autoRouteMode(text) : mode;
 
     const assistantId = `a_${Date.now()}`;
@@ -488,7 +511,7 @@ export default function Home() {
       const res = await fetch(endpoint, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ messages: history, mode: eMode, sessionId, location, systemPrompt }),
+        body: JSON.stringify({ messages: history, mode: eMode, sessionId, location, systemPrompt, clientKeys }),
         signal: controller.signal,
       });
 
