@@ -26,6 +26,7 @@ const NAV_ITEMS = [
 // Remove duplicate Agent entry
 const ITEMS = [
   { icon: '⚡', label: 'Agent',        route: '/agent' },
+  { icon: '📱', label: 'Phone Control', route: '/macrodroid' },
   { icon: '📷', label: 'Camera AI',    route: '/camera' },
   { icon: '🎙️', label: 'Voice',        route: '/voice' },
   { icon: '📡', label: 'Briefing',     route: '/briefing' },
@@ -45,7 +46,7 @@ const ITEMS = [
 ]
 
 const CATS: Record<string, string[]> = {
-  '🤖 AI':          ['/agent', '/voice', '/briefing', '/camera'],
+  '🤖 AI':          ['/agent', '/voice', '/briefing', '/camera', '/macrodroid'],
   '📖 Learn':       ['/study', '/notes', '/target'],
   '✅ Productivity':['/reminders', '/chat-history'],
   '🔧 Tools':       ['/tools', '/apps'],
