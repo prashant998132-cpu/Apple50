@@ -43,6 +43,7 @@ interface Msg {
   provider?: string;
   card?: any;
   timestamp: number;
+  widget?: string;
 }
 
 // ── Connected Apps config (with/without API key) ──────────────────────────
@@ -108,6 +109,8 @@ function MsgItem({ msg }: { msg: Msg; [key: string]: any }) {
             <ReactMarkdown remarkPlugins={[remarkGfm]}>{msg.content}</ReactMarkdown>
           </div>
           {msg.card && <RichCard card={msg.card} />}
+          {/* Inline Command Widget */}
+          {msg.widget && <CommandWidgetRenderer userText={msg.widget} aiText={msg.content} />}
           <button onClick={() => speakText(msg.content)}
             style={{ background: 'none', border: 'none', color: '#333', fontSize: 12, cursor: 'pointer', padding: '2px 0', marginTop: 2 }}>
             🔊
@@ -116,6 +119,16 @@ function MsgItem({ msg }: { msg: Msg; [key: string]: any }) {
       )}
     </div>
   );
+}
+
+function CommandWidgetRenderer({ userText, aiText }: { userText: string; aiText: string }) {
+  const [widget, setWidget] = React.useState<React.ReactNode>(null);
+  React.useEffect(() => {
+    import('@/components/chat/CommandWidgets').then(m => {
+      setWidget(m.detectWidget(aiText, userText));
+    }).catch(() => {});
+  }, [userText, aiText]);
+  return widget ? <>{widget}</> : null;
 }
 
 function PlusPopup({ open, mode, onMode, onClose }: { open: boolean; mode: Mode; onMode: (m: Mode) => void; onClose: () => void }) {
@@ -513,7 +526,8 @@ export default function Home() {
     const assistantId = `a_${Date.now()}`;
     let fullText = '', card: any = null, provider = '';
 
-    setMsgs(prev => [...prev, { id: assistantId, role: 'assistant', content: '', timestamp: Date.now() }]);
+    const _widget = text.trim();
+    setMsgs(prev => [...prev, { id: assistantId, role: 'assistant', content: '', timestamp: Date.now(), widget: _widget }]);
 
     abortRef.current?.abort();
     const controller = new AbortController();
