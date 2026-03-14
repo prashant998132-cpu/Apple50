@@ -91,15 +91,26 @@ export function ReminderWidget({ suggestion }: { suggestion?: string }) {
 export function PhoneWidget({ action, label }: { action: string; label: string }) {
   const [status, setStatus] = useState('')
   const run = async () => {
-    if (action === 'vibrate') { vibrate([200, 100, 200]); setStatus('📳 Vibrated!') }
-    else if (action === 'notify') {
+    if (action === 'vibrate') {
+      if (typeof navigator !== 'undefined') navigator.vibrate?.([200, 100, 200])
+      setStatus('📳 Vibrated!')
+    } else if (action === 'notify') {
       const ok = await showNotification('JARVIS', label)
       setStatus(ok ? '🔔 Sent!' : '❌ Permission nahi')
-    }
-    else if (action.startsWith('open:')) {
+    } else if (action.startsWith('open:')) {
       const app = action.slice(5)
-      const r = openApp(app)
-      setStatus(r.ok ? '✅ Opening...' : '❌ ' + r.msg)
+      const schemes: Record<string,string> = {
+        whatsapp: 'whatsapp://', phone: 'tel:', maps: 'geo:0,0',
+        camera: 'intent://camera#Intent;scheme=android-app;end',
+        youtube: 'vnd.youtube:', settings: 'intent://settings#Intent;scheme=android-app;end',
+      }
+      const url = schemes[app]
+      if (url && typeof window !== 'undefined') {
+        window.location.href = url
+        setStatus('✅ Opening ' + app + '...')
+      } else {
+        setStatus('❌ App not supported')
+      }
     }
   }
   return (
@@ -189,13 +200,25 @@ export function detectWidget(aiText: string, userText: string): React.ReactNode 
     return <WeatherWidget city={cityMatch?.[1] || 'Maihar'} />
   }
 
-  // WhatsApp open
-  if (/whatsapp.*khol|open.*whatsapp/.test(u))
-    return <PhoneWidget action="open:whatsapp" label="WhatsApp Kholo" />
+  // WhatsApp — message or open
+  if (/whatsapp|wa\s+pe|wa\s+mein/.test(u))
+    return <PhoneWidget action="open:whatsapp" label="WhatsApp Kholo — Paste Karo" />
+
+  // Phone call
+  if (/call kar|phone kar|ring kar/.test(u))
+    return <PhoneWidget action="open:phone" label="Phone Dialer Kholo" />
 
   // Vibrate
   if (/vibrate|buzz/.test(u))
     return <PhoneWidget action="vibrate" label="Vibrate Now" />
+
+  // Maps/navigate
+  if (/maps|navigate|kahan hai|location|rasta/.test(u))
+    return <PhoneWidget action="open:maps" label="Maps Kholo" />
+
+  // Camera
+  if (/camera.*khol|photo.*lo|selfie/.test(u))
+    return <PhoneWidget action="open:camera" label="Camera Kholo" />
 
   return null
 }
