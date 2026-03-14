@@ -175,9 +175,18 @@ export async function executePlan(
         case 'show_result':
           output = await runShowResult(prevOutput)
           break
-        case 'phone_action':
-          output = `Phone action: ${input} — browser mein available nahi, par log ho gaya.`
+        case 'phone_action': {
+          const actionType = typeof input === 'string' ? input : (input as any)?.action || 'notification'
+          const actionPayload = typeof input === 'object' ? (input as any)?.payload || {} : {}
+          try {
+            const { triggerMacro } = await import('@/lib/automation/bridge')
+            const result = await triggerMacro({ type: actionType as any, payload: actionPayload })
+            output = result.ok ? `✅ ${result.msg}` : `⚠️ ${result.msg}`
+          } catch {
+            output = `Phone action logged: ${actionType}`
+          }
           break
+        }
         default:
           output = `Tool "${step.tool}" not implemented yet`
           success = false
