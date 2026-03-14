@@ -6,6 +6,7 @@ import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { loadPuter, puterChat } from '@/lib/providers/puter';
 import { checkAndFireReminders } from '@/lib/reminders';
+import { checkBatteryAlert, showNotification, vibrate } from '@/lib/automation/bridge';
 import { saveMessage, createSession, getMessages, getSessions, updateSessionTitle, type ChatSession } from '@/lib/storage';
 import { speakText, stopSpeaking } from '@/lib/tts';
 import { ToastContainer, useToast } from '@/components/shared/Toast';
@@ -302,6 +303,18 @@ export default function Home() {
 
     // Reminders
     const ri = setInterval(() => {
+      // Battery alert check
+      checkBatteryAlert((msg) => {
+        setMsgs(prev => [...prev, {
+          id: 'battery_' + Date.now(), role: 'assistant', content: '⚡ ' + msg, timestamp: Date.now(),
+        }])
+      }).catch(() => {})
+
+      // Request notification permission silently
+      if (typeof window !== 'undefined' && 'Notification' in window && Notification.permission === 'default') {
+        Notification.requestPermission().catch(() => {})
+      }
+
       checkAndFireReminders(r => {
         showToast(`⏰ ${r.message}`, 'ok', '⏰');
         speakText(`Reminder: ${r.message}`);
