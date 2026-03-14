@@ -62,6 +62,10 @@ export async function buildSystemPrompt(): Promise<string> {
 
   let prompt = CORE_CHARACTER
   prompt += `\n\nCONTEXT:\n• Time: ${label}${hint ? ` (${hint})` : ''}\n• Location: ${location}`
+
+  // Device context (non-blocking)
+  const device = typeof window !== 'undefined' ? await getDeviceContext().catch(() => '') : ''
+  if (device) prompt += `\n• Device: ${device}`
   if (name) prompt += `\n• User ka naam: ${name} — naam se bulao kabhi kabhi`
   if (goal) prompt += `\n• Goal: ${goal} — relevant context mein use karo`
 
@@ -100,6 +104,31 @@ export function getTimeSuggestion(): string | null {
     22: 'So jao bhai. Neend important hai. 😴',
   }
   return suggestions[h] ?? null
+}
+
+
+// ── Device context (browser APIs) ─────────────────────────
+export async function getDeviceContext(): Promise<string> {
+  if (typeof window === 'undefined') return ''
+  const parts: string[] = []
+  try {
+    const nav = navigator as any
+    // Network
+    if (nav.connection) {
+      const conn = nav.connection
+      parts.push(`Network: ${conn.effectiveType || 'unknown'} (${conn.downlink || '?'}Mbps)`)
+    }
+    // Battery
+    if (nav.getBattery) {
+      const bat = await nav.getBattery()
+      parts.push(`Battery: ${Math.round(bat.level * 100)}%${bat.charging ? ' ⚡charging' : ''}`)
+    }
+    // Online status
+    parts.push(nav.onLine ? 'Online ✅' : 'Offline ⚠️')
+    // Screen
+    parts.push(`Screen: ${window.screen.width}×${window.screen.height}`)
+  } catch {}
+  return parts.join(' | ')
 }
 
 // ── Inside joke generator ──────────────────────────────────
