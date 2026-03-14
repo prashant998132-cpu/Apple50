@@ -64,7 +64,7 @@ export default function SettingsPage() {
   ]
 
   return (
-    <div style={{ background:'#060610', minHeight:'100vh', display:'flex', flexDirection:'column' }}>
+    <div style={{ background:'#060610', minHeight:'100dvh', display:'flex', flexDirection:'column', overflow:'hidden', height:'100dvh' }}>
       <div style={{ display:'flex', alignItems:'center', gap:10, padding:'12px 14px', borderBottom:'1px solid #1e1e2e' }}>
         <button onClick={()=>router.push('/')} style={{ background:'none', border:'none', color:'#666', fontSize:20, cursor:'pointer' }}>←</button>
         <div style={{ color:'#00d4ff', fontWeight:700, fontSize:16 }}>⚙️ Settings</div>
