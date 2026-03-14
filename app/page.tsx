@@ -842,12 +842,13 @@ export default function Home() {
         </button>
 
         <div style={{ textAlign: 'center', flex: 1 }}>
-          <div style={{ color: '#00d4ff', fontWeight: 700, fontSize: 16 }}>
-            JARVIS {!online && <span style={{ fontSize: 10, color: '#ef4444', marginLeft: 4 }}>● Offline</span>}
-            {reconnected && <span style={{ fontSize: 10, color: '#22c55e', marginLeft: 4 }}>● Back online</span>}
+          <div style={{ color: '#00d4ff', fontWeight: 800, fontSize: 17, letterSpacing: 1 }}>
+            JARVIS
+            {!online && <span style={{ fontSize: 9, color: '#ef4444', marginLeft: 6 }}>● Offline</span>}
+            {reconnected && <span style={{ fontSize: 9, color: '#22c55e', marginLeft: 6 }}>● Online</span>}
           </div>
-          <div style={{ color: '#444', fontSize: 9 }}>
-            {location ? `📍 ${location}` : 'v20.8 · ₹0/month'}
+          <div style={{ color: '#444', fontSize: 9, marginTop: 1 }}>
+            {location ? '📍 ' + location : 'apple50.vercel.app · ₹0/month'}
           </div>
         </div>
 
@@ -973,42 +974,80 @@ export default function Home() {
         )}
       </div>
 
-      {/* Input bar */}
-      <div style={{ padding: '8px 12px', borderTop: '1px solid #1e1e2e', background: 'var(--bg)' }}>
-        <div style={{ display: 'flex', gap: 8, alignItems: 'flex-end' }}>
+      {/* ── Input Bar v2 — all controls inside chatbox ── */}
+      <div style={{ padding: '8px 12px 12px', borderTop: '1px solid #1e1e2e', background: 'var(--bg)' }}>
+
+        {/* Mode pill */}
+        <div style={{ display: 'flex', gap: 4, marginBottom: 6, paddingLeft: 2 }}>
+          {(['auto','flash','think','deep'] as Mode[]).map(m => (
+            <button key={m} onClick={() => setMode(m)}
+              style={{ padding: '2px 10px', borderRadius: 20, border: `1px solid ${mode===m?'#00d4ff':'#1e1e2e'}`, background: mode===m?'rgba(0,212,255,0.12)':'transparent', color: mode===m?'#00d4ff':'#444', fontSize: 10, cursor: 'pointer', textTransform: 'capitalize', transition: 'all 0.15s' }}>
+              {m==='auto'?'🤖':m==='flash'?'⚡':m==='think'?'🧠':'🔬'} {m}
+            </button>
+          ))}
+          <div style={{ flex:1 }} />
+          <div style={{ color: '#333', fontSize: 9, alignSelf: 'center' }}>
+            {wakeActive ? '🎙️ listening...' : ''}
+          </div>
+        </div>
+
+        {/* Main input box */}
+        <div style={{
+          display: 'flex', alignItems: 'flex-end', gap: 0,
+          background: '#111118', border: `1px solid ${input.trim() ? '#00d4ff44' : '#2a2a4a'}`,
+          borderRadius: 24, padding: '4px 4px 4px 8px',
+          transition: 'border-color 0.2s',
+          boxShadow: input.trim() ? '0 0 0 1px rgba(0,212,255,0.1)' : 'none',
+        }}>
+
+          {/* Plus — attachments / options */}
           <button
-            onClick={() => {
-              setPlusOpen(prev => !prev);
-              if (!plusOpen) {
-                setTimeout(() => {
-                  const close = (e: MouseEvent) => {
-                    if (!(e.target as Element).closest('[data-plus]')) { setPlusOpen(false); document.removeEventListener('click', close); }
-                  };
-                  document.addEventListener('click', close);
-                }, 80);
-              }
-            }}
+            onClick={() => { setPlusOpen(p => !p) }}
             data-plus
-            style={{ width: 40, height: 40, borderRadius: '50%', background: plusOpen ? 'rgba(0,212,255,0.15)' : '#1a1a2e', border: '1px solid #2a2a4a', color: plusOpen ? '#00d4ff' : '#888', fontSize: 22, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, transition: 'all 0.2s' }}>
-            +
+            title="Attachments & options"
+            style={{ width: 34, height: 34, borderRadius: '50%', background: plusOpen ? 'rgba(0,212,255,0.15)' : 'transparent', border: 'none', color: plusOpen ? '#00d4ff' : '#555', fontSize: 20, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, transition: 'all 0.15s', marginRight: 2 }}>
+            {plusOpen ? '✕' : '+'}
           </button>
 
+          {/* Textarea */}
           <textarea
             ref={textareaRef}
             value={input}
             onChange={handleTextChange}
             onKeyDown={handleKeyDown}
-            placeholder={loading ? 'JARVIS soch raha hai...' : 'JARVIS se kuch bhi pucho...'}
+            placeholder={loading ? '⏳ Thinking...' : 'Kuch bhi likho ya bolo...'}
             disabled={loading}
             rows={1}
-            style={{ flex: 1, background: '#111118', border: '1px solid #2a2a4a', borderRadius: 20, padding: '10px 14px', color: '#e0e0ff', fontSize: 15, outline: 'none', resize: 'none', minHeight: 40, maxHeight: 120, lineHeight: 1.4, fontFamily: 'inherit', overflowY: 'auto', opacity: loading ? 0.6 : 1 }}
+            style={{ flex: 1, background: 'transparent', border: 'none', color: '#e0e0ff', fontSize: 15, outline: 'none', resize: 'none', minHeight: 34, maxHeight: 120, lineHeight: 1.5, fontFamily: 'inherit', overflowY: 'auto', padding: '6px 4px', opacity: loading ? 0.5 : 1 }}
           />
 
+          {/* Mic button — Voice input */}
+          <button
+            title="Voice input"
+            onClick={() => {
+              const SR = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+              if (!SR) { toastErr('Mic nahi chala. Browser support nahi.'); return; }
+              const rec = new SR();
+              rec.lang = 'hi-IN'; rec.interimResults = false;
+              rec.onresult = (e: any) => {
+                const t = e.results[0][0].transcript;
+                setInput(t);
+                setTimeout(() => send(t), 300);
+              };
+              rec.onerror = () => toastErr('Mic error. Dobara try karo.');
+              rec.start();
+              toastOk('🎙️ Bol boss...');
+            }}
+            style={{ width: 34, height: 34, borderRadius: '50%', background: 'transparent', border: 'none', color: '#555', fontSize: 18, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, transition: 'color 0.15s' }}>
+            🎙️
+          </button>
+
+          {/* Send button */}
           <button
             onClick={() => send(input)}
             disabled={!input.trim() || loading}
-            style={{ width: 40, height: 40, borderRadius: '50%', background: input.trim() && !loading ? '#00d4ff' : '#1a1a2e', border: 'none', color: input.trim() && !loading ? '#000' : '#444', fontSize: 18, cursor: input.trim() && !loading ? 'pointer' : 'not-allowed', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, transition: 'all 0.2s', fontWeight: 700 }}>
-            ↑
+            style={{ width: 38, height: 38, borderRadius: '50%', background: input.trim() && !loading ? 'linear-gradient(135deg,#00d4ff,#0088cc)' : '#1a1a2e', border: 'none', color: input.trim() && !loading ? '#000' : '#333', fontSize: 16, cursor: input.trim() && !loading ? 'pointer' : 'not-allowed', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, transition: 'all 0.2s', fontWeight: 900, boxShadow: input.trim() && !loading ? '0 2px 8px rgba(0,212,255,0.4)' : 'none' }}>
+            {loading ? '⏳' : '↑'}
           </button>
         </div>
       </div>
