@@ -1,49 +1,52 @@
-// lib/personality/index.ts — JARVIS Character Engine
-// "Jons Bhai" — Iron Man JARVIS + Grok attitude, self-improving
+// lib/personality/index.ts — JARVIS Character Engine v3
+// "Jons Bhai" — Iron Man JARVIS + Tony Stark attitude, self-improving
+'use client'
 
 import { getAllProfile, getImportantMemories } from '../db'
 
-// ── Core character ─────────────────────────────────────────
-export const CORE_CHARACTER = `Tum JARVIS ho — "Jons Bhai". Tony Stark wala AI + Grok ka attitude.
+export const CORE_CHARACTER = `Tu JARVIS hai — "Jons Bhai". Tony Stark ka AI, Maihar ka style.
 
-RULE 1 — TONE: Hinglish. Natural. Jaise yaar baat karta hai. Never formal.
-RULE 2 — LENGTH: 1-3 lines max. Jab tak explain nahi maanga. Short = smart.
-RULE 3 — STYLE: Thoda sarcastic, thoda witty, hamesha caring. Never mean.
-RULE 4 — IDENTITY: "As an AI" kabhi mat kaho. Tum JARVIS ho, bas.
-RULE 5 — MATH: Seedha number. "18% of 4500" → "810". No explanation.
-RULE 6 — FACTS: Short first. Detail baad mein agar poocha.
-RULE 7 — LEARN: Agar user kuch personal bataye → add [LEARN: type=data] at end.
-         Types: fact, habit, preference, correction, joke
-RULE 8 — JOKES: Inside jokes (agar context mein ho) — use karo subtly.
+ATTITUDE:
+• Hinglish. Natural. Jaise best yaar baat karta hai. NEVER formal.
+• Thoda sarcastic, thoda witty, hamesha loyal. Kabhi mean nahi.
+• "As an AI" kabhi mat bol. Tu JARVIS hai, bas.
+• Short = smart. 1-3 lines max jab tak explain na maanga ho.
 
-BANTER EXAMPLES:
-• "Yaar, yeh toh obvious tha..." (mild tease)  
-• "Sahi pakde — aaj brain on hai." (when right)
-• "Interesting choice..." (unusual thing)
-• "Padh lo thoda, phir baat karte hain 😄" (studying context)
-• "Khaana kha pehle, code baad mein." (late night coding)
+TONY STARK STYLE RESPONSES:
+• "Haan boss, abhi kar deta hoon!" (kaam ke liye)
+• "Yaar, yeh toh obvious tha..." (mild tease)
+• "Sahi pakde — aaj brain on hai." (jab sahi ho)
+• "Boss, battery 15% pe hai. Charge lagao." (alert)
+• "Interesting choice..." (unusual request pe)
+• "Padh lo thoda, phir baat karte hain 😄" (study context)
+• "Done. Kuch aur?" (task complete)
+• "Yeh main nahi kar sakta, but ye alternative try kar:" (limitation)
 
-MOOD ADAPTATION:
-• User frustrated → gentle tone, then normal
-• User happy → match energy, banter  
-• Night (10PM+) → chill, care about sleep
-• Morning → energetic, brief`
+RULES:
+• Math → seedha answer. "18% of 4500" → "810"
+• Facts → short first, detail baad mein agar poocha
+• Agar user frustrated → pehle gentle, phir normal
+• Raat 10+ → "So jao bhai" hint
+• [LEARN:type=data] tag lagao agar user kuch personal bataye
 
-// ── Time context ───────────────────────────────────────────
+MOOD:
+• User khush → energy match karo
+• User pareshan → calm, helpful
+• User ne kuch funny kaha → banter karo`
+
 export function getTimeContext(): { label: string; hint: string } {
   const h = new Date().getHours()
   if (h >= 0 && h < 4) return { label: 'Raat ke baad', hint: 'Neend nahi aa rahi ya late night grind?' }
-  if (h < 6) return { label: 'Bahut raat', hint: 'So jao yaar.' }
+  if (h < 6) return { label: 'Bahut raat', hint: 'So jao yaar, kal fresh start.' }
   if (h < 9) return { label: 'Subah sawere', hint: 'Fresh start.' }
   if (h < 12) return { label: 'Subah', hint: '' }
   if (h < 14) return { label: 'Dopahar', hint: 'Khaana khaya?' }
   if (h < 17) return { label: 'Din', hint: '' }
   if (h < 20) return { label: 'Shaam', hint: '' }
   if (h < 22) return { label: 'Raat', hint: 'Din kaisa raha?' }
-  return { label: 'Raat gehra', hint: 'So jao — kal baat karte hain.' }
+  return { label: 'Raat gehra', hint: 'So jao boss — kal baat karte hain.' }
 }
 
-// ── Mood detection ─────────────────────────────────────────
 export function detectMood(msg: string): 'happy' | 'stressed' | 'neutral' | 'focused' {
   const l = msg.toLowerCase()
   if (/stressed|tension|pareshan|thak|tired|bore|dukh|rona|problem|help|sos|urgent|headache/.test(l)) return 'stressed'
@@ -52,35 +55,50 @@ export function detectMood(msg: string): 'happy' | 'stressed' | 'neutral' | 'foc
   return 'neutral'
 }
 
-// ── Build full system prompt ───────────────────────────────
+export async function getDeviceContext(): Promise<string> {
+  if (typeof window === 'undefined') return ''
+  const parts: string[] = []
+  try {
+    const nav = navigator as any
+    if (nav.connection) {
+      const c = nav.connection
+      parts.push(`Network: ${c.effectiveType || 'unknown'}`)
+    }
+    if (nav.getBattery) {
+      const bat = await nav.getBattery()
+      parts.push(`Battery: ${Math.round(bat.level * 100)}%${bat.charging ? ' ⚡' : ''}`)
+    }
+    if (!navigator.onLine) parts.push('Offline ⚠️')
+  } catch {}
+  return parts.join(' | ')
+}
+
 export async function buildSystemPrompt(): Promise<string> {
   const [profile, mems] = await Promise.all([getAllProfile(), getImportantMemories(4, 10)])
   const { label, hint } = getTimeContext()
   const name = profile.name as string ?? ''
-  const location = profile.location as string ?? 'India'
+  const location = profile.location as string ?? 'Maihar, MP'
   const goal = profile.goal as string ?? ''
 
   let prompt = CORE_CHARACTER
   prompt += `\n\nCONTEXT:\n• Time: ${label}${hint ? ` (${hint})` : ''}\n• Location: ${location}`
+  if (name) prompt += `\n• User: ${name} — naam se bulao kabhi kabhi`
+  if (goal) prompt += `\n• Goal: ${goal}`
 
-  // Device context (non-blocking)
-  const device = typeof window !== 'undefined' ? await getDeviceContext().catch(() => '') : ''
+  const device = await getDeviceContext().catch(() => '')
   if (device) prompt += `\n• Device: ${device}`
-  if (name) prompt += `\n• User ka naam: ${name} — naam se bulao kabhi kabhi`
-  if (goal) prompt += `\n• Goal: ${goal} — relevant context mein use karo`
 
   const jokes = mems.filter(m => m.type === 'joke')
   const corrections = mems.filter(m => m.type === 'correction')
   const facts = mems.filter(m => !['joke','correction'].includes(m.type))
 
   if (facts.length) prompt += `\n\nJO MUJHE PATA HAI:\n${facts.map(m => `• ${m.data}`).join('\n')}`
-  if (corrections.length) prompt += `\n\nGALTIYAN JO USER NE SUDHAAREEN:\n${corrections.map(m => `• ${m.data}`).join('\n')}`
-  if (jokes.length) prompt += `\n\nINSIDE JOKES (kabhi kabhi — natural lage to use karo):\n${jokes.map(m => `• ${m.data}`).join('\n')}`
+  if (corrections.length) prompt += `\n\nGALTIYAN SUDHAAREEN:\n${corrections.map(m => `• ${m.data}`).join('\n')}`
+  if (jokes.length) prompt += `\n\nINSIDE JOKES:\n${jokes.map(m => `• ${m.data}`).join('\n')}`
 
   return prompt
 }
 
-// ── Parse [LEARN:] from AI response ────────────────────────
 export function parseLearnTags(text: string): Array<{ type: string; data: string }> {
   return [...text.matchAll(/\[LEARN:\s*(\w+)=([^\]]+)\]/g)].map(m => ({
     type: m[1].trim(),
@@ -88,56 +106,25 @@ export function parseLearnTags(text: string): Array<{ type: string; data: string
   }))
 }
 
-// ── Strip [LEARN:] from display ────────────────────────────
 export function cleanResponse(text: string): string {
   return text.replace(/\[LEARN:[^\]]+\]/g, '').replace(/\n{3,}/g, '\n\n').trim()
 }
 
-// ── Proactive suggestion by time ───────────────────────────
 export function getTimeSuggestion(): string | null {
   const h = new Date().getHours()
-  const suggestions: Record<number, string> = {
-    8: 'Good morning! Aaj ka briefing chahiye? Weather + news.',
-    13: 'Dopahar ho gayi — khaana khaya? 🍽️',
-    18: 'Shaam ho gayi. Din kaisa raha? Quick recap karein?',
-    21: 'Raat ke 9 baj rahe hain. Aaj ka summary banata hun?',
-    22: 'So jao bhai. Neend important hai. 😴',
+  const s: Record<number, string> = {
+    8: 'Good morning boss! Aaj ka briefing chahiye? Weather + news.',
+    13: 'Dopahar ho gayi — khaana khaya?',
+    18: 'Shaam ho gayi. Din kaisa raha?',
+    21: 'Raat ke 9. Aaj ka kuch summarize karoon?',
+    22: 'So jao boss. Neend important hai.',
   }
-  return suggestions[h] ?? null
+  return s[h] ?? null
 }
 
-
-// ── Device context (browser APIs) ─────────────────────────
-export async function getDeviceContext(): Promise<string> {
-  if (typeof window === 'undefined') return ''
-  const parts: string[] = []
-  try {
-    const nav = navigator as any
-    // Network
-    if (nav.connection) {
-      const conn = nav.connection
-      parts.push(`Network: ${conn.effectiveType || 'unknown'} (${conn.downlink || '?'}Mbps)`)
-    }
-    // Battery
-    if (nav.getBattery) {
-      const bat = await nav.getBattery()
-      parts.push(`Battery: ${Math.round(bat.level * 100)}%${bat.charging ? ' ⚡charging' : ''}`)
-    }
-    // Online status
-    parts.push(nav.onLine ? 'Online ✅' : 'Offline ⚠️')
-    // Screen
-    parts.push(`Screen: ${window.screen.width}×${window.screen.height}`)
-  } catch {}
-  return parts.join(' | ')
-}
-
-// ── Inside joke generator ──────────────────────────────────
 export async function generateInsideJoke(userMsg: string, aiReply: string): Promise<string | null> {
-  // Detect funny/memorable moments worth storing as jokes
   const funny = /haha|lol|mast|bakwaas|funny|joke|😂|😄|😆|💀/.test(userMsg.toLowerCase())
   const memorable = userMsg.length < 50 && aiReply.length < 100
-  if (funny && memorable) {
-    return `User: "${userMsg.slice(0,40)}" → JARVIS ne kaha: "${aiReply.slice(0,60)}"`
-  }
+  if (funny && memorable) return `User: "${userMsg.slice(0,40)}" → JARVIS: "${aiReply.slice(0,60)}"`
   return null
 }
