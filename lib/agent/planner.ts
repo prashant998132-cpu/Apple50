@@ -104,6 +104,38 @@ const PLAN_TEMPLATES: Array<{
     ]
   },
   {
+    match: [/weather.*reminder|barish.*umbrella|rain.*remind|temperature.*alarm/i],
+    plan: (input) => [
+      { tool: 'web_search', input: { query: 'today weather forecast ' + input }, status: 'pending' },
+      { tool: 'ai_text', input: { prompt: 'Weather data dekho. Agar barish/rain expected hai toh reminder suggest karo with MacroDroid action. Otherwise just weather batao.' }, status: 'pending' },
+      { tool: 'phone_action', input: { action: 'notification', payload: { title: 'JARVIS Weather Alert', body: '{{prev_output}}' } }, status: 'pending' },
+      { tool: 'show_result', input: { message: '{{prev_output}}' }, status: 'pending' },
+    ]
+  },
+  {
+    match: [/battery.*low.*remind|charge.*remind|low battery/i],
+    plan: () => [
+      { tool: 'phone_action', input: { action: 'notification', payload: { title: '⚡ JARVIS', body: 'Boss, battery check karo!' } }, status: 'pending' },
+      { tool: 'show_result', input: { message: 'Battery reminder set! Notification bhej di.' }, status: 'pending' },
+    ]
+  },
+  {
+    match: [/whatsapp.*bhej|message.*send.*whatsapp|send.*whatsapp/i],
+    plan: (input) => [
+      { tool: 'ai_text', input: { prompt: 'WhatsApp message draft karo for: ' + input + '. Short, natural Hinglish. Bas message text, koi explanation nahi.' }, status: 'pending' },
+      { tool: 'copy_text', input: { text: '{{prev_output}}' }, status: 'pending' },
+      { tool: 'open_app', input: { app: 'whatsapp' }, status: 'pending' },
+      { tool: 'show_result', input: { message: 'Message copy ho gaya, WhatsApp khul raha hai. Paste karke bhej do!' }, status: 'pending' },
+    ]
+  },
+  {
+    match: [/maps.*open|navigate|directions|kaise jaaun|rasta batao/i],
+    plan: (input) => [
+      { tool: 'open_app', input: { app: 'maps', extra: input }, status: 'pending' },
+      { tool: 'show_result', input: { message: 'Maps khul raha hai! Route dekho.' }, status: 'pending' },
+    ]
+  },
+  {
     match: [/news|khabar|aaj ki news|latest.*news|news.*summarize/i],
     plan: (input) => [
       { tool: 'web_search', input: { query: input.replace(/bata(o)?|dedo|lao/gi, '').trim() || 'today latest news India' }, status: 'pending' },
