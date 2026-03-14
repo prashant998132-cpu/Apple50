@@ -26,6 +26,7 @@ const NAV_ITEMS = [
 // Remove duplicate Agent entry
 const ITEMS = [
   { icon: '⚡', label: 'Agent',        route: '/agent' },
+  { icon: '📷', label: 'Camera AI',    route: '/camera' },
   { icon: '🎙️', label: 'Voice',        route: '/voice' },
   { icon: '📡', label: 'Briefing',     route: '/briefing' },
   { icon: '📚', label: 'Study',        route: '/study' },
@@ -44,7 +45,7 @@ const ITEMS = [
 ]
 
 const CATS: Record<string, string[]> = {
-  '🤖 AI':          ['/agent', '/voice', '/briefing'],
+  '🤖 AI':          ['/agent', '/voice', '/briefing', '/camera'],
   '📖 Learn':       ['/study', '/notes', '/target'],
   '✅ Productivity':['/reminders', '/chat-history'],
   '🔧 Tools':       ['/tools', '/apps'],
