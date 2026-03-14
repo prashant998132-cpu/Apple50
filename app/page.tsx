@@ -679,8 +679,9 @@ export default function Home() {
                 toastInfo('Wake word off');
               } else {
                 const ok = startWakeWord(() => {
-                  // Wake word detected — open mic
-                  toastOk('🎙️ JARVIS sun raha hai...');
+                  // Wake word detected — show toast + vibrate + focus
+                  toastOk('🎙️ Haan boss, bol!');
+                  if (typeof navigator !== 'undefined') navigator.vibrate?.(100);
                   setInput('');
                   textareaRef.current?.focus();
                 });
