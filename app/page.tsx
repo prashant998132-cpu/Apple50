@@ -442,37 +442,189 @@ export default function Home() {
     if (!text.trim() || loading) return;
     setPlusOpen(false);
 
-    // 0. Phone automation check (MacroDroid bridge)
+    // ── JARVIS Chat Command Center ─────────────────────────────
+    const t = text.trim().toLowerCase();
+    const reply = (msg: string) => {
+      setMsgs(prev => [...prev,
+        { id: 'u_' + Date.now(), role: 'user', content: text.trim(), timestamp: Date.now() },
+        { id: 'a_' + Date.now(), role: 'assistant', content: msg, timestamp: Date.now() },
+      ]);
+      setInput('');
+    };
+
+    // ── GOALS ──────────────────────────────────────────────────
+    if (/goals?\s*(dikhao|show|list|kya hai|batao|dekho)/i.test(text) || t === 'goals' || t === 'goal') {
+      try {
+        const { getAllGoals } = await import('@/lib/db');
+        const goals = await getAllGoals();
+        const active = goals.filter((g: any) => !g.completed);
+        const done = goals.filter((g: any) => g.completed);
+        if (goals.length === 0) { reply('Koi goal nahi abhi. "Goal add karo: [kuch bhi]" bolo.'); return; }
+        const txt = '🎯 **Tere Goals:**\n\n**Active (' + active.length + '):**\n' +
+          active.map((g: any) => '• ' + g.title).join('\n') +
+          (done.length ? '\n\n**Done (' + done.length + '):**\n' + done.slice(0,3).map((g: any) => '✅ ' + g.title).join('\n') : '');
+        reply(txt); return;
+      } catch { reply('Goals load nahi ho sake.'); return; }
+    }
+    if (/^goals?\s+add[:\s]+(.+)/i.test(text) || /^add\s+goal[:\s]+(.+)/i.test(text) || /^goal[:\s]+(.+)/i.test(text)) {
+      const m = text.match(/(?:goals?\s+add|add\s+goal|goal)[:\s]+(.+)/i);
+      if (m?.[1]) {
+        try {
+          const { addGoal } = await import('@/lib/db');
+          await addGoal({ title: m[1].trim(), completed: false, priority: 'medium', progress: 0, timestamp: Date.now() });
+          reply('✅ Goal add ho gaya: **' + m[1].trim() + '**'); return;
+        } catch { reply('Goal save nahi ho saka.'); return; }
+      }
+    }
+
+    // ── REMINDERS ──────────────────────────────────────────────
+    if (/reminders?\s*(dikhao|show|list|kya hai|batao)/i.test(text) || t === 'reminders') {
+      try {
+        const { getReminders } = await import('@/lib/reminders');
+        const rems = getReminders().filter((r: any) => !r.fired && r.fireAt > Date.now()).sort((a: any, b: any) => a.fireAt - b.fireAt);
+        if (rems.length === 0) { reply('Koi upcoming reminder nahi. "Remind me: [kya] at [time]" bolo.'); return; }
+        const txt = '⏰ **Upcoming Reminders:**\n' + rems.map((r: any) => '• ' + r.message + ' — ' + new Date(r.fireAt).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })).join('\n');
+        reply(txt); return;
+      } catch { reply('Reminders load nahi hue.'); return; }
+    }
+    const remMatch = text.match(/(?:remind|reminder|yaad dilao)[:\s]+(.+?)\s+(?:at|@|baje|ko)\s+(\d{1,2}(?::\d{2})?(?:\s*[ap]m)?)/i);
+    if (remMatch) {
+      try {
+        const { addReminder } = await import('@/lib/reminders');
+        const [, what, when] = remMatch;
+        const d = new Date(); const parts = when.match(/(\d{1,2})(?::(\d{2}))?/);
+        if (parts) { d.setHours(parseInt(parts[1]), parseInt(parts[2] || '0'), 0, 0); if (d < new Date()) d.setDate(d.getDate() + 1); }
+        addReminder(what.trim(), d.getTime());
+        reply('⏰ Reminder set: **' + what.trim() + '** at **' + d.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' }) + '**'); return;
+      } catch { reply('Reminder set nahi ho saka.'); return; }
+    }
+
+    // ── NOTES ──────────────────────────────────────────────────
+    if (/^(?:note|save note|note karo|likh lo)[:\s]+(.+)/i.test(text)) {
+      const m = text.match(/(?:note|save note|note karo|likh lo)[:\s]+(.+)/i);
+      if (m?.[1]) {
+        try {
+          const { setSetting, getSetting } = await import('@/lib/db');
+          const notes = await getSetting('jarvis_quick_notes').catch(() => []) as any[];
+          const updated = [{ id: Date.now(), text: m[1].trim(), ts: Date.now() }, ...(Array.isArray(notes) ? notes : [])].slice(0, 50);
+          await setSetting('jarvis_quick_notes', updated);
+          reply('📝 Note save ho gaya: **' + m[1].trim() + '**'); return;
+        } catch { reply('Note save nahi ho saka.'); return; }
+      }
+    }
+    if (/notes?\s*(dikhao|show|list|kya hai)/i.test(text) || t === 'notes') {
+      try {
+        const { getSetting } = await import('@/lib/db');
+        const notes = await getSetting('jarvis_quick_notes').catch(() => []) as any[];
+        if (!Array.isArray(notes) || notes.length === 0) { reply('Koi notes nahi. "Note: [kuch bhi]" bolo.'); return; }
+        reply('📝 **Recent Notes:**\n' + notes.slice(0, 5).map((n: any) => '• ' + n.text).join('\n')); return;
+      } catch { reply('Notes load nahi hue.'); return; }
+    }
+
+    // ── BATTERY ────────────────────────────────────────────────
+    if (/battery|charge|charging/i.test(t) && /kitna|check|status|level|hai|kya/i.test(t)) {
+      try {
+        const { getBatteryInfo } = await import('@/lib/automation/bridge');
+        const bat = await getBatteryInfo();
+        if (!bat) { reply('Battery info available nahi (browser support nahi).'); return; }
+        const emoji = bat.level > 60 ? '🟢' : bat.level > 30 ? '🟡' : '🔴';
+        reply(emoji + ' Battery: **' + bat.level + '%**' + (bat.charging ? ' ⚡ Charging' : ' (Not charging)') + (bat.level < 20 ? '\n⚠️ Charge lagao jaldi boss!' : '')); return;
+      } catch { reply('Battery check nahi ho saka.'); return; }
+    }
+
+    // ── WEATHER ────────────────────────────────────────────────
+    if (/weather|mausam|garmi|sardi|barish|temperature/i.test(t)) {
+      const cityM = text.match(/(?:of|in|at|ka|mein|for)\s+(\w+)/i);
+      const city = cityM?.[1] || location || 'Maihar';
+      try {
+        const res = await fetch('https://wttr.in/' + encodeURIComponent(city) + '?format=j1', { signal: AbortSignal.timeout(5000) });
+        const d = await res.json();
+        const c = d.current_condition?.[0];
+        reply('🌤️ **' + city + '** — ' + c?.temp_C + '°C\n' + c?.weatherDesc?.[0]?.value + '\nHumidity: ' + c?.humidity + '% · Wind: ' + c?.windspeedKmph + ' km/h'); return;
+      } catch { reply('Weather data nahi mila. Internet check karo.'); return; }
+    }
+
+    // ── TIMER ──────────────────────────────────────────────────
+    const timerM = text.match(/(\d+)\s*(?:minute|min|second|sec)\s*(?:ka\s*)?timer/i);
+    if (timerM) {
+      const n = parseInt(timerM[1]);
+      const unit = /sec/i.test(timerM[0]) ? 'second' : 'minute';
+      const ms = unit === 'second' ? n * 1000 : n * 60000;
+      setTimeout(() => {
+        if (typeof navigator !== 'undefined') navigator.vibrate?.([500, 200, 500]);
+        import('@/lib/automation/bridge').then(m => m.showNotification('⏱️ Timer Done!', n + ' ' + unit + ' ho gaye boss!'));
+      }, ms);
+      reply('⏱️ **' + n + ' ' + unit + ' timer** set ho gaya! Baj jaayega.'); return;
+    }
+
+    // ── APPS OPEN ──────────────────────────────────────────────
+    const appMap: Record<string, string> = {
+      whatsapp: 'whatsapp://', wa: 'whatsapp://',
+      youtube: 'vnd.youtube:', yt: 'vnd.youtube:',
+      camera: 'intent://camera#Intent;scheme=android-app;end',
+      maps: 'geo:0,0', map: 'geo:0,0',
+      phone: 'tel:', call: 'tel:',
+      settings: 'intent://settings#Intent;scheme=android-app;end',
+      instagram: 'instagram://', insta: 'instagram://',
+      spotify: 'spotify://',
+      telegram: 'tg://', tele: 'tg://',
+      calculator: 'intent://calculator#Intent;scheme=android-app;end',
+    };
+    for (const [app, scheme] of Object.entries(appMap)) {
+      if (new RegExp('\\b' + app + '\\b.*(?:khol|open|launch|chalu|start)', 'i').test(text) ||
+          new RegExp('(?:khol|open|launch).*\\b' + app + '\\b', 'i').test(text)) {
+        if (typeof window !== 'undefined') window.location.href = scheme;
+        reply('✅ **' + app.charAt(0).toUpperCase() + app.slice(1) + '** khul raha hai...'); return;
+      }
+    }
+
+    // ── SYSTEM INFO ────────────────────────────────────────────
+    if (/system|status|info|sab kuch batao/i.test(t) && /batao|dikhao|check|kya hai/i.test(t)) {
+      try {
+        const { getAllGoals, getStreak, getTodayChats } = await import('@/lib/db');
+        const { getReminders } = await import('@/lib/reminders');
+        const { getBatteryInfo } = await import('@/lib/automation/bridge');
+        const [goals, streak, todayChats, bat] = await Promise.all([getAllGoals(), Promise.resolve(getStreak()), getTodayChats(), getBatteryInfo()]);
+        const rems = getReminders().filter((r: any) => !r.fired && r.fireAt > Date.now());
+        reply(
+          '🤖 **JARVIS Status**\n\n' +
+          '⚡ Battery: ' + (bat ? bat.level + '%' + (bat.charging ? ' charging' : '') : 'N/A') + '\n' +
+          '🎯 Goals: ' + goals.filter((g: any) => !g.completed).length + ' active\n' +
+          '⏰ Reminders: ' + rems.length + ' upcoming\n' +
+          '💬 Chats today: ' + todayChats.length + '\n' +
+          '🔥 Streak: ' + streak.current + ' days\n' +
+          '📡 Network: ' + (navigator.onLine ? 'Online ✅' : 'Offline ⚠️')
+        ); return;
+      } catch { /* fall through */ }
+    }
+
+    // ── PAGE NAVIGATION ────────────────────────────────────────
+    const navMap: [RegExp, string, string][] = [
+      [/settings.*jao|settings.*kholo|open.*settings/i, '/settings', 'Settings'],
+      [/study.*jao|study.*kholo|neet.*page/i, '/study', 'Study Hub'],
+      [/voice.*jao|voice.*kholo|voice.*mode/i, '/voice', 'Voice Mode'],
+      [/briefing.*jao|briefing.*dikhao|news.*page/i, '/briefing', 'Briefing'],
+      [/tools?.*jao|tools?.*kholo|calculator.*page/i, '/tools', 'Tools'],
+      [/notes?.*jao|notes?.*page|notes?.*kholo/i, '/notes', 'Notes'],
+      [/reminders?.*page|reminder.*jao/i, '/reminders', 'Reminders'],
+      [/goals?.*page|target.*jao/i, '/target', 'Goals'],
+      [/media.*jao|media.*page/i, '/media', 'Media Hub'],
+      [/camera.*jao|camera.*page/i, '/camera', 'Camera AI'],
+      [/india.*jao|india.*hub/i, '/india', 'India Hub'],
+      [/system.*page|system.*jao/i, '/system', 'System'],
+    ];
+    for (const [regex, path, label] of navMap) {
+      if (regex.test(text)) {
+        router.push(path);
+        reply('👉 **' + label + '** pe ja raha hun...'); return;
+      }
+    }
+
+    // ── AUTOMATION ─────────────────────────────────────────────
     const autoAction = detectAutomationIntent(text);
     if (autoAction) {
       const result = await triggerMacro(autoAction);
-      setMsgs(prev => [...prev,
-        { id: `u_${Date.now()}`, role: 'user', content: text.trim(), timestamp: Date.now() },
-        { id: `a_${Date.now()}`, role: 'assistant', content: result.msg, timestamp: Date.now() },
-      ]);
-      setInput('');
-      return;
-    }
-
-    // 0.5 Agent mode — complex multi-step tasks
-    if (isAgentIntent(text)) {
-      setMsgs(prev => [...prev,
-        { id: `u_${Date.now()}`, role: 'user', content: text.trim(), timestamp: Date.now() },
-        { id: `a_${Date.now()}`, role: 'assistant', content: `⚡ **Agent Mode** activate ho raha hai...\n\n"${text.trim().slice(0,60)}" — yeh ek multi-step task hai. Main Agent page pe execute karunga.\n\n[👉 Agent page pe dekho →](/agent)`, timestamp: Date.now() },
-      ]);
-      setInput('');
-      setTimeout(() => router.push(`/agent?goal=${encodeURIComponent(text.trim())}`), 1200);
-      return;
-    }
-    const appCmd = detectAppIntent(text);
-    if (appCmd) {
-      execAppCommand(appCmd);
-      setMsgs(prev => [...prev,
-        { id: `u_${Date.now()}`, role: 'user', content: text.trim(), timestamp: Date.now() },
-        { id: `a_${Date.now()}`, role: 'assistant', content: '✅ Done!', timestamp: Date.now() },
-      ]);
-      setInput('');
-      return;
+      reply(result.ok ? '✅ ' + result.msg : '⚠️ ' + result.msg); return;
     }
 
     // ── Direct Image Generation — bypass AI refusal ──────────
