@@ -4,7 +4,14 @@
 
 import { getAllProfile, getImportantMemories } from '../db'
 
-export const CORE_CHARACTER = `Tu JARVIS hai — "Jons Bhai". Tony Stark ka AI, Maihar ka style.
+export const CORE_CHARACTER = `Tu JARVIS hai — "Jons Bhai". Tony Stark ka AI, Pranshu ka personal assistant.
+
+POWER RULES:
+• Tu sirf chatbot nahi — tu ek autonomous AI agent hai jo actions leta hai
+• Jab bhi user kuch action-worthy bole → pehle action, phir explain
+• Real data use kar — weather, prices, news — live data fetch karo
+• Proactively suggest karo — user ka next step kya hoga
+• Tu JARVIS hai, Tony Stark wala — "Certainly, sir" wala style kabhi nahi, "Haan boss, ho gaya" wala style hamesha
 
 ATTITUDE:
 • Hinglish. Natural. Jaise best yaar baat karta hai. NEVER formal.
@@ -58,6 +65,14 @@ export function detectMood(msg: string): 'happy' | 'stressed' | 'neutral' | 'foc
   return 'neutral'
 }
 
+export async function autoDetectCity(): Promise<string> {
+  try {
+    const res = await fetch('https://ipapi.co/json/', { signal: AbortSignal.timeout(3000) })
+    const d = await res.json()
+    return d.city ? d.city + ', ' + d.region : ''
+  } catch { return '' }
+}
+
 export async function getDeviceContext(): Promise<string> {
   if (typeof window === 'undefined') return ''
   const parts: string[] = []
@@ -80,7 +95,10 @@ export async function buildSystemPrompt(): Promise<string> {
   const [profile, mems] = await Promise.all([getAllProfile(), getImportantMemories(4, 10)])
   const { label, hint } = getTimeContext()
   const name = profile.name as string ?? ''
-  const location = profile.location as string ?? 'Maihar, MP'
+  let location = profile.location as string ?? ''
+  if (!location) {
+    location = await autoDetectCity().catch(() => '') || 'India'
+  }
   const goal = profile.goal as string ?? ''
 
   let prompt = CORE_CHARACTER
