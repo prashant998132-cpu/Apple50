@@ -16,6 +16,8 @@ export default function VoicePage() {
   const [provider, setProvider] = useState('')
   const [error, setError] = useState('')
   const [autoSpeak, setAutoSpeak] = useState(true)
+  const [continuous, setContinuous] = useState(false)
+  const contRef = React.useRef(false)
 
   const recognitionRef = useRef<any>(null)
   const mediaRecorderRef = useRef<MediaRecorder | null>(null)
@@ -114,6 +116,10 @@ export default function VoicePage() {
       }
     } catch { setError('JARVIS se connect nahi ho paya.') }
     setLoading(false)
+    // Continuous mode — auto restart listening
+    if (contRef.current) {
+      setTimeout(() => { if (contRef.current) startListening(); }, 1500);
+    }
   }
 
   return (
@@ -195,7 +201,15 @@ export default function VoicePage() {
           {listening ? '🔴 Sun raha hun...' : loading ? '⏳ Soch raha hun...' : 'Tap to speak'}
         </div>
         <button onClick={stopSpeaking} style={{ background: 'none', border: '1px solid #1e1e2e', borderRadius: 8, color: '#333', padding: '5px 16px', cursor: 'pointer', fontSize: 12 }}>
-          🔇 Stop Speaking
+          🔇 Stop
+        </button>
+        <button onClick={() => {
+          const next = !continuous;
+          setContinuous(next); contRef.current = next;
+          if (next) { startListening(); }
+          else { stopListening(); stopSpeaking(); }
+        }} style={{ background: continuous ? 'rgba(239,68,68,0.15)' : '#111', border: '1px solid ' + (continuous ? '#ef4444' : '#1e1e2e'), borderRadius: 8, color: continuous ? '#ef4444' : '#555', padding: '5px 12px', cursor: 'pointer', fontSize: 12 }}>
+          {continuous ? '🔴 Always-On OFF karo' : '🔁 Always-On Mode'}
         </button>
       </div>
     </div>
