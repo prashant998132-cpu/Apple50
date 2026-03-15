@@ -18,15 +18,27 @@ interface BriefSection {
 
 async function fetchWeather(): Promise<string> {
   try {
-    const res = await fetch('https://wttr.in/Maihar?format=j1', { signal: AbortSignal.timeout(5000) })
-    const d = await res.json()
-    const c = d.current_condition?.[0]
-    const temp = c?.temp_C ?? '?'
-    const desc = c?.weatherDesc?.[0]?.value ?? ''
-    const humidity = c?.humidity ?? '?'
-    return `${temp}°C · ${desc} · Humidity: ${humidity}%`
+    // Try Open-Meteo first (no key, more reliable)
+    const geoRes = await fetch('https://geocoding-api.open-meteo.com/v1/search?name=Maihar&count=1', { signal: AbortSignal.timeout(4000) })
+    const geo = await geoRes.json()
+    const loc = geo.results?.[0]
+    if (loc) {
+      const wRes = await fetch('https://api.open-meteo.com/v1/forecast?latitude=' + loc.latitude + '&longitude=' + loc.longitude + '&current=temperature_2m,relative_humidity_2m,weather_code,wind_speed_10m&forecast_days=1', { signal: AbortSignal.timeout(5000) })
+      const w = await wRes.json()
+      const c = w.current
+      const codes: Record<number, string> = { 0:'Clear sky', 1:'Mainly clear', 2:'Partly cloudy', 3:'Overcast', 45:'Foggy', 51:'Light drizzle', 61:'Light rain', 71:'Light snow', 80:'Rain showers', 95:'Thunderstorm' }
+      const desc = codes[c.weather_code] || 'Unknown'
+      return c.temperature_2m + '°C · ' + desc + ' · Humidity: ' + c.relative_humidity_2m + '% · Wind: ' + c.wind_speed_10m + ' km/h'
+    }
+    throw new Error('no geo')
   } catch {
-    return 'Weather unavailable'
+    // Fallback to wttr.in
+    try {
+      const res = await fetch('https://wttr.in/Maihar?format=j1', { signal: AbortSignal.timeout(5000) })
+      const d = await res.json()
+      const c = d.current_condition?.[0]
+      return (c?.temp_C ?? '?') + '°C · ' + (c?.weatherDesc?.[0]?.value ?? '') + ' · Humidity: ' + (c?.humidity ?? '?') + '%'
+    } catch { return 'Weather unavailable' }
   }
 }
 
@@ -42,16 +54,7 @@ async function fetchNews(): Promise<string[]> {
   } catch { return ['News unavailable'] }
 }
 
-const NEET_TIPS = [
-  'NCERT Biology — diagrams zaroor banao. Visual memory = longer retention.',
-  'Chemistry: pehle reaction mechanism samjho, phir memorize karo.',
-  'Physics: formula derivation samajhna > ratta maarna. NEET mein application aata hai.',
-  'Pomodoro: 25 min deep focus + 5 min break = maximum retention.',
-  'Revision > New chapters. Jo padh liya wo pakka karo pehle.',
-  'Mock tests weekly do — galtiyan wahan karo, exam mein nahi.',
-  'Biology ka weightage 50% hai — isko ignore mat karna.',
-  'Organic chemistry: mechanisms ek baar samajh gaya toh sab easy.',
-]
+const STUDY_TIPS = ['Aaj kuch naya seekho. Curiosity hi sabse bada teacher hai.', 'Breaks lena zaroori hai — kaam bhi, rest bhi.', 'Ek step ek baar. Sab ek saath nahi hota.']
 
 export default function BriefingPage() {
   const router = useRouter()
@@ -122,7 +125,7 @@ export default function BriefingPage() {
     try {
       const memories = await getImportantMemories(5, 5)
       const studyMemories = memories.filter(m =>
-        m.data.toLowerCase().match(/padh|study|neet|chapter|subject|goal/)
+        m.data.toLowerCase().match(/padh|study|padhai|chapter|subject|goal/)
       )
       if (studyMemories.length > 0) {
         built.push({
@@ -135,8 +138,8 @@ export default function BriefingPage() {
       }
     } catch {}
 
-    // Section 6: NEET tip of the day
-    const tip = NEET_TIPS[now.getDate() % NEET_TIPS.length]
+    // Section 6: Padhai tip of the day
+    const tip = STUDY_TIPS[now.getDate() % STUDY_TIPS.length]
     built.push({
       icon: '💡',
       title: 'Aaj ka JARVIS Tip',
@@ -148,7 +151,7 @@ export default function BriefingPage() {
     // Section 7: AI synthesis — what to focus on today
     try {
       const sysPrompt = await buildSystemPrompt().catch(() => 'You are JARVIS. Hinglish mein baat karo.')
-      const prompt = `Aaj ek NEET student ke liye 2-3 line ka focus suggestion do. Realistic, specific. Koi generic motivational nahi — actual kya karna chahiye aaj.`
+      const prompt = `Aaj ek Padhai student ke liye 2-3 line ka focus suggestion do. Realistic, specific. Koi generic motivational nahi — actual kya karna chahiye aaj.`
       const res = await fetch('/api/stream', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
