@@ -94,27 +94,68 @@ function RichCard({ card }: { card: any }) {
   );
 }
 
-function MsgItem({ msg }: { msg: Msg; [key: string]: any }) {
+function MsgItem({ msg, onDelete, onRegenerate }: { msg: Msg; onDelete?: (id: string) => void; onRegenerate?: () => void }) {
   const isUser = msg.role === 'user';
+  const [menuOpen, setMenuOpen] = React.useState(false);
+  const longPressTimer = React.useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const startLongPress = () => {
+    longPressTimer.current = setTimeout(() => {
+      setMenuOpen(true);
+      if (typeof navigator !== 'undefined') navigator.vibrate?.(50);
+    }, 500);
+  };
+  const cancelLongPress = () => { if (longPressTimer.current) clearTimeout(longPressTimer.current); };
+
+  const copy = () => { navigator.clipboard?.writeText(msg.content); setMenuOpen(false); };
+  const share = () => {
+    if (navigator.share) navigator.share({ text: msg.content });
+    else { navigator.clipboard?.writeText(msg.content); }
+    setMenuOpen(false);
+  };
+
   return (
-    <div className="fade-in" style={{ display: 'flex', justifyContent: isUser ? 'flex-end' : 'flex-start', marginBottom: 12, padding: '0 12px' }}>
+    <div className="fade-in" style={{ display: 'flex', justifyContent: isUser ? 'flex-end' : 'flex-start', marginBottom: 12, padding: '0 12px', position: 'relative' }}>
+      {menuOpen && (
+        <div onClick={() => setMenuOpen(false)} style={{ position: 'fixed', inset: 0, zIndex: 999 }} />
+      )}
       {isUser ? (
-        <div className="user-bubble">{msg.content}</div>
+        <div onPointerDown={startLongPress} onPointerUp={cancelLongPress} onPointerLeave={cancelLongPress}
+          style={{ position: 'relative' }}>
+          <div className="user-bubble">{msg.content}</div>
+          {menuOpen && (
+            <div style={{ position: 'absolute', bottom: '110%', right: 0, background: '#0d0d18', border: '1px solid #1e1e2e', borderRadius: 12, padding: 6, zIndex: 1000, display: 'flex', gap: 4, boxShadow: '0 4px 20px rgba(0,0,0,0.6)', whiteSpace: 'nowrap' }}>
+              {[['📋', 'Copy', copy], ['↗️', 'Share', share], ['🗑️', 'Delete', () => { onDelete?.(msg.id); setMenuOpen(false); }]].map(([icon, label, fn]: any) => (
+                <button key={label as string} onClick={fn} style={{ background: 'none', border: 'none', color: '#888', cursor: 'pointer', padding: '6px 10px', borderRadius: 8, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2, fontSize: 10 }}>
+                  <span style={{ fontSize: 16 }}>{icon as string}</span>{label as string}
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
       ) : (
-        <div style={{ maxWidth: '90%' }}>
-          <div style={{ color: '#00d4ff', fontSize: 12, marginBottom: 2, fontWeight: 600 }}>
-            JARVIS {msg.provider ? `· ${msg.provider}` : ''}
+        <div style={{ maxWidth: '90%' }} onPointerDown={startLongPress} onPointerUp={cancelLongPress} onPointerLeave={cancelLongPress}>
+          <div style={{ color: '#00d4ff', fontSize: 11, marginBottom: 2, fontWeight: 600 }}>
+            JARVIS {msg.provider ? '· ' + msg.provider : ''}
           </div>
-          <div className="jarvis-message">
+          <div className="jarvis-message" style={{ position: 'relative' }}>
             <ReactMarkdown remarkPlugins={[remarkGfm]}>{msg.content}</ReactMarkdown>
           </div>
           {msg.card && <RichCard card={msg.card} />}
-          {/* Inline Command Widget */}
           {msg.widget && <CommandWidgetRenderer userText={msg.widget} aiText={msg.content} />}
-          <button onClick={() => speakText(msg.content)}
-            style={{ background: 'none', border: 'none', color: '#333', fontSize: 12, cursor: 'pointer', padding: '2px 0', marginTop: 2 }}>
-            🔊
-          </button>
+          <div style={{ display: 'flex', gap: 6, marginTop: 4 }}>
+            <button onClick={() => speakText(msg.content)}
+              style={{ background: 'none', border: 'none', color: '#333', fontSize: 12, cursor: 'pointer', padding: '2px 0' }}>🔊</button>
+          </div>
+          {menuOpen && (
+            <div style={{ position: 'absolute', left: 0, background: '#0d0d18', border: '1px solid #1e1e2e', borderRadius: 12, padding: 6, zIndex: 1000, display: 'flex', gap: 4, boxShadow: '0 4px 20px rgba(0,0,0,0.6)', whiteSpace: 'nowrap' }}>
+              {[['📋', 'Copy', copy], ['↗️', 'Share', share], ['🔄', 'Again', () => { onRegenerate?.(); setMenuOpen(false); }], ['🗑️', 'Delete', () => { onDelete?.(msg.id); setMenuOpen(false); }]].map(([icon, label, fn]: any) => (
+                <button key={label as string} onClick={fn} style={{ background: 'none', border: 'none', color: '#888', cursor: 'pointer', padding: '6px 10px', borderRadius: 8, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2, fontSize: 10 }}>
+                  <span style={{ fontSize: 16 }}>{icon as string}</span>{label as string}
+                </button>
+              ))}
+            </div>
+          )}
         </div>
       )}
     </div>
@@ -428,7 +469,7 @@ export default function Home() {
 
   function generateInstantTitle(msg: string): string {
     const m = msg.toLowerCase();
-    if (/neet|biology|chemistry|physics/.test(m)) return '📚 NEET';
+    if (/exam|biology|chemistry|physics/.test(m)) return '📚 exam';
     if (/weather|mausam/.test(m)) return '🌤️ Weather';
     if (/image|generate|draw/.test(m)) return '🎨 AI Image';
     if (/code|program/.test(m)) return '💻 Code';
@@ -566,9 +607,30 @@ export default function Home() {
       phone: 'tel:', call: 'tel:',
       settings: 'intent://settings#Intent;scheme=android-app;end',
       instagram: 'instagram://', insta: 'instagram://',
-      spotify: 'spotify://',
+      spotify: 'spotify://', music: 'spotify://',
       telegram: 'tg://', tele: 'tg://',
       calculator: 'intent://calculator#Intent;scheme=android-app;end',
+      zomato: 'zomato://', food: 'zomato://',
+      swiggy: 'swiggy://',
+      ola: 'olacabs://', cab: 'olacabs://',
+      uber: 'uber://',
+      phonepe: 'phonepe://', upi: 'upi://pay',
+      paytm: 'paytm://',
+      gpay: 'tez://', googlepay: 'tez://',
+      amazon: 'https://www.amazon.in/s?k=',
+      flipkart: 'https://www.flipkart.com/search?q=',
+      gmail: 'googlegmail://', mail: 'googlegmail://',
+      chrome: 'googlechrome://',
+      netflix: 'nflx://',
+      hotstar: 'https://www.hotstar.com',
+      twitter: 'twitter://', x: 'twitter://',
+      linkedin: 'linkedin://',
+      snapchat: 'snapchat://',
+      facebook: 'fb://',
+      gallery: 'content://media/internal/images/media',
+      files: 'content://com.android.externalstorage.documents',
+      clock: 'intent://clock#Intent;scheme=android-app;end',
+      contacts: 'content://contacts/people/',
     };
     for (const [app, scheme] of Object.entries(appMap)) {
       if (new RegExp('\\b' + app + '\\b.*(?:khol|open|launch|chalu|start)', 'i').test(text) ||
@@ -598,10 +660,25 @@ export default function Home() {
       } catch { /* fall through */ }
     }
 
+    // ── CHAT SEARCH ────────────────────────────────────────────
+    const searchMatch = text.match(/(?:search|dhundho|find|kahan)\s+(?:chat|baat|conversation|messages?)[:\s]+(.+)/i)
+      || text.match(/(.+)\s+wali\s+(?:baat|chat)\s+dhundho/i);
+    if (searchMatch) {
+      const query = (searchMatch[1] || searchMatch[0]).trim().toLowerCase();
+      try {
+        const { getRecentChats } = await import('@/lib/db');
+        const chats = await getRecentChats(200);
+        const found = chats.filter((c: any) => c.content?.toLowerCase().includes(query)).slice(0, 5);
+        if (found.length === 0) { reply('🔍 "' + query + '" — koi baat nahi mili purani chats mein.'); return; }
+        reply('🔍 **"' + query + '"** — ' + found.length + ' matches mile:\n\n' +
+          found.map((c: any) => (c.role === 'user' ? '👤' : '🤖') + ' ' + c.content.slice(0, 80) + '...').join('\n\n')); return;
+      } catch { reply('Chat search nahi ho saka.'); return; }
+    }
+
     // ── PAGE NAVIGATION ────────────────────────────────────────
     const navMap: [RegExp, string, string][] = [
       [/settings.*jao|settings.*kholo|open.*settings/i, '/settings', 'Settings'],
-      [/study.*jao|study.*kholo|neet.*page/i, '/study', 'Study Hub'],
+      [/study.*jao|study.*kholo|exam.*page/i, '/study', 'Study Hub'],
       [/voice.*jao|voice.*kholo|voice.*mode/i, '/voice', 'Voice Mode'],
       [/briefing.*jao|briefing.*dikhao|news.*page/i, '/briefing', 'Briefing'],
       [/tools?.*jao|tools?.*kholo|calculator.*page/i, '/tools', 'Tools'],
@@ -657,6 +734,28 @@ export default function Home() {
     if (sessionId) {
       saveMessage({ sessionId, role: 'user', content: text.trim(), timestamp: Date.now() });
       if (isFirstMsg) generateTitle(text.trim(), sessionId);
+    }
+
+    // ── Offline fallback ─────────────────────────────────────
+    if (!navigator.onLine) {
+      try {
+        const { getOfflineAnswer } = await import('@/lib/offline/answers');
+        const offlineReply = getOfflineAnswer(text.trim());
+        if (offlineReply) {
+          setMsgs(prev => [...prev,
+            { id: 'u_' + Date.now(), role: 'user', content: text.trim(), timestamp: Date.now() },
+            { id: 'a_' + Date.now(), role: 'assistant', content: '📴 *Offline mode*\n\n' + offlineReply, timestamp: Date.now() },
+          ]);
+          setInput(''); setLoading(false);
+          return;
+        }
+      } catch {}
+      setMsgs(prev => [...prev,
+        { id: 'u_' + Date.now(), role: 'user', content: text.trim(), timestamp: Date.now() },
+        { id: 'a_' + Date.now(), role: 'assistant', content: '📴 Offline hoon abhi. Internet wapas aane pe jawab dunga. Basic cheezein poochho — time, date, math, GK — offline bhi jawab deta hoon!', timestamp: Date.now() },
+      ]);
+      setInput(''); setLoading(false);
+      return;
     }
 
     // Rich personality system prompt (Jons Bhai + memory + time context)
@@ -815,6 +914,17 @@ export default function Home() {
 
   if (showPin) return <PinLock onUnlock={() => setShowPin(false)} />;
 
+  // Onboarding check
+  const [onboarded, setOnboarded] = React.useState<boolean | null>(null);
+  React.useEffect(() => {
+    import('@/lib/db').then(m => m.getProfile('onboarded')).then(v => setOnboarded(!!v)).catch(() => setOnboarded(true));
+  }, []);
+  if (onboarded === null) return null; // loading
+  if (onboarded === false) {
+    if (typeof window !== 'undefined') { window.location.href = '/onboarding'; }
+    return null;
+  }
+
   return (
     <div className="page-container">
 
@@ -917,7 +1027,11 @@ export default function Home() {
 
       {/* Messages */}
       <div style={{ flex: 1, overflowY: 'auto', padding: '8px 0' }}>
-        {msgs.map(msg => <MsgItem key={msg.id} msg={msg} />)}
+        {msgs.map((msg: Msg) => {
+          const msgDel = (id: string) => setMsgs(prev => prev.filter(m => m.id !== id));
+          const msgRegen = () => { const u = [...msgs].reverse().find(m => m.role === 'user'); if (u) send(u.content); };
+          const MsgEl = MsgItem as any; return <MsgEl key={msg.id} msg={msg} onDelete={msgDel} onRegenerate={msgRegen} />;
+        })}
         {loading && <div style={{ padding: '0 12px' }}><TypingDots /></div>}
         <div ref={bottomRef} />
       </div>
@@ -974,82 +1088,68 @@ export default function Home() {
         )}
       </div>
 
-      {/* ── Input Bar v2 — all controls inside chatbox ── */}
+      {/* ── Input Bar v3 — ChatGPT style ── */}
       <div style={{ padding: '8px 12px 12px', borderTop: '1px solid #1e1e2e', background: 'var(--bg)' }}>
-
-        {/* Mode pill */}
-        <div style={{ display: 'flex', gap: 4, marginBottom: 6, paddingLeft: 2 }}>
-          {(['auto','flash','think','deep'] as Mode[]).map(m => (
-            <button key={m} onClick={() => setMode(m)}
-              style={{ padding: '2px 10px', borderRadius: 20, border: `1px solid ${mode===m?'#00d4ff':'#1e1e2e'}`, background: mode===m?'rgba(0,212,255,0.12)':'transparent', color: mode===m?'#00d4ff':'#444', fontSize: 10, cursor: 'pointer', textTransform: 'capitalize', transition: 'all 0.15s' }}>
-              {m==='auto'?'🤖':m==='flash'?'⚡':m==='think'?'🧠':'🔬'} {m}
-            </button>
-          ))}
-          <div style={{ flex:1 }} />
-          <div style={{ color: '#333', fontSize: 9, alignSelf: 'center' }}>
-            {wakeActive ? '🎙️ listening...' : ''}
-          </div>
-        </div>
-
-        {/* Main input box */}
         <div style={{
-          display: 'flex', alignItems: 'flex-end', gap: 0,
-          background: '#111118', border: `1px solid ${input.trim() ? '#00d4ff44' : '#2a2a4a'}`,
-          borderRadius: 24, padding: '4px 4px 4px 8px',
+          display: 'flex', alignItems: 'flex-end',
+          background: '#111118',
+          border: input.trim() ? '1px solid rgba(0,212,255,0.4)' : '1px solid #2a2a4a',
+          borderRadius: 26, padding: '4px 4px 4px 6px',
           transition: 'border-color 0.2s',
-          boxShadow: input.trim() ? '0 0 0 1px rgba(0,212,255,0.1)' : 'none',
+          boxShadow: input.trim() ? '0 0 12px rgba(0,212,255,0.08)' : 'none',
         }}>
-
-          {/* Plus — attachments / options */}
-          <button
-            onClick={() => { setPlusOpen(p => !p) }}
-            data-plus
-            title="Attachments & options"
-            style={{ width: 34, height: 34, borderRadius: '50%', background: plusOpen ? 'rgba(0,212,255,0.15)' : 'transparent', border: 'none', color: plusOpen ? '#00d4ff' : '#555', fontSize: 20, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, transition: 'all 0.15s', marginRight: 2 }}>
-            {plusOpen ? '✕' : '+'}
-          </button>
+          {/* Plus — mode selector inside */}
+          <div style={{ position: 'relative' }}>
+            <button onClick={() => setPlusOpen(p => !p)} data-plus
+              title="Mode & options"
+              style={{ width: 36, height: 36, borderRadius: '50%', background: plusOpen ? 'rgba(0,212,255,0.15)' : 'transparent', border: 'none', color: plusOpen ? '#00d4ff' : '#666', fontSize: plusOpen ? 16 : 18, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, transition: 'all 0.15s' }}>
+              {plusOpen ? '✕' : (mode === 'flash' ? '⚡' : mode === 'think' ? '🧠' : mode === 'deep' ? '🔬' : '+')}
+            </button>
+          </div>
 
           {/* Textarea */}
-          <textarea
-            ref={textareaRef}
-            value={input}
-            onChange={handleTextChange}
-            onKeyDown={handleKeyDown}
-            placeholder={loading ? '⏳ Thinking...' : 'Kuch bhi likho ya bolo...'}
-            disabled={loading}
-            rows={1}
-            style={{ flex: 1, background: 'transparent', border: 'none', color: '#e0e0ff', fontSize: 15, outline: 'none', resize: 'none', minHeight: 34, maxHeight: 120, lineHeight: 1.5, fontFamily: 'inherit', overflowY: 'auto', padding: '6px 4px', opacity: loading ? 0.5 : 1 }}
+          <textarea ref={textareaRef} value={input} onChange={handleTextChange} onKeyDown={handleKeyDown}
+            placeholder={loading ? '⏳ Soch raha hoon...' : 'Kuch bhi likho ya bolo...'}
+            disabled={loading} rows={1}
+            style={{ flex: 1, background: 'transparent', border: 'none', color: '#e0e0ff', fontSize: 15, outline: 'none', resize: 'none', minHeight: 34, maxHeight: 120, lineHeight: 1.5, fontFamily: 'inherit', overflowY: 'auto', padding: '7px 6px', opacity: loading ? 0.5 : 1 }}
           />
 
-          {/* Mic button — Voice input */}
+          {/* Mic — tap = ek baar, hold = jab tak bolo */}
           <button
-            title="Voice input"
-            onClick={() => {
+            onPointerDown={() => {
               const SR = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
-              if (!SR) { toastErr('Mic nahi chala. Browser support nahi.'); return; }
-              const rec = new SR();
-              rec.lang = 'hi-IN'; rec.interimResults = false;
-              rec.onresult = (e: any) => {
-                const t = e.results[0][0].transcript;
-                setInput(t);
-                setTimeout(() => send(t), 300);
-              };
-              rec.onerror = () => toastErr('Mic error. Dobara try karo.');
-              rec.start();
-              toastOk('🎙️ Bol boss...');
+              if (!SR) { toastErr('Mic support nahi'); return; }
+              const rec = new SR(); rec.lang = 'hi-IN'; rec.continuous = false; rec.interimResults = true;
+              let final = '';
+              rec.onresult = (e: any) => { final = Array.from(e.results).map((r: any) => r[0].transcript).join(''); setInput(final); };
+              rec.onerror = () => { toastErr('Mic error'); };
+              rec.onend = () => { if (final.trim()) setTimeout(() => send(final), 200); };
+              rec.start(); toastOk('🎙️ Bol...');
+              (window as any).__jarvisRec = rec;
             }}
-            style={{ width: 34, height: 34, borderRadius: '50%', background: 'transparent', border: 'none', color: '#555', fontSize: 18, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, transition: 'color 0.15s' }}>
-            🎙️
-          </button>
+            onPointerUp={() => { (window as any).__jarvisRec?.stop(); }}
+            style={{ width: 36, height: 36, borderRadius: '50%', background: 'transparent', border: 'none', color: '#555', fontSize: 18, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, WebkitUserSelect: 'none', userSelect: 'none' }}
+            title="Tap or hold to speak">🎙️</button>
 
-          {/* Send button */}
-          <button
-            onClick={() => send(input)}
-            disabled={!input.trim() || loading}
-            style={{ width: 38, height: 38, borderRadius: '50%', background: input.trim() && !loading ? 'linear-gradient(135deg,#00d4ff,#0088cc)' : '#1a1a2e', border: 'none', color: input.trim() && !loading ? '#000' : '#333', fontSize: 16, cursor: input.trim() && !loading ? 'pointer' : 'not-allowed', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, transition: 'all 0.2s', fontWeight: 900, boxShadow: input.trim() && !loading ? '0 2px 8px rgba(0,212,255,0.4)' : 'none' }}>
+          {/* Send */}
+          <button onClick={() => send(input)} disabled={!input.trim() || loading}
+            style={{ width: 38, height: 38, borderRadius: '50%', background: input.trim() && !loading ? 'linear-gradient(135deg,#00d4ff,#0077bb)' : '#1a1a2e', border: 'none', color: input.trim() && !loading ? '#000' : '#333', fontSize: 17, cursor: input.trim() && !loading ? 'pointer' : 'not-allowed', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, transition: 'all 0.2s', fontWeight: 900, boxShadow: input.trim() && !loading ? '0 2px 10px rgba(0,212,255,0.35)' : 'none' }}>
             {loading ? '⏳' : '↑'}
           </button>
         </div>
+
+        {/* Plus popup — mode select */}
+        {plusOpen && (
+          <div data-plus style={{ position: 'absolute', bottom: 70, left: 14, background: '#0d0d18', border: '1px solid #1e1e2e', borderRadius: 16, padding: 10, zIndex: 9999, boxShadow: '0 -4px 20px rgba(0,0,0,0.6)', display: 'flex', gap: 6 }}>
+            {([['auto','🤖','Auto'],['flash','⚡','Flash'],['think','🧠','Think'],['deep','🔬','Deep']] as [Mode,string,string][]).map(([m,icon,label]) => (
+              <button key={m} onClick={() => { setMode(m); setPlusOpen(false); }}
+                style={{ background: mode===m?'rgba(0,212,255,0.15)':'#111118', border: `1px solid ${mode===m?'#00d4ff':'#1e1e2e'}`, borderRadius: 10, padding: '8px 12px', cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 3, minWidth: 52 }}>
+                <span style={{ fontSize: 20 }}>{icon}</span>
+                <span style={{ color: mode===m?'#00d4ff':'#666', fontSize: 10 }}>{label}</span>
+              </button>
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );
