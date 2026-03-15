@@ -403,6 +403,26 @@ export default function Home() {
     }, 30000);
 
     // Proactive check (once on load)
+    // Smart contextual greeting on load
+    const initGreeting = async () => {
+      try {
+        const { getSmartGreeting } = await import('@/lib/db');
+        const smart = await getSmartGreeting();
+        if (smart) {
+          setMsgs([{ id: 'init_smart', role: 'assistant', content: smart, timestamp: Date.now() }]);
+          return;
+        }
+      } catch {}
+      const h = new Date().getHours();
+      const greet = h < 6 ? 'Raat gehra hai boss 🌙 Kya ho raha hai?' :
+        h < 12 ? 'Good morning! ☀️ Aaj kya plan hai?' :
+        h < 17 ? 'Kya haal hai! 👋 Bata kya kaam hai?' :
+        h < 20 ? 'Shaam ho gayi boss 🌆 Din kaisa raha?' :
+        'Raat ho gayi boss 🌙 Kya chal raha hai?';
+      setMsgs([{ id: 'init_greet', role: 'assistant', content: greet + '\n\n_Type `/` for commands | Mic tap to speak_', timestamp: Date.now() }]);
+    };
+    initGreeting();
+
     checkProactive().then(event => {
       if (event?.message) {
         setTimeout(() => {
@@ -598,6 +618,79 @@ export default function Home() {
         const emoji = bat.level > 60 ? '🟢' : bat.level > 30 ? '🟡' : '🔴';
         reply(emoji + ' Battery: **' + bat.level + '%**' + (bat.charging ? ' ⚡ Charging' : ' (Not charging)') + (bat.level < 20 ? '\n⚠️ Charge lagao jaldi boss!' : '')); return;
       } catch { reply('Battery check nahi ho saka.'); return; }
+    }
+
+    // ── CURRENCY / EXCHANGE RATE ───────────────────────────────
+    const currMatch = text.match(/(\d+(?:\.\d+)?)\s*([a-z]{3})\s+(?:to|mein|ka|in)\s+([a-z]{3})/i)
+      || text.match(/([a-z]{3})\s+(?:to|ka|rate|price)\s+([a-z]{3})/i);
+    if (currMatch || /currency|exchange rate|dollar|rupee|euro|pound/i.test(t)) {
+      try {
+        const from = (currMatch?.[2] || 'USD').toUpperCase();
+        const to = (currMatch?.[3] || 'INR').toUpperCase();
+        const amt = parseFloat(currMatch?.[1] || '1');
+        const res = await fetch('https://api.exchangerate-api.com/v4/latest/' + from);
+        const d = await res.json();
+        const rate = d.rates?.[to];
+        if (rate) {
+          reply('💱 **' + from + ' → ' + to + '**\n1 ' + from + ' = ' + rate.toFixed(4) + ' ' + to + (amt !== 1 ? '\n' + amt + ' ' + from + ' = **' + (amt * rate).toFixed(2) + ' ' + to + '**' : ''));
+        } else {
+          reply('Currency rate nahi mila. Valid currency code daalo (USD, EUR, INR, GBP...)');
+        }
+        return;
+      } catch { reply('Currency fetch nahi ho saka.'); return; }
+    }
+
+    // ── CRYPTO PRICE ───────────────────────────────────────────
+    const cryptoMatch = text.match(/(?:price|rate|value|kitna)\s+(?:of\s+)?([a-z]+)(?:\s+coin)?/i);
+    if (/bitcoin|btc|ethereum|eth|crypto|coin price/i.test(t)) {
+      const coin = /bitcoin|btc/i.test(t) ? 'bitcoin' : /ethereum|eth/i.test(t) ? 'ethereum' : (cryptoMatch?.[1] || 'bitcoin').toLowerCase();
+      try {
+        const res = await fetch('https://api.coingecko.com/api/v3/simple/price?ids=' + coin + '&vs_currencies=inr,usd');
+        const d = await res.json();
+        const data = d[coin];
+        if (data) reply('₿ **' + coin.charAt(0).toUpperCase() + coin.slice(1) + '**\n₹' + data.inr?.toLocaleString('en-IN') + ' | $' + data.usd?.toLocaleString());
+        else reply('Coin nahi mila: ' + coin);
+        return;
+      } catch { reply('Crypto price nahi mila.'); return; }
+    }
+
+    // ── DICTIONARY / MEANING ───────────────────────────────────
+    const wordMatch = text.match(/(?:meaning|matlab|definition|define|kya hota hai)\s+(?:of\s+)?['"]?(\w+)['"]?/i);
+    if (wordMatch?.[1]) {
+      try {
+        const res = await fetch('https://api.dictionaryapi.dev/api/v2/entries/en/' + wordMatch[1].toLowerCase());
+        const d = await res.json();
+        if (Array.isArray(d) && d[0]) {
+          const entry = d[0];
+          const def = entry.meanings?.[0]?.definitions?.[0];
+          reply('📖 **' + entry.word + '** (' + (entry.meanings?.[0]?.partOfSpeech || '') + ')\n' + def?.definition + (def?.example ? '\n\n*"' + def.example + '"*' : ''));
+        } else { reply('"' + wordMatch[1] + '" ka meaning nahi mila.'); }
+        return;
+      } catch { reply('Dictionary fetch nahi ho saka.'); return; }
+    }
+
+    // ── NEWS ────────────────────────────────────────────────────
+    if (/(?:aaj ki|latest|today) news|top news|khabar|headlines/i.test(t)) {
+      try {
+        const res = await fetch('https://hacker-news.firebaseio.com/v0/topstories.json');
+        const ids = await res.json();
+        const stories = await Promise.all(ids.slice(0, 5).map((id: number) =>
+          fetch('https://hacker-news.firebaseio.com/v0/item/' + id + '.json').then(r => r.json())
+        ));
+        reply('📰 **Top News:**\n' + stories.map((s: any, i: number) => (i+1) + '. ' + s.title).join('\n'));
+        return;
+      } catch { reply('News fetch nahi ho saki.'); return; }
+    }
+
+    // ── MATH INLINE ─────────────────────────────────────────────
+    const mathExpr = text.match(/^(?:calc(?:ulate)?|calculate|solve|compute|=)\s+(.+)$/i);
+    if (mathExpr?.[1]) {
+      try {
+        const safe = mathExpr[1].replace(/[^0-9+\-*/.()%\s^]/g, '');
+        const result = Function('"use strict"; return (' + safe + ')')();
+        reply('🧮 ' + mathExpr[1] + ' = **' + result + '**');
+        return;
+      } catch { /* fall through to AI */ }
     }
 
     // ── WEATHER ────────────────────────────────────────────────
@@ -832,16 +925,16 @@ export default function Home() {
 
     const history = msgs.slice(-8).map(m => ({ role: m.role, content: m.content }));
 
-    // Web search injection — for factual/search queries, fetch real data first
-    const searchTrigger = /latest|news|khabar|price|stock|weather|score|result|who is|kya hai|batao|search|find|current|today|2024|2025/.test(text.toLowerCase())
+    // Smart web search injection — auto-trigger on factual queries
+    const searchTrigger = /latest|news|khabar|price|stock|score|result|who is|kya hai|search|find|current|today|2025|2026|released|launched|happened|broke|won|lost|died|born|invented|discovered/.test(text.toLowerCase())
     let searchContext = ''
-    if (searchTrigger && text.length > 5) {
+    if (searchTrigger && text.length > 8 && !(/weather|mausam|battery|reminder|goal|note|timer|whatsapp|open app/i.test(text))) {
       try {
-        const sr = await fetch('/api/search?q=' + encodeURIComponent(text.slice(0, 100)), { signal: AbortSignal.timeout(4000) })
+        const sr = await fetch('/api/search?q=' + encodeURIComponent(text.slice(0, 120)), { signal: AbortSignal.timeout(5000) })
         const sd = await sr.json()
         if (sd.results?.length) {
-          const topResults = sd.results.slice(0, 3).map((r: any) => '[' + r.source + '] ' + r.title + ': ' + (r.text || '').slice(0, 200)).join(' | ')
-          searchContext = ' [SEARCH: ' + topResults + ']'
+          const top = sd.results.slice(0, 3).map((r: any) => '[' + r.source + '] ' + r.title + ': ' + (r.text || '').slice(0, 250)).join('\n')
+          searchContext = ' [LIVE WEB DATA:\n' + top + '\nUse this fresh data in your answer.]'
         }
       } catch {}
     }
@@ -869,7 +962,22 @@ export default function Home() {
         signal: controller.signal,
       });
 
-      if (!res.ok || !res.body) throw new Error('Stream failed');
+      if (!res.ok || !res.body) {
+        // Try Puter.js GPT-4o as emergency fallback (FREE, no key needed)
+        try {
+          const puter = await loadPuter();
+          if (puter?.ai?.chat) {
+            const puterRes = await puter.ai.chat(text.trim(), { model: 'gpt-4o-mini' });
+            const puterText = typeof puterRes === 'string' ? puterRes : puterRes?.message?.content || '';
+            if (puterText) {
+              setMsgs(prev => prev.map(m => m.id === assistantId ? { ...m, content: puterText, provider: 'Puter/GPT-4o' } : m));
+              setLoading(false);
+              return;
+            }
+          }
+        } catch {}
+        throw new Error('Stream failed');
+      }
       const reader = res.body.getReader();
       const decoder = new TextDecoder();
 
