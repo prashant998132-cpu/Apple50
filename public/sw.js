@@ -168,3 +168,41 @@ self.addEventListener('message', e => {
     caches.keys().then(keys => keys.forEach(k => caches.delete(k)))
   }
 })
+
+
+// ── Periodic Reminder Check (every 30 seconds) ──────────
+self.addEventListener('activate', e => {
+  e.waitUntil(self.clients.claim());
+});
+
+// Check reminders from SW directly using stored data
+async function fireRemindersFromSW() {
+  try {
+    const allClients = await clients.matchAll({ includeUncontrolled: true });
+    if (allClients.length > 0) {
+      allClients.forEach(c => c.postMessage({ type: 'CHECK_REMINDERS' }));
+      return;
+    }
+    // No clients — fire notification directly from SW
+    const cache = await caches.open('jarvis-reminders-v1');
+    const resp = await cache.match('/reminders-data');
+    if (!resp) return;
+    const reminders = await resp.json();
+    const now = Date.now();
+    for (const r of reminders) {
+      if (!r.fired && r.fireAt <= now) {
+        await self.registration.showNotification('⏰ JARVIS Reminder', {
+          body: r.message,
+          icon: '/icons/icon-192.png',
+          badge: '/icons/icon-192.png',
+          tag: 'reminder-' + r.id,
+          data: { url: '/' }
+        });
+        r.fired = true;
+      }
+    }
+    await cache.put('/reminders-data', new Response(JSON.stringify(reminders)));
+  } catch(e) {}
+}
+
+setInterval(fireRemindersFromSW, 30000);
