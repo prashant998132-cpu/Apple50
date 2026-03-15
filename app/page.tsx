@@ -174,37 +174,7 @@ function CommandWidgetRenderer({ userText, aiText }: { userText: string; aiText:
 }
 
 function PlusPopup({ open, mode, onMode, onClose }: { open: boolean; mode: Mode; onMode: (m: Mode) => void; onClose: () => void }) {
-  const fileRef = useRef<HTMLInputElement>(null);
-  if (!open) return null;
-  const MODES: { key: Mode; icon: string; label: string }[] = [
-    { key: 'auto', icon: '🤖', label: 'Auto' },
-    { key: 'flash', icon: '⚡', label: 'Flash' },
-    { key: 'think', icon: '🧠', label: 'Think' },
-    { key: 'deep', icon: '🔬', label: 'Deep' },
-  ];
-  return (
-    <div style={{ position: 'fixed', bottom: 80, left: 12, right: 12, zIndex: 9999, background: '#111118', border: '1px solid #1e1e2e', borderRadius: 16, padding: 16 }}>
-      <div style={{ color: '#555', fontSize: 11, marginBottom: 8 }}>MODE</div>
-      <div style={{ display: 'flex', gap: 8, marginBottom: 14 }}>
-        {MODES.map(m => (
-          <button key={m.key} onClick={() => { onMode(m.key); onClose(); }}
-            style={{ flex: 1, padding: '8px 4px', borderRadius: 10, border: mode === m.key ? '1px solid #00d4ff' : '1px solid #2a2a4a', background: mode === m.key ? 'rgba(0,212,255,0.1)' : '#1a1a2e', color: mode === m.key ? '#00d4ff' : '#666', fontSize: 11, cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 3 }}>
-            <span style={{ fontSize: 18 }}>{m.icon}</span>{m.label}
-          </button>
-        ))}
-      </div>
-      <div style={{ color: '#555', fontSize: 11, marginBottom: 8 }}>ATTACH</div>
-      <div style={{ display: 'flex', gap: 8 }}>
-        {[{ icon: '📷', label: 'Camera' }, { icon: '🖼️', label: 'Image' }, { icon: '📄', label: 'PDF' }, { icon: '🎵', label: 'Voice' }].map(opt => (
-          <button key={opt.label} onClick={() => { fileRef.current?.click(); onClose(); }}
-            style={{ flex: 1, padding: '8px 4px', borderRadius: 10, border: '1px solid #2a2a4a', background: '#1a1a2e', color: '#666', fontSize: 11, cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 3 }}>
-            <span style={{ fontSize: 18 }}>{opt.icon}</span>{opt.label}
-          </button>
-        ))}
-      </div>
-      <input ref={fileRef} type="file" style={{ display: 'none' }} multiple accept="image/*,.pdf" />
-    </div>
-  );
+  return null; // Handled inline in input bar
 }
 
 // ── Chat History Sidebar ──────────────────────────────────────────────────
@@ -858,10 +828,12 @@ export default function Home() {
     }
 
     // ── Direct Image Generation — bypass AI refusal ──────────
-    const imgMatch = text.match(/(?:image|img|photo|pic|wallpaper|banner|poster|draw|paint|sketch)\s+(?:bana|banao|generate|create|make|de|do|chahiye|of|ki|ka)\s*(.+)/i)
-      || text.match(/(.+)\s+(?:ki|ka|ke|wala|wali)\s+image/i)
+    const imgMatch = text.match(/(?:image|img|photo|pic|wallpaper|banner|poster|draw|paint|sketch|generator)\s+(?:kar|bana|banao|generate|create|make|de|do|chahiye|of|ki|ka)\s*(.+)/i)
+      || text.match(/(.+)\s+(?:ki|ka|ke|wala|wali)\s+(?:image|photo|pic|tasveer)/i)
+      || text.match(/^(?:generate|create|bana|draw)\s+(?:a\s+)?(?:image|photo|picture|pic)\s+(?:of\s+)?(.+)/i)
+      || (/(?:image|photo|tasveer|pic)\s+(?:chahiye|de do|banao|bana do)/i.test(text) ? [text, text.replace(/image|photo|tasveer|pic|chahiye|de do|banao|bana do/gi, '').trim()] : null)
     if (imgMatch) {
-      const imgPrompt = (imgMatch[1] || imgMatch[0]).trim()
+      const imgPrompt = (imgMatch[1] || text).replace(/image|generator|bana|banao|kar|create|generate|photo|chahiye|de do/gi, '').trim() || text.trim()
       const safePrompt = imgPrompt.replace(/(nude|naked|nsfw|explicit|sex|porn)/gi, 'person')
       const imgUrl = 'https://image.pollinations.ai/prompt/' + encodeURIComponent(safePrompt + ', high quality, detailed') + '?width=1024&height=1024&nologo=true&seed=' + Date.now()
       setMsgs(prev => [...prev,
