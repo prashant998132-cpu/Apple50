@@ -136,6 +136,34 @@ const PLAN_TEMPLATES: Array<{
     ]
   },
   {
+    match: [/birthday|janmdin|birthday.*wish|wish.*birthday/i],
+    plan: (input) => [
+      { tool: 'ai_text', input: { prompt: 'Ek heartfelt birthday wish likho: ' + input + '. Hinglish mein, warm aur personal.' }, status: 'pending' },
+      { tool: 'ai_image', input: { prompt: 'beautiful birthday celebration, balloons, cake, colorful, festive' }, status: 'pending' },
+      { tool: 'copy_text', input: { text: '{{prev_output}}' }, status: 'pending' },
+      { tool: 'open_app', input: { app: 'whatsapp' }, status: 'pending' },
+      { tool: 'show_result', input: { message: 'Birthday wish copy ho gaya + WhatsApp khul raha hai. Paste kar do!' }, status: 'pending' },
+    ]
+  },
+  {
+    match: [/essay|article|lekh|nibandh|write.*about/i],
+    plan: (input) => [
+      { tool: 'web_search', input: { query: input }, status: 'pending' },
+      { tool: 'ai_text', input: { prompt: 'Web search results ke basis pe ek detailed essay/article likho: ' + input + '. 400-500 words, structured, informative.' }, status: 'pending' },
+      { tool: 'save_note', input: { title: 'Essay: ' + input.slice(0,30) }, status: 'pending' },
+      { tool: 'show_result', input: { message: '{{prev_output}}' }, status: 'pending' },
+    ]
+  },
+  {
+    match: [/business idea|startup|naya kaam|business plan/i],
+    plan: (input) => [
+      { tool: 'web_search', input: { query: input + ' business opportunity India 2025' }, status: 'pending' },
+      { tool: 'ai_text', input: { prompt: 'Ek practical business plan banao: ' + input + '. Include: market opportunity, starting cost, revenue model, risks. India-specific, realistic.' }, status: 'pending' },
+      { tool: 'save_note', input: { title: 'Business Plan: ' + input.slice(0,30) }, status: 'pending' },
+      { tool: 'show_result', input: { message: '{{prev_output}}' }, status: 'pending' },
+    ]
+  },
+  {
     match: [/news|khabar|aaj ki news|latest.*news|news.*summarize/i],
     plan: (input) => [
       { tool: 'web_search', input: { query: input.replace(/bata(o)?|dedo|lao/gi, '').trim() || 'today latest news India' }, status: 'pending' },
