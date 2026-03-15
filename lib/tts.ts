@@ -11,6 +11,18 @@ export function stopSpeaking(): void {
   currentUtterance = null;
 }
 
+export async function speakWithPuter(text: string): Promise<boolean> {
+  if (typeof window === 'undefined') return false;
+  try {
+    const puter = (window as any).puter;
+    if (puter?.ai?.txt2speech) {
+      const audio = await puter.ai.txt2speech(text.slice(0, 300));
+      if (audio) { audio.play(); return true; }
+    }
+  } catch {}
+  return false;
+}
+
 export function speakText(text: string, onEnd?: () => void): void {
   if (typeof window === 'undefined') return;
   stopSpeaking();
