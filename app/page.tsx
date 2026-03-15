@@ -73,11 +73,12 @@ function TypingDots() {
 }
 
 function RichCard({ card }: { card: any }) {
+  const [zoomed, setZoomed] = React.useState(false);
   if (!card) return null;
   return (
     <div className="rich-card" style={{ marginTop: 8 }}>
       {card.imageUrl && (
-        <img src={card.imageUrl} alt={card.title || ''} className="rich-card-image"
+        <img src={card.imageUrl} onClick={() => setZoomed(true)} style={{ cursor: "zoom-in" }} alt={card.title || ''} className="rich-card-image"
           onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }} />
       )}
       <div className="rich-card-body">
@@ -317,6 +318,8 @@ export default function Home() {
   const [slashOpen, setSlashOpen] = useState(false);
   const [slashFilter, setSlashFilter] = useState('');
   const [wakeActive, setWakeActive] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
+  const [pinnedMsgs, setPinnedMsgs] = useState<string[]>([]);  // pinned message ids
 
   const bottomRef   = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -357,6 +360,30 @@ export default function Home() {
 
     // Reminders
     const ri = setInterval(() => {
+      // Morning brief — schedule 7am notification
+      if (typeof window !== 'undefined' && 'Notification' in window && Notification.permission === 'granted') {
+        const now = new Date();
+        const next7am = new Date();
+        next7am.setHours(7, 0, 0, 0);
+        if (next7am <= now) next7am.setDate(next7am.getDate() + 1);
+        const msUntil7am = next7am.getTime() - now.getTime();
+        const briefTimer = setTimeout(async () => {
+          try {
+            const { getAllGoals, getStreak } = await import('@/lib/db');
+            const { getReminders } = await import('@/lib/reminders');
+            const goals = await getAllGoals();
+            const streak = getStreak();
+            const rems = getReminders().filter((r: any) => !r.fired && r.fireAt > Date.now());
+            const body = 'Goals: ' + goals.filter((g: any) => !g.completed).length + ' active | Reminders: ' + rems.length + ' | Streak: ' + streak.current + ' days';
+            const reg = await navigator.serviceWorker?.ready;
+            if (reg?.showNotification) {
+              reg.showNotification('🌅 Good Morning! JARVIS Brief', { body, icon: '/icons/icon-192.png', tag: 'morning-brief', data: { url: '/briefing' } });
+            }
+          } catch {}
+        }, msUntil7am);
+        return () => clearTimeout(briefTimer);
+      }
+
       // Battery alert check
       checkBatteryAlert((msg) => {
         setMsgs(prev => [...prev, {
@@ -675,6 +702,39 @@ export default function Home() {
       } catch { reply('Chat search nahi ho saka.'); return; }
     }
 
+    // ── CHAT EXPORT ────────────────────────────────────────────
+    if (/export|share chat|chat export|save chat|download chat/i.test(text)) {
+      const chatText = msgs.map(m => (m.role === 'user' ? '👤 You: ' : '🤖 JARVIS: ') + m.content).join('\n\n');
+      const blob = new Blob([chatText], { type: 'text/plain' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a'); a.href = url;
+      a.download = 'jarvis-chat-' + new Date().toLocaleDateString('en-IN').replace(/\//g, '-') + '.txt';
+      a.click(); URL.revokeObjectURL(url);
+      reply('📥 Chat export ho gaya — download ho rahi hai!'); return;
+    }
+
+    // Share chat via WhatsApp
+    if (/whatsapp.*share.*chat|chat.*share.*whatsapp/i.test(text)) {
+      const last5 = msgs.slice(-5).map(m => (m.role === 'user' ? 'Me: ' : 'JARVIS: ') + m.content.slice(0, 100)).join('\n');
+      window.location.href = 'whatsapp://send?text=' + encodeURIComponent('JARVIS Chat:\n\n' + last5);
+      reply('💬 WhatsApp pe bhej raha hoon...'); return;
+    }
+
+    // ── SESSION TIMER ───────────────────────────────────────────
+    if (/session.*start|kaam.*start|timer.*start|work.*start/i.test(text)) {
+      const startTime = Date.now();
+      if (typeof window !== 'undefined') localStorage.setItem('jarvis_session_start', String(startTime));
+      reply('⏱️ Session shuru! Jab kaam khatam karo toh "session end" bolo.'); return;
+    }
+    if (/session.*end|kaam.*khatam|session.*stop|work.*done/i.test(text)) {
+      const start = parseInt(typeof window !== 'undefined' ? localStorage.getItem('jarvis_session_start') || '0' : '0');
+      if (!start) { reply('Koi session start nahi tha. "Session start" bolo pehle.'); return; }
+      const mins = Math.round((Date.now() - start) / 60000);
+      const hrs = Math.floor(mins / 60); const remMins = mins % 60;
+      if (typeof window !== 'undefined') localStorage.removeItem('jarvis_session_start');
+      reply('✅ Session khatam!\n\n⏱️ Total time: **' + (hrs > 0 ? hrs + ' hr ' : '') + remMins + ' min**\n\nGood work boss! 💪'); return;
+    }
+
     // ── PAGE NAVIGATION ────────────────────────────────────────
     const navMap: [RegExp, string, string][] = [
       [/settings.*jao|settings.*kholo|open.*settings/i, '/settings', 'Settings'],
@@ -879,12 +939,26 @@ export default function Home() {
       if (suggestion) {
         setTimeout(() => {
           setMsgs(prev => [...prev, {
-            id: `suggest_${Date.now()}`,
+            id: 'suggest_' + Date.now(),
             role: 'assistant',
-            content: `💡 ${suggestion}`,
+            content: '💡 ' + suggestion,
             timestamp: Date.now(),
           }]);
         }, 1800);
+      }
+
+      // Mood detection — frustrated/tired → gentle suggestion
+      const stressWords = /pareshan|thak|bore|stress|tension|headache|rona|samajh nahi|kya karu|help|stuck|confused|frustrat/i;
+      const lateNight = new Date().getHours() >= 23 || new Date().getHours() < 4;
+      if (stressWords.test(text.trim()) && !suggestion) {
+        setTimeout(() => {
+          setMsgs(prev => [...prev, {
+            id: 'mood_' + Date.now(),
+            role: 'assistant',
+            content: lateNight ? '😴 Boss, so jao ab. Kal fresh mind se sab clear ho jaayega.' : '☕ Ek chhota break lo. Chai piyo, 10 min. Phir aata hoon.',
+            timestamp: Date.now(),
+          }]);
+        }, 2500);
       }
     }
   };
@@ -1026,13 +1100,47 @@ export default function Home() {
       )}
 
       {/* Messages */}
-      <div style={{ flex: 1, overflowY: 'auto', padding: '8px 0' }}>
+      <div style={{ flex: 1, overflowY: 'auto', padding: '8px 0' }}
+        onTouchStart={(e) => { (window as any).__pullY = e.touches[0].clientY; }}
+        onTouchEnd={(e) => {
+          const diff = e.changedTouches[0].clientY - ((window as any).__pullY || 0);
+          if (diff > 80 && !refreshing) {
+            setRefreshing(true);
+            setTimeout(() => { setRefreshing(false); }, 1000);
+          }
+        }}>
+        {refreshing && (
+          <div style={{ textAlign: 'center', padding: 10, color: '#00d4ff', fontSize: 12 }}>🔄 Refreshing...</div>
+        )}
         {msgs.map((msg: Msg) => {
           const msgDel = (id: string) => setMsgs(prev => prev.filter(m => m.id !== id));
           const msgRegen = () => { const u = [...msgs].reverse().find(m => m.role === 'user'); if (u) send(u.content); };
           const MsgEl = MsgItem as any; return <MsgEl key={msg.id} msg={msg} onDelete={msgDel} onRegenerate={msgRegen} />;
         })}
         {loading && <div style={{ padding: '0 12px' }}><TypingDots /></div>}
+
+        {/* Suggested quick replies after last AI message */}
+        {!loading && msgs.length > 0 && msgs[msgs.length-1]?.role === 'assistant' && (() => {
+          const lastMsg = msgs[msgs.length-1].content.toLowerCase();
+          const chips: string[] = [];
+          if (/weather|mausam/.test(lastMsg)) chips.push('Kal ka mausam?', 'Rain aayegi?');
+          if (/goal|target/.test(lastMsg)) chips.push('Goal complete karo', 'Naya goal add karo');
+          if (/remind|alarm/.test(lastMsg)) chips.push('Reminders dikhao', 'Timer set karo');
+          if (/image|photo/.test(lastMsg)) chips.push('Ek aur bana', 'Different style mein');
+          if (/battery|charge/.test(lastMsg)) chips.push('WhatsApp kholo', 'Settings kholo');
+          // Always show some generic chips if nothing specific
+          if (chips.length === 0) chips.push('Aur batao', 'Summary do', 'Example do');
+          return chips.length > 0 ? (
+            <div style={{ display: 'flex', gap: 8, padding: '4px 12px 8px', flexWrap: 'wrap' }}>
+              {chips.slice(0,3).map(c => (
+                <button key={c} onClick={() => send(c)}
+                  style={{ background: 'transparent', border: '1px solid #2a2a4a', borderRadius: 16, color: '#666', padding: '5px 12px', fontSize: 12, cursor: 'pointer', whiteSpace: 'nowrap' }}>
+                  {c}
+                </button>
+              ))}
+            </div>
+          ) : null;
+        })()}
         <div ref={bottomRef} />
       </div>
 
