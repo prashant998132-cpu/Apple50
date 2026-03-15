@@ -8,7 +8,6 @@ const ITEMS = [
   { icon: '📷', label: 'Camera AI',     route: '/camera' },
   { icon: '🎙️', label: 'Voice',         route: '/voice' },
   { icon: '📡', label: 'Briefing',      route: '/briefing' },
-  { icon: '📚', label: 'Study',         route: '/study' },
   { icon: '📝', label: 'Notes',         route: '/notes' },
   { icon: '🎯', label: 'Goals',         route: '/target' },
   { icon: '⏰', label: 'Reminders',     route: '/reminders' },
@@ -25,7 +24,7 @@ const ITEMS = [
 
 const CATS: Record<string, string[]> = {
   '🤖 AI':           ['/agent', '/macrodroid', '/camera', '/voice', '/briefing'],
-  '📖 Learn':        ['/study', '/notes', '/target'],
+  '📖 Learn':        ['/notes', '/target'],
   '✅ Productivity': ['/reminders', '/chat-history'],
   '🔧 Tools':        ['/tools', '/apps'],
   '🎨 Create':       ['/media', '/canva', '/studio'],
