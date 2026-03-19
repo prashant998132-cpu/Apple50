@@ -601,22 +601,14 @@ export default function Home() {
     }
 
     // ── CURRENCY / EXCHANGE RATE ───────────────────────────────
-    const currMatch = text.match(/(\d+(?:\.\d+)?)\s*([a-z]{3})\s+(?:to|mein|ka|in)\s+([a-z]{3})/i)
-      || text.match(/([a-z]{3})\s+(?:to|ka|rate|price)\s+([a-z]{3})/i);
-    if (currMatch || /currency|exchange rate|dollar|rupee|euro|pound/i.test(t)) {
+    const currMatch = text.match(/(\d+(?:\.\d+)?)\s*([a-z]{3})\s+(?:to|mein|ka|in)\s+([a-z]{3})/i);
+    if (currMatch || /currency|exchange rate|dollar.*rupee|rupee.*dollar|euro.*inr/i.test(t)) {
       try {
+        const { getCurrency } = await import('@/lib/core/freeAPIs');
         const from = (currMatch?.[2] || 'USD').toUpperCase();
         const to = (currMatch?.[3] || 'INR').toUpperCase();
         const amt = parseFloat(currMatch?.[1] || '1');
-        const res = await fetch('https://api.exchangerate-api.com/v4/latest/' + from);
-        const d = await res.json();
-        const rate = d.rates?.[to];
-        if (rate) {
-          reply('💱 **' + from + ' → ' + to + '**\n1 ' + from + ' = ' + rate.toFixed(4) + ' ' + to + (amt !== 1 ? '\n' + amt + ' ' + from + ' = **' + (amt * rate).toFixed(2) + ' ' + to + '**' : ''));
-        } else {
-          reply('Currency rate nahi mila. Valid currency code daalo (USD, EUR, INR, GBP...)');
-        }
-        return;
+        reply(await getCurrency(amt, from, to)); return;
       } catch { reply('Currency fetch nahi ho saka.'); return; }
     }
 
@@ -678,11 +670,44 @@ export default function Home() {
       const cityM = text.match(/(?:of|in|at|ka|mein|for)\s+(\w+)/i);
       const city = cityM?.[1] || location || 'Maihar';
       try {
-        const res = await fetch('https://wttr.in/' + encodeURIComponent(city) + '?format=j1', { signal: AbortSignal.timeout(5000) });
-        const d = await res.json();
-        const c = d.current_condition?.[0];
-        reply('🌤️ **' + city + '** — ' + c?.temp_C + '°C\n' + c?.weatherDesc?.[0]?.value + '\nHumidity: ' + c?.humidity + '% · Wind: ' + c?.windspeedKmph + ' km/h'); return;
-      } catch { reply('Weather data nahi mila. Internet check karo.'); return; }
+        const { getWeather } = await import('@/lib/core/freeAPIs');
+        reply('🏙️ **' + city + ' Weather:**\n\n' + await getWeather(city)); return;
+      } catch { reply('Weather nahi mila. Internet check karo.'); return; }
+    }
+
+    // ── ISS LOCATION ────────────────────────────────────────────
+    if (/iss|space station|antariksha station|satellite location/i.test(t)) {
+      try {
+        const { getISS } = await import('@/lib/core/freeAPIs');
+        reply(await getISS()); return;
+      } catch { reply('ISS location nahi mili.'); return; }
+    }
+
+    // ── COUNTRY INFO ────────────────────────────────────────────
+    const countryMatch = text.match(/(?:about|info|details?|tell me about|batao)\s+(.+?)(?:\s+(?:country|desh|nation))?$/i);
+    if (/which country|kis desh|country info|desh ki jankari/i.test(t) && countryMatch?.[1]) {
+      try {
+        const { getCountryInfo } = await import('@/lib/core/freeAPIs');
+        reply(await getCountryInfo(countryMatch[1].trim())); return;
+      } catch { reply('Country info nahi mili.'); return; }
+    }
+
+    // ── RANDOM ADVICE ────────────────────────────────────────────
+    if (/^(?:advice|sujhao|give me advice|kya karu|suggest karo|help me decide)$/i.test(t.trim())) {
+      const { getAdvice } = await import('@/lib/core/freeAPIs');
+      reply(await getAdvice()); return;
+    }
+
+    // ── QUOTES ───────────────────────────────────────────────────
+    if (/^(?:quote|suvichar|anmol vachan|motivat(?:ion)?|inspir(?:ation)?)$/i.test(t.trim())) {
+      const { getQuote } = await import('@/lib/core/freeAPIs');
+      reply(await getQuote()); return;
+    }
+
+    // ── JOKES ─────────────────────────────────────────────────────
+    if (/^(?:joke|chutkula|funny|hasao|ek joke suno)$/i.test(t.trim()) || /tell.*joke|joke.*suno|ek.*joke/i.test(t)) {
+      const { getJoke } = await import('@/lib/core/freeAPIs');
+      reply(await getJoke()); return;
     }
 
     // ── TIMER ──────────────────────────────────────────────────
@@ -896,13 +921,29 @@ export default function Home() {
     if (imgMatch) {
       const imgPrompt = (imgMatch[1] || text).replace(/image|generator|bana|banao|kar|create|generate|photo|chahiye|de do/gi, '').trim() || text.trim()
       const safePrompt = imgPrompt.replace(/(nude|naked|nsfw|explicit|sex|porn)/gi, 'person')
-      const imgUrl = 'https://image.pollinations.ai/prompt/' + encodeURIComponent(safePrompt + ', high quality, detailed') + '?width=1024&height=1024&nologo=true&seed=' + Date.now()
+      const pollinationsUrl = 'https://image.pollinations.ai/prompt/' + encodeURIComponent(safePrompt + ', high quality, detailed, artistic') + '?width=1024&height=1024&nologo=true&seed=' + Date.now()
+      const tempId = 'a_img_' + Date.now()
+      // Show loading immediately with Pollinations (instant URL)
       setMsgs(prev => [...prev,
         { id: 'u_' + Date.now(), role: 'user', content: text.trim(), timestamp: Date.now() },
-        { id: 'a_' + Date.now(), role: 'assistant', content: '🎨 Generating: "' + safePrompt + '"...', timestamp: Date.now(),
-          card: { type: 'image', imageUrl: imgUrl, title: safePrompt } },
+        { id: tempId, role: 'assistant', content: '🎨 Generating "' + safePrompt + '"...', timestamp: Date.now(),
+          card: { type: 'image', imageUrl: pollinationsUrl, title: safePrompt } },
       ])
       setInput('')
+
+      // Try Puter DALL-E 3 in background for better quality
+      setTimeout(async () => {
+        try {
+          const { puterImageGen } = await import('@/lib/providers/puter');
+          const puterUrl = await puterImageGen(safePrompt, 'dall-e-3');
+          if (puterUrl) {
+            setMsgs(prev => prev.map(m => m.id === tempId
+              ? { ...m, content: '🎨 "' + safePrompt + '" (DALL-E 3)', card: { type: 'image', imageUrl: puterUrl, title: safePrompt + ' (HD)' } }
+              : m
+            ));
+          }
+        } catch {}
+      }, 500);
       return
     }
 
@@ -921,6 +962,20 @@ export default function Home() {
       saveMessage({ sessionId, role: 'user', content: text.trim(), timestamp: Date.now() });
       if (isFirstMsg) generateTitle(text.trim(), sessionId);
     }
+
+    // ── Smart API Router — auto-detect and call free APIs ─────
+    try {
+      const { smartAPIRouter } = await import('@/lib/core/freeAPIs');
+      const apiResult = await smartAPIRouter(text.trim());
+      if (apiResult) {
+        setMsgs(prev => [...prev,
+          { id: 'u_' + Date.now(), role: 'user', content: text.trim(), timestamp: Date.now() },
+          { id: 'a_' + Date.now(), role: 'assistant', content: apiResult, timestamp: Date.now() },
+        ]);
+        setInput(''); setLoading(false);
+        return;
+      }
+    } catch {}
 
     // ── Offline fallback ─────────────────────────────────────
     if (!navigator.onLine) {
@@ -1042,7 +1097,8 @@ export default function Home() {
 
       // Puter fallback if empty
       if (!fullText || fullText.length < 5) {
-        const pt = await puterChat([{ role: 'system', content: 'You are JARVIS, a Hinglish AI assistant.' }, ...history]);
+        const lastMsg = history[history.length-1]?.content || '';
+        const pt = await puterChat(lastMsg, 'You are JARVIS, a Hinglish AI assistant.');
         fullText = pt; provider = 'Puter/GPT-4o-mini';
         setMsgs(prev => prev.map(m => m.id === assistantId ? { ...m, content: fullText, provider } : m));
       }
@@ -1050,7 +1106,8 @@ export default function Home() {
     } catch (err: any) {
       if (err.name === 'AbortError') { setLoading(false); return; }
       try {
-        const pt = await puterChat([{ role: 'system', content: 'You are JARVIS, a helpful Hinglish AI.' }, ...history]);
+        const lastMsgErr = history[history.length-1]?.content || '';
+        const pt = await puterChat(lastMsgErr, 'You are JARVIS, a helpful Hinglish AI.');
         fullText = pt; provider = 'Puter/GPT-4o-mini';
         setMsgs(prev => prev.map(m => m.id === assistantId ? { ...m, content: fullText, provider } : m));
       } catch {
