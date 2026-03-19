@@ -74,6 +74,16 @@ function TypingDots() {
 
 function RichCard({ card }: { card: any }) {
   const [zoomed, setZoomed] = React.useState(false);
+  if (zoomed && card.imageUrl) return (
+    <div onClick={() => setZoomed(false)} style={{ position:'fixed', inset:0, background:'rgba(0,0,0,0.95)', zIndex:9999, display:'flex', alignItems:'center', justifyContent:'center', cursor:'zoom-out' }}>
+      <img src={card.imageUrl} alt={card.title} style={{ maxWidth:'100%', maxHeight:'100%', objectFit:'contain', borderRadius:8 }} />
+      <div style={{ position:'absolute', top:16, right:16, color:'#fff', fontSize:24, cursor:'pointer' }}>✕</div>
+      <a href={card.imageUrl} download target="_blank" rel="noopener noreferrer" onClick={e=>e.stopPropagation()}
+        style={{ position:'absolute', bottom:20, background:'rgba(0,212,255,0.9)', color:'#000', padding:'8px 20px', borderRadius:20, textDecoration:'none', fontWeight:700, fontSize:14 }}>
+        ⬇️ Download
+      </a>
+    </div>
+  );
   if (!card) return null;
   return (
     <div className="rich-card" style={{ marginTop: 8 }}>
@@ -126,7 +136,7 @@ function MsgItem({ msg, onDelete, onRegenerate }: { msg: Msg; onDelete?: (id: st
           <div className="user-bubble">{msg.content}</div>
           {menuOpen && (
             <div style={{ position: 'absolute', bottom: '110%', right: 0, background: '#0d0d18', border: '1px solid #1e1e2e', borderRadius: 12, padding: 6, zIndex: 1000, display: 'flex', gap: 4, boxShadow: '0 4px 20px rgba(0,0,0,0.6)', whiteSpace: 'nowrap' }}>
-              {[['📋', 'Copy', copy], ['↗️', 'Share', share], ['🗑️', 'Delete', () => { onDelete?.(msg.id); setMenuOpen(false); }]].map(([icon, label, fn]: any) => (
+              {[['📋', 'Copy', copy], ['↗️', 'Share', share], ['📌', 'Pin', () => { const pins = JSON.parse(localStorage.getItem('jarvis_pins')||'[]'); if(!pins.find((p:any)=>p.id===msg.id)){pins.unshift({id:msg.id,content:msg.content,ts:Date.now()});localStorage.setItem('jarvis_pins',JSON.stringify(pins.slice(0,10)));} setMenuOpen(false); alert('📌 Pinned!'); }], ['🗑️', 'Delete', () => { onDelete?.(msg.id); setMenuOpen(false); }]].map(([icon, label, fn]: any) => (
                 <button key={label as string} onClick={fn} style={{ background: 'none', border: 'none', color: '#888', cursor: 'pointer', padding: '6px 10px', borderRadius: 8, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2, fontSize: 10 }}>
                   <span style={{ fontSize: 16 }}>{icon as string}</span>{label as string}
                 </button>
@@ -150,7 +160,7 @@ function MsgItem({ msg, onDelete, onRegenerate }: { msg: Msg; onDelete?: (id: st
           </div>
           {menuOpen && (
             <div style={{ position: 'absolute', left: 0, background: '#0d0d18', border: '1px solid #1e1e2e', borderRadius: 12, padding: 6, zIndex: 1000, display: 'flex', gap: 4, boxShadow: '0 4px 20px rgba(0,0,0,0.6)', whiteSpace: 'nowrap' }}>
-              {[['📋', 'Copy', copy], ['↗️', 'Share', share], ['🔄', 'Again', () => { onRegenerate?.(); setMenuOpen(false); }], ['🗑️', 'Delete', () => { onDelete?.(msg.id); setMenuOpen(false); }]].map(([icon, label, fn]: any) => (
+              {[['📋', 'Copy', copy], ['↗️', 'Share', share], ['📌', 'Pin', () => { const pins = JSON.parse(localStorage.getItem('jarvis_pins')||'[]'); if(!pins.find((p:any)=>p.id===msg.id)){pins.unshift({id:msg.id,content:msg.content,ts:Date.now()});localStorage.setItem('jarvis_pins',JSON.stringify(pins.slice(0,10)));} setMenuOpen(false); alert('📌 Pinned!'); }], ['🔄', 'Again', () => { onRegenerate?.(); setMenuOpen(false); }], ['🗑️', 'Delete', () => { onDelete?.(msg.id); setMenuOpen(false); }]].map(([icon, label, fn]: any) => (
                 <button key={label as string} onClick={fn} style={{ background: 'none', border: 'none', color: '#888', cursor: 'pointer', padding: '6px 10px', borderRadius: 8, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2, fontSize: 10 }}>
                   <span style={{ fontSize: 16 }}>{icon as string}</span>{label as string}
                 </button>
@@ -765,6 +775,47 @@ export default function Home() {
       } catch { reply('Chat search nahi ho saka.'); return; }
     }
 
+    // ── WEEKLY PROGRESS REPORT ─────────────────────────────────
+    if (/progress report|weekly report|hafte ka|week.*summary|report banao/i.test(text)) {
+      try {
+        const { getAllGoals, getStreak, getTodayChats } = await import('@/lib/db');
+        const { getReminders } = await import('@/lib/reminders');
+        const [goals, streak, todayChats] = await Promise.all([getAllGoals(), Promise.resolve(getStreak()), getTodayChats()]);
+        const rems = getReminders();
+        const activeGoals = goals.filter((g: any) => !g.completed);
+        const doneGoals = goals.filter((g: any) => g.completed);
+        const report = '📊 **Weekly Progress Report**\n' +
+          '━━━━━━━━━━━━━━━━━━━━\n\n' +
+          '🔥 **Streak:** ' + streak.current + ' days (Best: ' + streak.best + ')\n\n' +
+          '🎯 **Goals:**\n' +
+          '  ✅ Done: ' + doneGoals.length + '\n' +
+          '  🔄 Active: ' + activeGoals.length + '\n' +
+          (activeGoals.length ? '  ' + activeGoals.slice(0,3).map((g: any) => '• ' + g.title).join('\n  ') + '\n' : '') + '\n' +
+          '⏰ **Reminders set:** ' + rems.length + '\n\n' +
+          '💬 **Chats today:** ' + todayChats.length + '\n\n' +
+          '━━━━━━━━━━━━━━━━━━━━\n' +
+          (streak.current >= 7 ? '🏆 7 din ka streak! Zabardast consistency!' : streak.current >= 3 ? '👍 ' + streak.current + ' din se active — keep going!' : '💪 Kal se daily aao, streak banao!');
+        reply(report);
+        // Also offer to share
+        setTimeout(() => {
+          setMsgs(prev => [...prev, {
+            id: 'share_' + Date.now(), role: 'assistant',
+            content: 'WhatsApp pe share karna hai? "report share karo" bolo.',
+            timestamp: Date.now(),
+          }]);
+        }, 1000);
+        return;
+      } catch { reply('Report nahi ban saka. Dobara try karo.'); return; }
+    }
+    if (/report share karo|share.*report|report.*whatsapp/i.test(text)) {
+      const lastReport = msgs.slice().reverse().find(m => m.content.includes('Weekly Progress Report'));
+      if (lastReport) {
+        window.location.href = 'whatsapp://send?text=' + encodeURIComponent(lastReport.content.replace(/\*\*/g, ''));
+        reply('💬 WhatsApp pe bhej raha hoon...'); return;
+      }
+      reply('Pehle "progress report" type karo, phir share karo.'); return;
+    }
+
     // ── CHAT EXPORT ────────────────────────────────────────────
     if (/export|share chat|chat export|save chat|download chat/i.test(text)) {
       const chatText = msgs.map(m => (m.role === 'user' ? '👤 You: ' : '🤖 JARVIS: ') + m.content).join('\n\n');
@@ -796,6 +847,16 @@ export default function Home() {
       const hrs = Math.floor(mins / 60); const remMins = mins % 60;
       if (typeof window !== 'undefined') localStorage.removeItem('jarvis_session_start');
       reply('✅ Session khatam!\n\n⏱️ Total time: **' + (hrs > 0 ? hrs + ' hr ' : '') + remMins + ' min**\n\nGood work boss! 💪'); return;
+    }
+
+    // ── PINNED MESSAGES ────────────────────────────────────────
+    if (/pinned|pin.*dikhao|saved.*messages|important.*messages/i.test(text)) {
+      if (typeof window === 'undefined') { reply('Pinned messages load nahi ho sake.'); return; }
+      const pins = JSON.parse(localStorage.getItem('jarvis_pins') || '[]');
+      if (pins.length === 0) { reply('Koi pinned message nahi. Long press karo message pe → 📌 Pin.'); return; }
+      reply('📌 **Pinned Messages (' + pins.length + '):**\n\n' +
+        pins.map((p: any, i: number) => (i+1) + '. ' + p.content.slice(0, 100) + (p.content.length > 100 ? '...' : '')).join('\n\n'));
+      return;
     }
 
     // ── PAGE NAVIGATION ────────────────────────────────────────
