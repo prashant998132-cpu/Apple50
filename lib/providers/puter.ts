@@ -1,63 +1,91 @@
-/* lib/providers/puter.ts — Puter.js pre-loader */
+/* lib/providers/puter.ts — Puter.js v2 — FREE GPT-5.4 + Gemini 3.1 + DALL-E 3 + FLUX + TTS */
+'use client'
 
 declare global {
-  interface Window {
-    puter?: any;
-  }
+  interface Window { puter?: any }
 }
 
-let puterLoaded = false;
-let puterLoading = false;
-const loadCallbacks: Array<() => void> = [];
+let loaded = false
+let loading = false
+const callbacks: Array<() => void> = []
 
 export function loadPuter(): Promise<any> {
   return new Promise((resolve) => {
-    if (typeof window === 'undefined') { resolve(null); return; }
-    if (puterLoaded && window.puter) { resolve(window.puter); return; }
-    if (puterLoading) { loadCallbacks.push(() => resolve(window.puter)); return; }
-
-    puterLoading = true;
-
+    if (typeof window === 'undefined') { resolve(null); return }
+    if (loaded && window.puter) { resolve(window.puter); return }
+    if (loading) { callbacks.push(() => resolve(window.puter)); return }
+    loading = true
     const check = setInterval(() => {
       if (window.puter) {
-        clearInterval(check);
-        puterLoaded = true;
-        puterLoading = false;
-        loadCallbacks.forEach(cb => cb());
-        loadCallbacks.length = 0;
-        resolve(window.puter);
+        clearInterval(check)
+        loaded = true; loading = false
+        callbacks.forEach(cb => cb()); callbacks.length = 0
+        resolve(window.puter)
       }
-    }, 200);
-
-    setTimeout(() => {
-      clearInterval(check);
-      puterLoading = false;
-      resolve(null);
-    }, 10000);
-  });
+    }, 200)
+    setTimeout(() => { clearInterval(check); loading = false; resolve(null) }, 8000)
+  })
 }
 
-export async function puterChat(messages: any[], model = 'gpt-4o-mini'): Promise<string> {
-  const puter = await loadPuter();
-  if (!puter) throw new Error('Puter not available');
+// ── Text generation — GPT-5.4, Gemini 3.1, Claude 3 ─────────────────
+const PUTER_TEXT_MODELS = [
+  'gpt-5.4-nano',       // Fastest, free
+  'gemini-3-flash-preview', // Google free
+  'gpt-4o-mini',        // Reliable free
+  'claude-3-5-haiku',   // Anthropic free via Puter
+]
 
+export async function puterChat(prompt: string, systemPrompt?: string, model?: string): Promise<string | null> {
   try {
-    const response = await puter.ai.chat(messages, { model });
-    if (typeof response === 'string') return response;
-    if (response?.message?.content) return response.message.content;
-    if (response?.content) return response.content;
-    return String(response);
-  } catch (err) {
-    throw new Error(`Puter chat failed: ${err}`);
-  }
+    const puter = await loadPuter()
+    if (!puter?.ai?.chat) return null
+    const m = model || PUTER_TEXT_MODELS[0]
+    const messages = systemPrompt
+      ? [{ role: 'system', content: systemPrompt }, { role: 'user', content: prompt }]
+      : [{ role: 'user', content: prompt }]
+    const res = await puter.ai.chat(messages, { model: m })
+    return typeof res === 'string' ? res : res?.message?.content || null
+  } catch { return null }
 }
 
-export async function puterImage(prompt: string): Promise<string> {
-  const puter = await loadPuter();
-  if (!puter) throw new Error('Puter not available');
+// ── Image generation — DALL-E 3, FLUX.1, Gemini Flash Image ──────────
+const PUTER_IMAGE_MODELS = [
+  'dall-e-3',                          // Best quality
+  'black-forest-labs/FLUX.1-schnell',  // Fast + good
+  'gemini-2.5-flash-image-preview',    // Google Nano Banana
+  'stabilityai/stable-diffusion-xl-base-1.0', // Reliable fallback
+]
 
-  const result = await puter.ai.txt2img(prompt);
-  if (result?.src) return result.src;
-  if (typeof result === 'string') return result;
-  throw new Error('Puter image failed');
+export async function puterImageGen(prompt: string, model?: string): Promise<string | null> {
+  try {
+    const puter = await loadPuter()
+    if (!puter?.ai?.txt2img) return null
+    const m = model || PUTER_IMAGE_MODELS[0]
+    const imgEl = await puter.ai.txt2img(prompt, { model: m })
+    if (!imgEl) return null
+    // Extract src from returned element
+    if (imgEl.src) return imgEl.src
+    if (typeof imgEl === 'string') return imgEl
+    return null
+  } catch { return null }
+}
+
+// ── TTS — OpenAI quality voice ────────────────────────────────────────
+export async function puterTTS(text: string): Promise<HTMLAudioElement | null> {
+  try {
+    const puter = await loadPuter()
+    if (!puter?.ai?.txt2speech) return null
+    const audio = await puter.ai.txt2speech(text.slice(0, 400), { provider: 'openai' })
+    return audio || null
+  } catch { return null }
+}
+
+// ── OCR / Image analysis ──────────────────────────────────────────────
+export async function puterVision(imageUrl: string, question = 'What is in this image?'): Promise<string | null> {
+  try {
+    const puter = await loadPuter()
+    if (!puter?.ai?.chat) return null
+    const res = await puter.ai.chat(question, imageUrl, { model: 'gpt-4o-mini' })
+    return typeof res === 'string' ? res : res?.message?.content || null
+  } catch { return null }
 }
