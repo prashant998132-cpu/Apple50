@@ -5,6 +5,11 @@ on:
     branches: [main]
   workflow_dispatch:
 
+# Fix: permissions add karo
+permissions:
+  contents: write
+  actions: read
+
 jobs:
   build-apk:
     name: Build JARVIS APK
@@ -25,7 +30,7 @@ jobs:
         with:
           node-version: '20'
 
-      - name: 🔧 Install only Capacitor (no Next.js build needed)
+      - name: 🔧 Install Capacitor
         run: |
           npm install --legacy-peer-deps --ignore-scripts 2>/dev/null || true
           npm install @capacitor/core @capacitor/cli @capacitor/android --legacy-peer-deps
@@ -33,42 +38,44 @@ jobs:
       - name: 📱 Create Android project
         run: |
           npx cap add android 2>/dev/null || true
-          # Update capacitor config to use live URL
           cat > capacitor.config.json << 'CAPEOF'
-          {
-            "appId": "com.jarvis.ai.pranshu",
-            "appName": "JARVIS AI",
-            "webDir": "out",
-            "server": {
-              "url": "https://apple50.vercel.app",
-              "cleartext": false
-            }
-          }
-          CAPEOF
+{
+  "appId": "com.jarvis.ai.pranshu",
+  "appName": "JARVIS AI",
+  "webDir": "out",
+  "server": {
+    "url": "https://apple50.vercel.app",
+    "cleartext": false
+  }
+}
+CAPEOF
           npx cap sync android 2>/dev/null || true
 
-      - name: 🔨 Build debug APK
+      - name: 🔨 Build APK
         run: |
           cd android
           chmod +x ./gradlew
-          ./gradlew assembleDebug --no-daemon -x lint --stacktrace 2>&1 | tail -50
+          ./gradlew assembleDebug --no-daemon -x lint
+          echo "APK path check:"
+          find . -name "*.apk" 2>/dev/null
 
-      - name: 📤 Upload APK
+      - name: 📤 Upload APK artifact
         uses: actions/upload-artifact@v4
         with:
           name: JARVIS-AI-apk
           path: android/app/build/outputs/apk/debug/app-debug.apk
           retention-days: 30
 
-      - name: 🚀 Release
+      - name: 🚀 Create Release
         uses: softprops/action-gh-release@v2
         with:
           tag_name: apk-${{ github.run_number }}
           name: "JARVIS AI v${{ github.run_number }}"
           body: |
-            📲 JARVIS AI APK — Install karo
+            📲 **JARVIS AI APK — Install karo**
             Settings → Security → Unknown sources ON
-            App: https://apple50.vercel.app
+            Loads from: https://apple50.vercel.app
           files: android/app/build/outputs/apk/debug/app-debug.apk
+          fail_on_unmatched_files: false
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
