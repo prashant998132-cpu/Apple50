@@ -567,6 +567,27 @@ export default function Home() {
       } catch { reply('Reminder set nahi ho saka.'); return; }
     }
 
+    // ── SMART MEMORY COMMANDS ──────────────────────────────────
+    if (/^yaad rakh[oa]?:|^remember:|^note that:|^save this:/i.test(text)) {
+      const fact = text.replace(/^yaad rakh[oa]?:|^remember:|^note that:|^save this:/i,'').trim()
+      if (fact) {
+        const { addMemory } = await import('@/lib/memory/smartMemory')
+        addMemory(fact, 'fact')
+        reply('🧠 Yaad kar liya: "' + fact + '"'); return
+      }
+    }
+    if (/memory|yaadein|memories|tune kya yaad|tujhe kya pata/i.test(t) && /dikhao|show|list|kya hai|batao/i.test(t)) {
+      const { getAllMemories } = await import('@/lib/memory/smartMemory')
+      const mems = getAllMemories()
+      if (!mems.length) { reply('Koi memory nahi abhi. "Yaad rakho: [kuch bhi]" bolo.'); return }
+      reply('🧠 **Meri Memories (' + mems.length + '):**\n\n' + mems.slice(0,10).map(m => '• ' + m.content).join('\n')); return
+    }
+    if (/memory.*clear|sab bhool|forget everything|memory.*delete/i.test(t)) {
+      const { clearAllMemory } = await import('@/lib/memory/smartMemory')
+      clearAllMemory()
+      reply('🧠 Sab memory clear kar di. Fresh start!'); return
+    }
+
     // ── NOTES ──────────────────────────────────────────────────
     if (/^(?:note|save note|note karo|likh lo)[:\s]+(.+)/i.test(text)) {
       const m = text.match(/(?:note|save note|note karo|likh lo)[:\s]+(.+)/i);
@@ -986,6 +1007,8 @@ export default function Home() {
 
     // Learn + habit tracking (background, silent)
     learnFromMessage(text.trim()).catch(() => {});
+    // Smart memory extraction
+    import('@/lib/memory/smartMemory').then(m => m.learnFromMessage(text.trim())).catch(() => {});
     trackHabit(text.trim()).catch(() => {});
 
     if (sessionId) {
@@ -1173,6 +1196,24 @@ export default function Home() {
             timestamp: Date.now(),
           }]);
         }, 1800);
+      }
+
+      // Proactive action — JARVIS takes initiative
+      if (!suggestion) {
+        const lc = fullText.toLowerCase()
+        // If JARVIS mentions a link → auto-make it tappable
+        // If JARVIS gives a phone number → auto-show call button
+        // If JARVIS mentions a time → check if reminder needed
+        const timeMatch = fullText.match(/(\d{1,2}(?::\d{2})?\s*(?:am|pm|baje|AM|PM))/)
+        if (timeMatch && /remind|yaad|alarm|timer/i.test(text)) {
+          setTimeout(() => {
+            setMsgs(prev => [...prev, {
+              id: 'proact_' + Date.now(), role: 'assistant',
+              content: '⏰ Reminder set karna chahoge **' + timeMatch[1] + '** ke liye? "Haan" bolo.',
+              timestamp: Date.now(),
+            }])
+          }, 2000)
+        }
       }
 
       // Mood detection — frustrated/tired → gentle suggestion
