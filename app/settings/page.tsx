@@ -19,7 +19,57 @@ const API_KEYS = [
   { key:'ELEVENLABS_API_KEY', label:'ElevenLabs', icon:'🎙️', priority:'MED',  url:'https://elevenlabs.io',                 desc:'Best TTS voice — 10K chars/month FREE. Realistic human voice.' },
 ]
 
-type Tab = 'keys' | 'automation' | 'theme' | 'about'
+type Tab = 'keys' | 'automation' | 'theme' | 'about' | 'memory'
+
+function MemoryManager() {
+  const [mems, setMems] = React.useState<any[]>([])
+  const [loading, setLoading] = React.useState(true)
+
+  React.useEffect(() => {
+    import('@/lib/memory/smartMemory').then(m => {
+      setMems(m.getAllMemories())
+      setLoading(false)
+    })
+  }, [])
+
+  const del = async (id: string) => {
+    const m = await import('@/lib/memory/smartMemory')
+    m.deleteMemory(id)
+    setMems(m.getAllMemories())
+  }
+
+  const clearAll = async () => {
+    if (!confirm('Sab memory delete karo?')) return
+    const m = await import('@/lib/memory/smartMemory')
+    m.clearAllMemory()
+    setMems([])
+  }
+
+  if (loading) return <div style={{ color:'#444', fontSize:13 }}>Loading...</div>
+  return (
+    <div>
+      <div style={{ display:'flex', justifyContent:'space-between', marginBottom:10 }}>
+        <div style={{ color:'#888', fontSize:12 }}>{mems.length} memories</div>
+        {mems.length > 0 && (
+          <button onClick={clearAll} style={{ background:'rgba(239,68,68,0.1)', border:'1px solid #ef4444', color:'#ef4444', borderRadius:8, padding:'4px 12px', fontSize:11, cursor:'pointer' }}>
+            🗑️ Clear All
+          </button>
+        )}
+      </div>
+      {mems.length === 0 ? (
+        <div style={{ color:'#444', fontSize:13 }}>Koi memory nahi. Chat mein "Yaad rakho: [kuch bhi]" bolo.</div>
+      ) : mems.map((m: any) => (
+        <div key={m.id} style={{ background:'#111118', border:'1px solid #1e1e2e', borderRadius:10, padding:'10px 12px', marginBottom:8, display:'flex', justifyContent:'space-between', alignItems:'center' }}>
+          <div>
+            <div style={{ color:'#00d4ff', fontSize:10, marginBottom:2 }}>{m.type}</div>
+            <div style={{ color:'#ccc', fontSize:13 }}>{m.content}</div>
+          </div>
+          <button onClick={() => del(m.id)} style={{ background:'none', border:'none', color:'#444', cursor:'pointer', fontSize:16, padding:4 }}>🗑️</button>
+        </div>
+      ))}
+    </div>
+  )
+}
 
 export default function SettingsPage() {
   const router = useRouter()
@@ -62,6 +112,7 @@ export default function SettingsPage() {
     { key:'automation', icon:'⚡', label:'Automation' },
     { key:'theme', icon:'🎨', label:'Theme' },
     { key:'about', icon:'ℹ️', label:'About' },
+  { key:'memory', icon:'🧠', label:'Memory' },
   ]
 
   return (
@@ -218,7 +269,17 @@ export default function SettingsPage() {
         )}
 
         {/* ABOUT TAB */}
-        {tab === 'about' && (
+        {tab === 'memory' && (
+        <div>
+          <div style={{ background:'rgba(0,212,255,0.06)', border:'1px solid rgba(0,212,255,0.15)', borderRadius:10, padding:12, marginBottom:14 }}>
+            <div style={{ color:'#00d4ff', fontWeight:700, fontSize:13, marginBottom:4 }}>🧠 JARVIS Smart Memory</div>
+            <div style={{ color:'#888', fontSize:12 }}>Chat mein "Yaad rakho: [kuch bhi]" — JARVIS yaad rakhega. "Memory dikhao" se dekho.</div>
+          </div>
+          <MemoryManager />
+        </div>
+      )}
+
+      {tab === 'about' && (
           <div>
             <div style={{ textAlign:'center', padding:'20px 0' }}>
               <div style={{ fontSize:48, marginBottom:8 }}>🤖</div>
