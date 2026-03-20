@@ -1,36 +1,39 @@
-import { CapacitorConfig } from '@capacitor/cli';
+import type { CapacitorConfig } from '@capacitor/cli';
 
 const config: CapacitorConfig = {
-  appId: 'com.jarvis.ai',
+  appId: 'com.jarvis.ai.pranshu',
   appName: 'JARVIS AI',
-  // APK loads hosted URL — no bundling, auto-updates
+  // Remote URL — sab API routes, SSE, sab kuch kaam karega
   server: {
-    url: 'https://apple-v20.vercel.app',
+    url: 'https://apple50.vercel.app',
     cleartext: false,
-    androidScheme: 'https',
   },
+  webDir: 'out',
   android: {
-    buildOptions: {
-      releaseType: 'APK',
-    },
     allowMixedContent: false,
     captureInput: true,
     webContentsDebuggingEnabled: false,
   },
   plugins: {
     SplashScreen: {
-      launchShowDuration: 1500,
+      launchShowDuration: 2000,
       backgroundColor: '#060610',
-      androidSplashResourceName: 'splash',
       showSpinner: false,
+      androidSpinnerStyle: 'small',
+      spinnerColor: '#00d4ff',
+      splashFullScreen: true,
+      splashImmersive: true,
+    },
+    StatusBar: {
+      style: 'Dark',
+      backgroundColor: '#060610',
     },
     PushNotifications: {
       presentationOptions: ['badge', 'sound', 'alert'],
     },
-    LocalNotifications: {
-      smallIcon: 'ic_stat_icon_config_sample',
-      iconColor: '#00d4ff',
-      sound: 'beep.wav',
+    Keyboard: {
+      resize: 'body',
+      style: 'dark',
     },
   },
 };
