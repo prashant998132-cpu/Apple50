@@ -1,34 +1,20 @@
-/* lib/tts.ts — TTS fallback chain */
-'use client';
+// lib/tts.ts — Smart TTS v3 — 4 providers, auto-fallback
+// Priority: ElevenLabs → Pollinations audio → Puter TTS → Web Speech
+'use client'
 
-let currentUtterance: SpeechSynthesisUtterance | null = null;
-let isSpeaking = false;
+let currentAudio: HTMLAudioElement | null = null
+let currentUtterance: SpeechSynthesisUtterance | null = null
 
 export function stopSpeaking(): void {
-  if (typeof window === 'undefined') return;
-  window.speechSynthesis?.cancel();
-  isSpeaking = false;
-  currentUtterance = null;
+  if (typeof window === 'undefined') return
+  currentAudio?.pause()
+  currentAudio = null
+  window.speechSynthesis?.cancel()
+  currentUtterance = null
 }
 
-export async function speakWithPuter(text: string): Promise<boolean> {
-  if (typeof window === 'undefined') return false;
-  try {
-    const puter = (window as any).puter;
-    if (puter?.ai?.txt2speech) {
-      const audio = await puter.ai.txt2speech(text.slice(0, 300));
-      if (audio) { audio.play(); return true; }
-    }
-  } catch {}
-  return false;
-}
-
-export function speakText(text: string, onEnd?: () => void): void {
-  if (typeof window === 'undefined') return;
-  stopSpeaking();
-
-  // Clean text for TTS
-  const clean = text
+function cleanText(text: string): string {
+  return text
     .replace(/```[\s\S]*?```/g, 'Code block.')
     .replace(/\*\*(.*?)\*\*/g, '$1')
     .replace(/\*(.*?)\*/g, '$1')
@@ -37,39 +23,88 @@ export function speakText(text: string, onEnd?: () => void): void {
     .replace(/[|`#*_~]/g, ' ')
     .replace(/\s+/g, ' ')
     .trim()
-    .slice(0, 500);
-
-  if (!clean) return;
-
-  // Try Web Speech API
-  if (window.speechSynthesis) {
-    const utter = new SpeechSynthesisUtterance(clean);
-    utter.lang = 'en-IN';
-    utter.rate = 1.05;
-    utter.pitch = 1.0;
-    utter.volume = 1.0;
-
-    // Pick a good voice
-    const voices = window.speechSynthesis.getVoices();
-    const preferred = voices.find(v =>
-      v.lang === 'en-IN' || v.name.includes('Google') || v.name.includes('Samantha')
-    );
-    if (preferred) utter.voice = preferred;
-
-    utter.onend = () => {
-      isSpeaking = false;
-      onEnd?.();
-    };
-    utter.onerror = () => {
-      isSpeaking = false;
-    };
-
-    currentUtterance = utter;
-    isSpeaking = true;
-    window.speechSynthesis.speak(utter);
-  }
+    .slice(0, 400)
 }
 
-export function getIsSpeaking(): boolean {
-  return isSpeaking;
+// Main speak function — tries all providers
+export async function speakText(text: string, onEnd?: () => void): Promise<void> {
+  if (typeof window === 'undefined') return
+  stopSpeaking()
+  const clean = cleanText(text)
+  if (!clean) return
+
+  // Get user preference from localStorage
+  const pref = localStorage.getItem('jarvis_tts_provider') || 'auto'
+  const elKey = localStorage.getItem('jarvis_key_ELEVENLABS_API_KEY')
+  const voice = localStorage.getItem('jarvis_tts_voice') || 'nova'
+
+  // 1. Try server TTS route (ElevenLabs → Pollinations)
+  if (pref !== 'browser') {
+    try {
+      const clientKeys: Record<string,string> = {}
+      if (elKey) clientKeys.ELEVENLABS_API_KEY = elKey
+      const res = await fetch('/api/tts', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ text: clean, voice, provider: pref, clientKeys }),
+        signal: AbortSignal.timeout(15000),
+      })
+      if (res.ok) {
+        const ct = res.headers.get('Content-Type') || ''
+        if (ct.includes('audio')) {
+          const blob = await res.blob()
+          const url = URL.createObjectURL(blob)
+          const audio = new Audio(url)
+          currentAudio = audio
+          audio.onended = () => { URL.revokeObjectURL(url); onEnd?.() }
+          await audio.play()
+          return
+        } else {
+          // Fallback signal from server
+          const d = await res.json()
+          if (d.fallback === 'webspeech') speakBrowser(d.text || clean, voice, onEnd)
+          return
+        }
+      }
+    } catch {}
+  }
+
+  // 2. Puter TTS
+  if (pref !== 'browser') {
+    try {
+      const puter = (window as any).puter
+      if (puter?.ai?.txt2speech) {
+        const audio = await puter.ai.txt2speech(clean, { provider: 'openai' })
+        if (audio) {
+          currentAudio = audio
+          audio.onended = onEnd
+          audio.play()
+          return
+        }
+      }
+    } catch {}
+  }
+
+  // 3. Browser Web Speech (always works, robotic but free)
+  speakBrowser(clean, voice, onEnd)
+}
+
+function speakBrowser(text: string, voice: string, onEnd?: () => void): void {
+  if (!window.speechSynthesis) return
+  const utter = new SpeechSynthesisUtterance(text)
+  utter.lang = 'en-IN'
+  utter.rate = 1.05
+  utter.pitch = voice === 'onyx' ? 0.8 : 1.0
+  utter.volume = 1.0
+
+  // Try to pick a good voice
+  const voices = window.speechSynthesis.getVoices()
+  const preferred = voices.find(v => v.lang.includes('en') && v.name.includes('India'))
+    || voices.find(v => v.lang.includes('en-IN'))
+    || voices.find(v => v.lang.startsWith('en'))
+  if (preferred) utter.voice = preferred
+
+  utter.onend = onEnd || null
+  currentUtterance = utter
+  window.speechSynthesis.speak(utter)
 }
