@@ -34,11 +34,13 @@ jobs:
           npm install --legacy-peer-deps --ignore-scripts 2>/dev/null || true
           npm install @capacitor/core @capacitor/cli @capacitor/android --legacy-peer-deps
 
-      - name: Create Android project
+      - name: Setup Capacitor config + Android
         run: |
-          npx cap add android 2>/dev/null || true
-          node -e "const fs=require('fs');fs.writeFileSync('capacitor.config.json',JSON.stringify({appId:'com.jarvis.ai.pranshu',appName:'JARVIS AI',webDir:'out',server:{url:'https://apple50.vercel.app',cleartext:false}},null,2))"
-          npx cap sync android 2>/dev/null || true
+          node -e "require('fs').writeFileSync('capacitor.config.json',JSON.stringify({appId:'com.jarvis.ai.pranshu',appName:'JARVIS AI',webDir:'out',server:{url:'https://apple50.vercel.app',cleartext:false}},null,2))"
+          mkdir -p out && echo '{}' > out/index.html
+          rm -rf android
+          npx cap add android
+          npx cap sync android
 
       - name: Build APK
         run: |
@@ -61,7 +63,7 @@ jobs:
           body: |
             JARVIS AI APK
             Install: Settings > Security > Unknown sources ON
-            App: https://apple50.vercel.app
+            App loads from: https://apple50.vercel.app
           files: android/app/build/outputs/apk/debug/app-debug.apk
           fail_on_unmatched_files: false
         env:
