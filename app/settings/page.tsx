@@ -16,6 +16,7 @@ const API_KEYS = [
   { key:'FIREWORKS_API_KEY',  label:'Fireworks',  icon:'🎆', priority:'LOW',  url:'https://fireworks.ai',               desc:'Llama 3.3 70B.' },
   { key:'DEEPINFRA_API_KEY',  label:'DeepInfra',  icon:'🌊', priority:'LOW',  url:'https://deepinfra.com',              desc:'Budget option.' },
   { key:'HUGGINGFACE_API_KEY',label:'HuggingFace',icon:'🤗', priority:'LOW',  url:'https://huggingface.co/settings/tokens', desc:'Mistral 7B fallback.' },
+  { key:'ELEVENLABS_API_KEY', label:'ElevenLabs', icon:'🎙️', priority:'MED',  url:'https://elevenlabs.io',                 desc:'Best TTS voice — 10K chars/month FREE. Realistic human voice.' },
 ]
 
 type Tab = 'keys' | 'automation' | 'theme' | 'about'
@@ -240,7 +241,7 @@ export default function SettingsPage() {
               </div>
             ))}
             <div style={{ marginTop:16, color:'#333', fontSize:11, textAlign:'center', lineHeight:2 }}>
-              Made with ❤️ by Pranshu<br/>Iron Man ka JARVIS, Maihar ka style
+              Made with ❤️ by Pranshu<br/>Tony Stark ka AI, Maihar mein bana
             </div>
           </div>
         )}
