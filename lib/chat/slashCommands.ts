@@ -261,8 +261,8 @@ export async function cmdApp(appId: string, query?: string): Promise<SlashResult
     train:       { name:'IRCTC Trains',     url:()=>'https://www.irctc.co.in/nget/train-search' },
     pnr:         { name:'PNR Status',       url:()=>'https://www.irctc.co.in/nget/pnr-status' },
     digilocker:  { name:'DigiLocker',       url:()=>'https://www.digilocker.gov.in' },
-    nta:         { name:'NTA NEET',         url:()=>'https://neet.nta.nic.in' },
-    neet:        { name:'NEET Portal',      url:()=>'https://neet.nta.nic.in' },
+    nta:         { name:'NTA Padhai',         url:()=>'https://padhai.nta.nic.in' },
+    padhai:        { name:'Padhai Portal',      url:()=>'https://padhai.nta.nic.in' },
     // Communication
     whatsapp:    { name:'WhatsApp Web',     url:()=>'https://web.whatsapp.com' },
     wa:          { name:'WhatsApp Web',     url:(q)=>q?`https://wa.me/${q.replace(/\D/g,'')}`:'https://web.whatsapp.com' },
@@ -335,7 +335,7 @@ export function parseSlashCommand(input: string): ParsedCommand | null {
     'youtube','spotify',        // Media
     'calendar','gcal',          // Calendar
     'irctc','train','pnr',      // India travel
-    'digilocker','nta','neet',  // India govt
+    'digilocker','nta','padhai',  // India govt
     'whatsapp','wa','telegram', // Communication
     'open',                     // Generic open
     'apps',                     // Hub
@@ -358,6 +358,10 @@ export const SLASH_COMMANDS = [
   { cmd: '/img',          desc: '/img [prompt] — DALL-E 3 image',       icon: '🎨' },
   { cmd: '/image',        desc: '/image [prompt] — Pollinations image', icon: '🖼️' },
   { cmd: '/canva',        desc: '/canva [design idea] — Canva mein design kholo', icon: '🎨' },
+  { cmd: '/music',        desc: '/music [mood/genre] — Suno pe music generate karo',          icon: '🎵' },
+  { cmd: '/video',        desc: '/video [prompt] — Kling AI video link kholo',               icon: '🎬' },
+  { cmd: '/tts',          desc: '/tts [text] — Voice mein bol do JARVIS se',                 icon: '🔊' },
+  { cmd: '/elevenlabs',   desc: '/elevenlabs [text] — Best quality voice',                   icon: '🎙️' },
   { cmd: '/design',       desc: '/design [type] — Canva templates browse karo',   icon: '✏️' },
   { cmd: '/chatgpt',      desc: '/chatgpt [query] — ChatGPT mein kholo',          icon: '🤖' },
   { cmd: '/gemini',       desc: '/gemini [query] — Gemini mein kholo',            icon: '🌟' },
