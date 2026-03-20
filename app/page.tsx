@@ -841,6 +841,36 @@ export default function Home() {
       reply('Pehle "progress report" type karo, phir share karo.'); return;
     }
 
+    // ── MUSIC GENERATION ──────────────────────────────────────
+    if (/^music|^song|gaana bana|music generate/i.test(t)) {
+      const mood = text.replace(/music|song|gaana|bana|generate/gi,'').trim() || 'relaxing hindi'
+      // Open Suno + Udio as alternatives
+      const sunoUrl = 'https://suno.com/create?prompt=' + encodeURIComponent(mood)
+      const udioUrl = 'https://www.udio.com/create?prompt=' + encodeURIComponent(mood)
+      reply('🎵 Music generate karo:\n\nSuno: ' + sunoUrl + '\nUdio: ' + udioUrl + '\n\nDono free hain boss!')
+      return
+    }
+
+    // ── VIDEO GENERATION ───────────────────────────────────────
+    if (/^video|video bana|clip generate/i.test(t)) {
+      const prompt = text.replace(/video|bana|generate|clip/gi,'').trim() || 'cinematic short clip'
+      const klingUrl = 'https://klingai.com/create?prompt=' + encodeURIComponent(prompt)
+      const lumaUrl = 'https://lumalabs.ai/dream-machine?prompt=' + encodeURIComponent(prompt)
+      reply('🎬 Video generate karo:\n\nKling AI (best): ' + klingUrl + '\nLuma (8/month): ' + lumaUrl)
+      return
+    }
+
+    // ── TTS / VOICE ────────────────────────────────────────────
+    if (/^(?:bol|speak|tts|voice|read aloud|padho)\s+(.+)/i.test(text)) {
+      const sayText = text.replace(/^(?:bol|speak|tts|voice|read aloud|padho)\s+/i,'').trim()
+      if (sayText) {
+        const { speakText } = await import('@/lib/tts')
+        speakText(sayText)
+        reply('🔊 Bol raha hoon: "' + sayText.slice(0,50) + (sayText.length > 50 ? '...' : '') + '"')
+        return
+      }
+    }
+
     // ── CHAT EXPORT ────────────────────────────────────────────
     if (/export|share chat|chat export|save chat|download chat/i.test(text)) {
       const chatText = msgs.map(m => (m.role === 'user' ? '👤 You: ' : '🤖 JARVIS: ') + m.content).join('\n\n');
