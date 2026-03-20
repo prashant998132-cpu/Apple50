@@ -20,31 +20,38 @@ jobs:
           distribution: 'zulu'
           java-version: '17'
 
-      - name: 📦 Node.js 20
+      - name: 📦 Node 20
         uses: actions/setup-node@v4
         with:
           node-version: '20'
-          # No cache — package-lock.json nahi hai repo mein
 
-      - name: 🔧 Install deps
-        run: npm install --legacy-peer-deps
-
-      - name: 🏗️ Build Next.js
-        run: npm run build
-        env:
-          NEXT_PUBLIC_APP_URL: https://apple50.vercel.app
-
-      - name: 📱 Capacitor install + sync
+      - name: 🔧 Install only Capacitor (no Next.js build needed)
         run: |
+          npm install --legacy-peer-deps --ignore-scripts 2>/dev/null || true
           npm install @capacitor/core @capacitor/cli @capacitor/android --legacy-peer-deps
-          npx cap add android 2>/dev/null || true
-          npx cap sync android
 
-      - name: 🔨 Build APK
+      - name: 📱 Create Android project
+        run: |
+          npx cap add android 2>/dev/null || true
+          # Update capacitor config to use live URL
+          cat > capacitor.config.json << 'CAPEOF'
+          {
+            "appId": "com.jarvis.ai.pranshu",
+            "appName": "JARVIS AI",
+            "webDir": "out",
+            "server": {
+              "url": "https://apple50.vercel.app",
+              "cleartext": false
+            }
+          }
+          CAPEOF
+          npx cap sync android 2>/dev/null || true
+
+      - name: 🔨 Build debug APK
         run: |
           cd android
           chmod +x ./gradlew
-          ./gradlew assembleDebug --no-daemon -x lint
+          ./gradlew assembleDebug --no-daemon -x lint --stacktrace 2>&1 | tail -50
 
       - name: 📤 Upload APK
         uses: actions/upload-artifact@v4
@@ -59,9 +66,9 @@ jobs:
           tag_name: apk-${{ github.run_number }}
           name: "JARVIS AI v${{ github.run_number }}"
           body: |
-            📲 **JARVIS AI APK**
-            Install karo → Settings → Unknown sources ON
-            App URL: https://apple50.vercel.app
+            📲 JARVIS AI APK — Install karo
+            Settings → Security → Unknown sources ON
+            App: https://apple50.vercel.app
           files: android/app/build/outputs/apk/debug/app-debug.apk
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
