@@ -1,5 +1,9 @@
 /** @type {import('next').NextConfig} */
+// Static export for Capacitor APK build
+const isCapacitor = process.env.NEXT_PUBLIC_STATIC === 'true'
+
 const nextConfig = {
+  ...(isCapacitor && { output: 'export' }),
   typescript: {
     ignoreBuildErrors: true,
   },
