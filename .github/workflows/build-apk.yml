@@ -3,85 +3,65 @@ name: 🤖 JARVIS APK Builder
 on:
   push:
     branches: [main]
-    paths:
-      - 'capacitor.config.ts'
-      - '.github/workflows/build-apk.yml'
-      - 'app/**'
-      - 'package.json'
-  workflow_dispatch:  # Manual trigger from GitHub UI
+  workflow_dispatch:
 
 jobs:
   build-apk:
     name: Build JARVIS APK
     runs-on: ubuntu-latest
-    
+
     steps:
-      - name: 📥 Checkout code
+      - name: 📥 Checkout
         uses: actions/checkout@v4
 
-      - name: ☕ Setup Java 17
+      - name: ☕ Java 17
         uses: actions/setup-java@v4
         with:
           distribution: 'zulu'
           java-version: '17'
 
-      - name: 📦 Setup Node.js
+      - name: 📦 Node.js 20
         uses: actions/setup-node@v4
         with:
           node-version: '20'
-          cache: 'npm'
+          # No cache — package-lock.json nahi hai repo mein
 
-      - name: 🔧 Install dependencies
+      - name: 🔧 Install deps
         run: npm install --legacy-peer-deps
 
-      - name: 🏗️ Build Next.js (static export)
+      - name: 🏗️ Build Next.js
         run: npm run build
         env:
           NEXT_PUBLIC_APP_URL: https://apple50.vercel.app
 
-      - name: 📱 Install Capacitor
+      - name: 📱 Capacitor install + sync
         run: |
-          npm install @capacitor/core @capacitor/cli @capacitor/android @capacitor/splash-screen @capacitor/status-bar @capacitor/push-notifications --legacy-peer-deps
-
-      - name: 🔄 Capacitor sync
-        run: |
-          npx cap add android || true
+          npm install @capacitor/core @capacitor/cli @capacitor/android --legacy-peer-deps
+          npx cap add android 2>/dev/null || true
           npx cap sync android
 
-      - name: 🔑 Setup keystore
-        run: |
-          echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 -d > android/keystore.jks
-        
-      - name: 🔨 Build debug APK (no keystore needed)
+      - name: 🔨 Build APK
         run: |
           cd android
           chmod +x ./gradlew
-          ./gradlew assembleDebug --no-daemon
+          ./gradlew assembleDebug --no-daemon -x lint
 
-      - name: 📤 Upload APK artifact
+      - name: 📤 Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: JARVIS-AI-debug
+          name: JARVIS-AI-apk
           path: android/app/build/outputs/apk/debug/app-debug.apk
           retention-days: 30
 
-      - name: 🚀 Create Release (on main push)
+      - name: 🚀 Release
         uses: softprops/action-gh-release@v2
-        if: github.ref == 'refs/heads/main'
         with:
           tag_name: apk-${{ github.run_number }}
           name: "JARVIS AI v${{ github.run_number }}"
           body: |
-            🤖 **JARVIS AI APK — Auto Build**
-            
-            📲 Download karo aur install karo
-            ⚙️ Settings → Security → Unknown sources ON karo
-            🔗 App loads from: https://apple50.vercel.app
-            
-            **Build:** ${{ github.run_number }}
-            **Commit:** ${{ github.sha }}
+            📲 **JARVIS AI APK**
+            Install karo → Settings → Unknown sources ON
+            App URL: https://apple50.vercel.app
           files: android/app/build/outputs/apk/debug/app-debug.apk
-          draft: false
-          prerelease: false
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
