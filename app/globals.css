@@ -211,13 +211,17 @@ body {
 
 /* Page container */
 .page-container {
-  min-height: 100dvh;
   height: 100dvh;
+  min-height: 100dvh;
+  max-height: 100dvh;
   display: flex;
   flex-direction: column;
   background: var(--bg);
   max-width: 600px;
   overflow: hidden;
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  width: 100%;
   margin: 0 auto;
   position: relative;
 }
