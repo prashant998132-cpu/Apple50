@@ -251,62 +251,50 @@ export default function SettingsPage() {
 
         {/* THEME TAB */}
         {tab === 'theme' && (
-          <div>
-            <div style={{ color:'#888', fontSize:13, marginBottom:14, lineHeight:1.8 }}>
-              JARVIS ka current theme: <b style={{ color:'#00d4ff' }}>{theme}</b>
-            </div>
-            <button onClick={()=>{ const t = toggleTheme(); setTheme(t) }} style={{ width:'100%', background:'linear-gradient(135deg,#1a1a2e,#0a0a1e)', border:'1px solid #2a2a4a', borderRadius:12, padding:14, cursor:'pointer', color:'#e0e0ff', fontSize:14, marginBottom:10 }}>
-              🌗 Theme Toggle karo
-            </button>
-            <div style={{ background:'#111118', border:'1px solid #1e1e2e', borderRadius:12, padding:14 }}>
-              <div style={{ color:'#555', fontSize:11, lineHeight:2 }}>
-                <div>🎨 Dark mode — JARVIS default</div>
-                <div>🌞 Light mode — optional</div>
-                <div>📱 AMOLED friendly — true black</div>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* ABOUT TAB */}
-        {tab === 'memory' && (
         <div>
-          <div style={{ background:'rgba(0,212,255,0.06)', border:'1px solid rgba(0,212,255,0.15)', borderRadius:10, padding:12, marginBottom:14 }}>
-            <div style={{ color:'#00d4ff', fontWeight:700, fontSize:13, marginBottom:4 }}>🧠 JARVIS Smart Memory</div>
-            <div style={{ color:'#888', fontSize:12 }}>Chat mein "Yaad rakho: [kuch bhi]" — JARVIS yaad rakhega. "Memory dikhao" se dekho.</div>
+          {/* App Theme */}
+          <div style={{ marginBottom: 20 }}>
+            <div style={{ color:'#00d4ff', fontWeight:700, fontSize:13, marginBottom:8 }}>🎨 App Theme</div>
+            <div style={{ color:'#888', fontSize:12, marginBottom:10 }}>Current: <b style={{ color:'#00d4ff' }}>{theme}</b></div>
+            <div style={{ display:'flex', gap:8, flexWrap:'wrap' }}>
+              {(['dark','light','amoled','ocean'] as const).map(t => (
+                <button key={t} onClick={() => { const r = toggleTheme(); setTheme(r); }}
+                  style={{ padding:'8px 14px', borderRadius:10, border: theme===t ? '1px solid #00d4ff' : '1px solid #1e1e2e', background: theme===t ? 'rgba(0,212,255,0.1)' : '#111', color: theme===t ? '#00d4ff' : '#666', fontSize:12, cursor:'pointer', textTransform:'capitalize' }}>
+                  {t==='dark'?'🌑':t==='light'?'☀️':t==='amoled'?'⬛':'🌊'} {t}
+                </button>
+              ))}
+            </div>
           </div>
-          <MemoryManager />
+
+          {/* Chat Background Wallpaper */}
+          <div>
+            <div style={{ color:'#00d4ff', fontWeight:700, fontSize:13, marginBottom:8 }}>🖼️ Chat Background</div>
+            <div style={{ color:'#888', fontSize:12, marginBottom:10 }}>Chat ke peeche wallpaper set karo</div>
+            <div style={{ display:'grid', gridTemplateColumns:'repeat(3,1fr)', gap:8 }}>
+              {[
+                { id:'none', label:'None', bg:'#060610' },
+                { id:'gradient1', label:'Cyan', bg:'linear-gradient(135deg,#0a0a1a,#0d1f2d)' },
+                { id:'gradient2', label:'Purple', bg:'linear-gradient(135deg,#0a0a1a,#1a0a2e)' },
+                { id:'gradient3', label:'Green', bg:'linear-gradient(135deg,#0a1a0a,#0d2d0d)' },
+                { id:'gradient4', label:'Sunset', bg:'linear-gradient(135deg,#1a0a0a,#2d1a0a)' },
+                { id:'gradient5', label:'Ocean', bg:'linear-gradient(135deg,#0a0f1a,#0a1a2d)' },
+                { id:'dots', label:'Dots', bg:'radial-gradient(#00d4ff22 1px,transparent 1px) 0 0/20px 20px #060610' },
+                { id:'grid', label:'Grid', bg:'linear-gradient(#00d4ff11 1px,transparent 1px) 0 0/30px 30px #060610' },
+                { id:'stars', label:'Stars', bg:'radial-gradient(#ffffff22 1px,transparent 1px) 0 0/40px 40px #060610' },
+              ].map(w => (
+                <button key={w.id} onClick={() => {
+                    if (typeof window !== 'undefined') { localStorage.setItem('jarvis_chat_bg', w.id); window.dispatchEvent(new Event('storage')); }
+                    alert('Background set! JARVIS main chat mein dikhega.');
+                  }}
+                  style={{ padding:6, borderRadius:10, border:'1px solid #1e1e2e', background:w.bg, cursor:'pointer', aspectRatio:'1.5', display:'flex', alignItems:'flex-end', justifyContent:'center' }}>
+                  <span style={{ color:'#ccc', fontSize:10, background:'rgba(0,0,0,0.7)', padding:'2px 6px', borderRadius:6 }}>{w.label}</span>
+                </button>
+              ))}
+            </div>
+          </div>
         </div>
       )}
-
-      {tab === 'about' && (
-          <div>
-            <div style={{ textAlign:'center', padding:'20px 0' }}>
-              <div style={{ fontSize:48, marginBottom:8 }}>🤖</div>
-              <div style={{ color:'#00d4ff', fontSize:22, fontWeight:900, letterSpacing:3 }}>JARVIS</div>
-              <div style={{ color:'#444', fontSize:12, marginTop:4 }}>v20.9 · Just A Rather Very Intelligent System</div>
-            </div>
-            {[
-              { label:'Framework', val:'Next.js 14.2.29' },
-              { label:'React', val:'18.2.0' },
-              { label:'Database', val:'Dexie.js + IndexedDB' },
-              { label:'AI Providers', val:'14 providers (all free)' },
-              { label:'Hosting', val:'Vercel (free tier)' },
-              { label:'Storage', val:'Puter Cloud (unlimited)' },
-              { label:'Personality', val:'"Jons Bhai" — Hinglish AI' },
-              { label:'Cost', val:'₹0/month' },
-            ].map(r => (
-              <div key={r.label} style={{ display:'flex', justifyContent:'space-between', padding:'10px 0', borderBottom:'1px solid #111120' }}>
-                <span style={{ color:'#555', fontSize:12 }}>{r.label}</span>
-                <span style={{ color:'#888', fontSize:12 }}>{r.val}</span>
-              </div>
-            ))}
-            <div style={{ marginTop:16, color:'#333', fontSize:11, textAlign:'center', lineHeight:2 }}>
-              Made with ❤️ by Pranshu<br/>Tony Stark ka AI, Maihar mein bana
-            </div>
-          </div>
-        )}
       </div>
     </div>
-  )
+  );
 }
