@@ -300,6 +300,30 @@ export default function Home() {
   const [wakeActive, setWakeActive] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
   const [micActive, setMicActive] = useState(false);
+  const [chatBg, setChatBg] = React.useState<string>('none');
+  React.useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const bgId = localStorage.getItem('jarvis_chat_bg') || 'none';
+    const bgMap: Record<string,string> = {
+      none: 'none',
+      gradient1: 'linear-gradient(135deg,#0a0a1a,#0d1f2d)',
+      gradient2: 'linear-gradient(135deg,#0a0a1a,#1a0a2e)',
+      gradient3: 'linear-gradient(135deg,#0a1a0a,#0d2d0d)',
+      gradient4: 'linear-gradient(135deg,#1a0a0a,#2d1a0a)',
+      gradient5: 'linear-gradient(135deg,#0a0f1a,#0a1a2d)',
+      dots: 'radial-gradient(circle,#00d4ff22 1px,transparent 1px) 0 0 / 20px 20px #060610',
+      grid: 'linear-gradient(#00d4ff11 1px,transparent 1px) 0 0 / 30px 30px, linear-gradient(90deg,#00d4ff11 1px,transparent 1px) 0 0 / 30px 30px #060610',
+      stars: 'radial-gradient(circle,#ffffff33 1px,transparent 1px) 0 0 / 40px 40px #060610',
+    };
+    setChatBg(bgMap[bgId] || 'none');
+    // Listen for storage changes (settings page se)
+    const onStorage = () => {
+      const id = localStorage.getItem('jarvis_chat_bg') || 'none';
+      setChatBg(bgMap[id] || 'none');
+    };
+    window.addEventListener('storage', onStorage);
+    return () => window.removeEventListener('storage', onStorage);
+  }, []);
   const [pinnedMsgs, setPinnedMsgs] = useState<string[]>([]);  // pinned message ids
 
   const bottomRef   = useRef<HTMLDivElement>(null);
@@ -1322,7 +1346,7 @@ export default function Home() {
             {reconnected && <span style={{ fontSize: 9, color: '#22c55e', marginLeft: 6 }}>● Online</span>}
           </div>
           <div style={{ color: '#444', fontSize: 9, marginTop: 1 }}>
-            {location ? '📍 ' + location : 'apple50.vercel.app · ₹0/month'}
+            {location ? '📍 ' + location : online ? '🟢 Online · ₹0/month' : '🔴 Offline mode'}
           </div>
         </div>
 
@@ -1390,7 +1414,8 @@ export default function Home() {
       )}
 
       {/* Messages — full flex space */}
-      <div style={{ flex: 1, overflowY: 'auto', overflowX: 'hidden', padding: '8px 0', minHeight: 0, WebkitOverflowScrolling: 'touch' }}
+      <div style={{ flex: 1, overflowY: 'auto', overflowX: 'hidden', padding: '8px 0', minHeight: 0, WebkitOverflowScrolling: 'touch',
+        background: chatBg !== 'none' ? chatBg : undefined }}
         onTouchStart={(e) => { (window as any).__pullY = e.touches[0].clientY; }}
         onTouchEnd={(e) => {
           const diff = e.changedTouches[0].clientY - ((window as any).__pullY || 0);
