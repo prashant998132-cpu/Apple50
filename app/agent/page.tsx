@@ -1,9 +1,9 @@
 'use client'
-import React, { useState, useRef, useEffect } from 'react'
+import React, { useState, useRef, useEffect, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { runAgent, type AgentStep } from '@/lib/agent/jarvisAgent'
 
-export default function AgentPage() {
+function AgentContent() {
   const router = useRouter()
   const params = useSearchParams()
   const [goal, setGoal] = useState(params?.get('goal') || '')
@@ -162,5 +162,13 @@ export default function AgentPage() {
         </div>
       </div>
     </div>
+  )
+}
+
+export default function AgentPage() {
+  return (
+    <Suspense fallback={<div style={{ background:'#060610', height:'100dvh', display:'flex', alignItems:'center', justifyContent:'center', color:'#00d4ff' }}>⏳ Loading...</div>}>
+      <AgentContent />
+    </Suspense>
   )
 }
