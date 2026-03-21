@@ -299,6 +299,7 @@ export default function Home() {
   const [slashFilter, setSlashFilter] = useState('');
   const [wakeActive, setWakeActive] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
+  const [micActive, setMicActive] = useState(false);
   const [pinnedMsgs, setPinnedMsgs] = useState<string[]>([]);  // pinned message ids
 
   const bottomRef   = useRef<HTMLDivElement>(null);
@@ -1270,6 +1271,7 @@ export default function Home() {
 
   return (
     <div className="page-container">
+      <style>{`@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.5} }`}</style>
 
       {/* New Toast System */}
       <ToastContainer toasts={toasts} onClose={hideToast} />
@@ -1491,22 +1493,49 @@ export default function Home() {
             style={{ flex: 1, background: 'transparent', border: 'none', color: '#e0e0ff', fontSize: 15, outline: 'none', resize: 'none', minHeight: 34, maxHeight: 120, lineHeight: 1.5, fontFamily: 'inherit', overflowY: 'auto', padding: '7px 6px', opacity: loading ? 0.5 : 1 }}
           />
 
-          {/* Mic — tap = ek baar, hold = jab tak bolo */}
+          {/* Mic — onClick with permission request (APK compatible) */}
           <button
-            onPointerDown={() => {
+            onClick={async () => {
+              // Request mic permission first (important for APK)
+              try {
+                await navigator.mediaDevices?.getUserMedia({ audio: true });
+              } catch {
+                toastErr('Mic permission do — Settings > Permissions > Microphone');
+                return;
+              }
               const SR = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
-              if (!SR) { toastErr('Mic support nahi'); return; }
-              const rec = new SR(); rec.lang = 'hi-IN'; rec.continuous = false; rec.interimResults = true;
+              if (!SR) {
+                // APK fallback — Puter Whisper
+                toastErr('Voice browser mein nahi chala. Voice page try karo.');
+                return;
+              }
+              const rec = new SR();
+              rec.lang = 'hi-IN';
+              rec.continuous = false;
+              rec.interimResults = true;
               let final = '';
-              rec.onresult = (e: any) => { final = Array.from(e.results).map((r: any) => r[0].transcript).join(''); setInput(final); };
-              rec.onerror = () => { toastErr('Mic error'); };
-              rec.onend = () => { if (final.trim()) setTimeout(() => send(final), 200); };
-              rec.start(); toastOk('🎙️ Bol...');
-              (window as any).__jarvisRec = rec;
+              setMicActive(true);
+              toastOk('🎙️ Bol boss...');
+              rec.onresult = (e: any) => {
+                final = Array.from(e.results).map((r: any) => r[0].transcript).join('');
+                setInput(final);
+              };
+              rec.onerror = (e: any) => {
+                setMicActive(false);
+                if (e.error === 'not-allowed') toastErr('Mic permission nahi — Settings mein allow karo');
+                else if (e.error === 'no-speech') toastErr('Kuch suna nahi. Dobara try karo.');
+                else toastErr('Mic error: ' + e.error);
+              };
+              rec.onend = () => {
+                setMicActive(false);
+                if (final.trim()) setTimeout(() => send(final), 300);
+              };
+              try { rec.start(); } catch { toastErr('Mic start nahi hua'); setMicActive(false); }
             }}
-            onPointerUp={() => { (window as any).__jarvisRec?.stop(); }}
-            style={{ width: 36, height: 36, borderRadius: '50%', background: 'transparent', border: 'none', color: '#555', fontSize: 18, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, WebkitUserSelect: 'none', userSelect: 'none' }}
-            title="Tap or hold to speak">🎙️</button>
+            style={{ width: 36, height: 36, borderRadius: '50%', background: micActive ? 'rgba(239,68,68,0.2)' : 'transparent', border: micActive ? '1px solid #ef4444' : 'none', color: micActive ? '#ef4444' : '#555', fontSize: 18, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, transition: 'all 0.2s', animation: micActive ? 'pulse 1s infinite' : 'none' }}
+            title="Tap to speak">
+            {micActive ? '🔴' : '🎙️'}
+          </button>
 
           {/* Send */}
           <button onClick={() => send(input)} disabled={!input.trim() || loading}
