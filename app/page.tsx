@@ -539,6 +539,14 @@ export default function Home() {
       setSlashFilter('/');
       return;
     }
+
+    // Agent mode trigger — "agent: goal" or "⚡ goal"
+    if (/^(?:agent|⚡|auto)[:\s]+(.+)/i.test(text) || /^jarvis\s+(?:khud|automatically|auto)\s+(.+)/i.test(text)) {
+      const goal = text.replace(/^(?:agent|⚡|auto|jarvis\s+(?:khud|automatically|auto))[:\s]+/i, '').trim();
+      router.push('/agent?goal=' + encodeURIComponent(goal));
+      setInput('');
+      return;
+    }
     setPlusOpen(false);
 
     // ── JARVIS Chat Command Center ─────────────────────────────
