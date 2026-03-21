@@ -672,6 +672,144 @@ export default function Home() {
       } catch { reply('Currency fetch nahi ho saka.'); return; }
     }
 
+    // ── EXPENSE TRACKER ────────────────────────────────────────
+    const expenseMatch = text.match(/(?:kharcha|kharch|spend|spent|paid|diya|lagaya)[:\s]+(?:rs\.?|₹|rupee[s]?)?\s*(\d+(?:\.\d+)?)\s+(.+)/i)
+      || text.match(/(\d+(?:\.\d+)?)\s+(?:rs\.?|₹|rupee[s]?)?\s+(.+?)\s+(?:kharcha|lagaya|diya|spend|paid)/i);
+    if (expenseMatch) {
+      const amount = parseFloat(expenseMatch[1]);
+      const category = expenseMatch[2]?.trim() || 'Other';
+      if (typeof window !== 'undefined') {
+        const expenses = JSON.parse(localStorage.getItem('jarvis_expenses') || '[]');
+        expenses.unshift({ amount, category, date: new Date().toLocaleDateString('en-IN'), ts: Date.now() });
+        localStorage.setItem('jarvis_expenses', JSON.stringify(expenses.slice(0, 200)));
+        const thisMonth = expenses.filter((e: any) => new Date(e.ts).getMonth() === new Date().getMonth());
+        const total = thisMonth.reduce((s: number, e: any) => s + e.amount, 0);
+        reply('💸 Expense saved!\n₹' + amount + ' — ' + category + '\n\n📊 This month total: ₹' + total.toLocaleString('en-IN'));
+        return;
+      }
+    }
+    if (/expense|kharcha|spending|kitna kharcha|monthly|budget/i.test(t) && /dikhao|show|report|kitna|summary/i.test(t)) {
+      if (typeof window !== 'undefined') {
+        const expenses = JSON.parse(localStorage.getItem('jarvis_expenses') || '[]');
+        if (!expenses.length) { reply('Koi expense nahi. "500 grocery kharcha" type karo.'); return; }
+        const thisMonth = expenses.filter((e: any) => new Date(e.ts).getMonth() === new Date().getMonth());
+        const total = thisMonth.reduce((s: number, e: any) => s + e.amount, 0);
+        const recent = thisMonth.slice(0, 5).map((e: any) => '• ₹' + e.amount + ' — ' + e.category + ' (' + e.date + ')').join('\n');
+        reply('💸 **This Month Expenses**\n\nTotal: **₹' + total.toLocaleString('en-IN') + '**\n\n' + recent);
+        return;
+      }
+    }
+
+    // ── HABIT TRACKER ───────────────────────────────────────────
+    const habitDoneMatch = text.match(/(?:aaj|today)\s+(.+?)\s+(?:kiya|done|complete|kar liya|kiya hai|ho gaya)/i)
+      || text.match(/(.+?)\s+(?:aaj|today)\s+(?:kiya|done|kar liya)/i);
+    if (habitDoneMatch?.[1] && !/goal|reminder|note/.test(habitDoneMatch[1])) {
+      const habit = habitDoneMatch[1].trim();
+      if (typeof window !== 'undefined') {
+        const habits = JSON.parse(localStorage.getItem('jarvis_habits') || '{}');
+        const today = new Date().toDateString();
+        if (!habits[habit]) habits[habit] = { streak: 0, lastDate: '', dates: [] };
+        const h = habits[habit];
+        const yesterday = new Date(Date.now() - 86400000).toDateString();
+        if (h.lastDate === yesterday) h.streak++;
+        else if (h.lastDate !== today) h.streak = 1;
+        h.lastDate = today;
+        if (!h.dates.includes(today)) h.dates.push(today);
+        localStorage.setItem('jarvis_habits', JSON.stringify(habits));
+        reply('✅ **' + habit + '** — Done!\n🔥 Streak: **' + h.streak + ' days**\n' + (h.streak >= 7 ? '🏆 7 din ka streak! Zabardast!' : h.streak >= 3 ? '💪 ' + h.streak + ' din se consistent!' : 'Keep it up boss!'));
+        return;
+      }
+    }
+    if (/habit|streak|dikhao.*habit|habit.*dikhao/i.test(t)) {
+      if (typeof window !== 'undefined') {
+        const habits = JSON.parse(localStorage.getItem('jarvis_habits') || '{}');
+        const keys = Object.keys(habits);
+        if (!keys.length) { reply('Koi habit nahi. "Aaj gym kiya" ya "aaj padhai kiya" bolo.'); return; }
+        reply('🔥 **Habit Streaks:**\n\n' + keys.map(k => '• **' + k + '**: ' + habits[k].streak + ' days 🔥').join('\n'));
+        return;
+      }
+    }
+
+    // ── WHATSAPP AI DRAFT ───────────────────────────────────────
+    const waDraftMatch = text.match(/(?:whatsapp|wa)\s+(?:pe|mein|ko|par)\s+(.+?)\s+(?:ko|ke liye)?\s+(?:bol|bolo|likho|message karo|msg karo)\s+(.+)/i)
+      || text.match(/(.+?)\s+ko\s+whatsapp\s+(?:karo|karna|message)\s+(?:ki|ke|ki)?\s*(.+)/i);
+    if (waDraftMatch) {
+      const person = waDraftMatch[1]?.trim();
+      const msgContent = waDraftMatch[2]?.trim();
+      if (person && msgContent) {
+        const draft = 'Hi ' + person + '! ' + msgContent;
+        if (typeof window !== 'undefined') {
+          window.location.href = 'whatsapp://send?text=' + encodeURIComponent(draft);
+        }
+        reply('💬 WhatsApp draft ready:\n"' + draft + '"\n\nWhatsApp khul raha hai...');
+        return;
+      }
+    }
+
+    // ── NIFTY/SENSEX ────────────────────────────────────────────
+    if (/nifty|sensex|stock market|share market/i.test(t)) {
+      try {
+        const res = await fetch('https://query1.finance.yahoo.com/v8/finance/chart/%5ENSEI?interval=1d&range=1d', { signal: AbortSignal.timeout(5000) });
+        const d = await res.json();
+        const price = d?.chart?.result?.[0]?.meta?.regularMarketPrice;
+        const prev = d?.chart?.result?.[0]?.meta?.previousClose;
+        const change = price && prev ? ((price - prev) / prev * 100).toFixed(2) : null;
+        if (price) {
+          reply('📈 **Nifty 50**: ' + price?.toLocaleString('en-IN') + (change ? ('\n' + (parseFloat(change) > 0 ? '📈' : '📉') + ' ' + change + '% today') : ''));
+          return;
+        }
+      } catch {}
+      // Fallback
+      reply('📈 Stock market data fetch nahi hua. NSE India: nseindia.com check karo.');
+      return;
+    }
+
+    // ── TRAIN STATUS ────────────────────────────────────────────
+    const trainMatch = text.match(/(?:train|rajdhani|shatabdi|express)\s+(?:number|no\.?|#)?\s*(\d{4,5})/i)
+      || text.match(/(\d{4,5})\s+(?:train|number|no\.?)\s+(?:kahan hai|status|location|running)/i);
+    if (trainMatch?.[1] || /train.*kahan|train.*status|train.*running/i.test(t)) {
+      const trainNo = trainMatch?.[1] || '12301';
+      const url = 'https://www.railyatri.in/live-train-status/train-' + trainNo;
+      reply('🚂 **Train ' + trainNo + ' Status**\n\nSeedha check karo:\n' + url + '\n\nYa NTES app use karo — most accurate live data.');
+      return;
+    }
+
+    // ── CRICKET/IPL SCORE ───────────────────────────────────────
+    if (/cricket|ipl|score|match.*score|cricket.*score/i.test(t)) {
+      try {
+        const res = await fetch('https://api.cricapi.com/v1/currentMatches?apikey=free&offset=0', { signal: AbortSignal.timeout(5000) });
+        const d = await res.json();
+        if (d?.data?.length) {
+          const matches = d.data.slice(0, 3).map((m: any) => '🏏 ' + m.name + '\n' + (m.score?.map((s: any) => s.inning + ': ' + s.r + '/' + s.w).join(' | ') || 'Score loading...')).join('\n\n');
+          reply('🏏 **Live Cricket:**\n\n' + matches);
+        } else {
+          reply('🏏 Abhi koi live match nahi. Cricbuzz check karo: cricbuzz.com');
+        }
+        return;
+      } catch {
+        reply('🏏 Cricket score fetch nahi hua. Cricbuzz: cricbuzz.com ya Espncricinfo: espncricinfo.com');
+        return;
+      }
+    }
+
+    // ── YOUTUBE SEARCH ──────────────────────────────────────────
+    const ytMatch = text.match(/(?:youtube|yt)\s+(?:pe|mein|par|search|play|chalao|dekho)\s+(.+)/i)
+      || text.match(/(.+)\s+(?:youtube pe|yt pe)\s+(?:search|play|chalao|dekho)/i);
+    if (ytMatch?.[1]) {
+      const query = ytMatch[1].trim();
+      const url = 'https://www.youtube.com/results?search_query=' + encodeURIComponent(query);
+      if (typeof window !== 'undefined') window.open(url, '_blank');
+      reply('▶️ YouTube search: "' + query + '"\nKhul raha hai...');
+      return;
+    }
+
+    // ── PETROL PRICE ────────────────────────────────────────────
+    if (/petrol|diesel|fuel.*price|price.*fuel/i.test(t)) {
+      reply('⛽ **Petrol/Diesel Price (Approx)**\n\nMaihar, MP (today):\n• Petrol: ~₹107/litre\n• Diesel: ~₹92/litre\n\n_Exact rate ke liye: fuel.goodreturns.in_\n_Ya type karo: "petrol rate Maihar"_');
+      return;
+    }
+
+    // ── GOLD & SILVER PRICE ────────────────────────────────────
     // ── GOLD & SILVER PRICE ────────────────────────────────────
     if (/gold|sona|chandi|silver|bullion/i.test(t)) {
       try {
