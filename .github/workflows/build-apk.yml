@@ -29,10 +29,10 @@ jobs:
         with:
           node-version: '20'
 
-      - name: Install Capacitor
+      - name: Install Capacitor pinned versions
         run: |
           npm install --legacy-peer-deps --ignore-scripts 2>/dev/null || true
-          npm install @capacitor/core @capacitor/cli @capacitor/android --legacy-peer-deps
+          npm install @capacitor/core@6.2.0 @capacitor/cli@6.2.0 @capacitor/android@6.2.0 --legacy-peer-deps --save-exact
 
       - name: Setup Capacitor + Android
         run: |
@@ -42,11 +42,17 @@ jobs:
           npx cap add android
           npx cap sync android
 
+      - name: Fix gradle duplicate classes
+        run: |
+          echo "android.useAndroidX=true" >> android/gradle.properties
+          echo "android.enableJetifier=true" >> android/gradle.properties
+          echo "org.gradle.jvmargs=-Xmx2048m" >> android/gradle.properties
+
       - name: Build APK
         run: |
           cd android
           chmod +x ./gradlew
-          ./gradlew assembleDebug --no-daemon -x lint
+          ./gradlew assembleDebug --no-daemon -x lint -x lintDebug
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
@@ -61,8 +67,8 @@ jobs:
           tag_name: apk-${{ github.run_number }}
           name: JARVIS AI v${{ github.run_number }}
           body: |
-            JARVIS AI APK
-            Install: Settings > Security > Unknown sources ON
+            JARVIS AI APK — Install karo
+            Settings > Security > Unknown sources ON
             App: https://apple50.vercel.app
           files: android/app/build/outputs/apk/debug/app-debug.apk
           fail_on_unmatched_files: false
