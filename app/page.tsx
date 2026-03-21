@@ -395,12 +395,12 @@ export default function Home() {
         }
       } catch {}
       const h = new Date().getHours();
-      const greet = h < 6 ? 'Raat gehra hai boss 🌙 Kya ho raha hai?' :
-        h < 12 ? 'Good morning! ☀️ Aaj kya plan hai?' :
-        h < 17 ? 'Kya haal hai! 👋 Bata kya kaam hai?' :
-        h < 20 ? 'Shaam ho gayi boss 🌆 Din kaisa raha?' :
-        'Raat ho gayi boss 🌙 Kya chal raha hai?';
-      setMsgs([{ id: 'init_greet', role: 'assistant', content: greet + '\n\n_Type `/` for commands | Mic tap to speak_', timestamp: Date.now() }]);
+      const greet = h < 6 ? 'Raat gehra hai boss 🌙' :
+        h < 12 ? 'Good morning boss! ☀️' :
+        h < 17 ? 'Kya haal hai! 👋' :
+        h < 20 ? 'Shaam ho gayi boss 🌆' :
+        'Raat ho gayi boss 🌙';
+      setMsgs([{ id: 'init_greet', role: 'assistant', content: greet + '\n\nKya karna hai? Kuch bhi bol — main hoon.\n\n**Quick:**\n• `mausam` — weather\n• `battery` — battery %\n• `image bana: [kuch bhi]` — image\n• `/` — sab commands', timestamp: Date.now() }]);
     };
     initGreeting();
 
@@ -509,6 +509,12 @@ export default function Home() {
   // ── Send message ──────────────────────────────────────────────────────
   const send = async (text: string) => {
     if (!text.trim() || loading) return;
+    // Don't send bare "/" — show slash commands instead
+    if (text.trim() === '/') {
+      setSlashOpen(true);
+      setSlashFilter('/');
+      return;
+    }
     setPlusOpen(false);
 
     // ── JARVIS Chat Command Center ─────────────────────────────
@@ -1005,6 +1011,19 @@ export default function Home() {
     setMsgs(prev => [...prev, userMsg]);
     setInput('');
     setLoading(true);
+    // Safety timeout — 30 sec ke baad loading reset
+    const loadingTimeout = setTimeout(() => {
+      setLoading(false);
+      setMsgs(prev => {
+        const last = prev[prev.length - 1];
+        if (last?.role === 'assistant' && (!last.content || last.content.length < 5)) {
+          return [...prev.slice(0, -1), { ...last, content: '⚠️ Response timeout. Dobara try karo ya Flash mode use karo.' }];
+        }
+        return prev;
+      });
+    }, 30000);
+    // Store timeout id to clear on success
+    (window as any).__loadingTimeout = loadingTimeout;
 
     // Learn + habit tracking (background, silent)
     learnFromMessage(text.trim()).catch(() => {});
@@ -1270,7 +1289,7 @@ export default function Home() {
   }
 
   return (
-    <div className="page-container">
+    <div className="page-container" style={{ display:"flex", flexDirection:"column", height:"100dvh", overflow:"hidden" }}>
       <style>{`@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.5} }`}</style>
 
       {/* New Toast System */}
@@ -1370,8 +1389,8 @@ export default function Home() {
         </div>
       )}
 
-      {/* Messages */}
-      <div style={{ flex: 1, overflowY: 'auto', padding: '8px 0' }}
+      {/* Messages — full flex space */}
+      <div style={{ flex: 1, overflowY: 'auto', overflowX: 'hidden', padding: '8px 0', minHeight: 0, WebkitOverflowScrolling: 'touch' }}
         onTouchStart={(e) => { (window as any).__pullY = e.touches[0].clientY; }}
         onTouchEnd={(e) => {
           const diff = e.changedTouches[0].clientY - ((window as any).__pullY || 0);
@@ -1390,27 +1409,33 @@ export default function Home() {
         })}
         {loading && <div style={{ padding: '0 12px' }}><TypingDots /></div>}
 
-        {/* Suggested quick replies after last AI message */}
+        {/* Smart suggested replies */}
         {!loading && msgs.length > 0 && msgs[msgs.length-1]?.role === 'assistant' && (() => {
           const lastMsg = msgs[msgs.length-1].content.toLowerCase();
+          const lastUser = [...msgs].reverse().find(m => m.role === 'user')?.content.toLowerCase() || '';
           const chips: string[] = [];
-          if (/weather|mausam/.test(lastMsg)) chips.push('Kal ka mausam?', 'Rain aayegi?');
-          if (/goal|target/.test(lastMsg)) chips.push('Goal complete karo', 'Naya goal add karo');
-          if (/remind|alarm/.test(lastMsg)) chips.push('Reminders dikhao', 'Timer set karo');
-          if (/image|photo/.test(lastMsg)) chips.push('Ek aur bana', 'Different style mein');
-          if (/battery|charge/.test(lastMsg)) chips.push('WhatsApp kholo', 'Settings kholo');
-          // Always show some generic chips if nothing specific
-          if (chips.length === 0) chips.push('Aur batao', 'Summary do', 'Example do');
-          return chips.length > 0 ? (
-            <div style={{ display: 'flex', gap: 8, padding: '4px 12px 8px', flexWrap: 'wrap' }}>
+          if (/weather|mausam|°c|forecast/.test(lastMsg)) chips.push('Kal ka mausam?', 'Barish hogi?');
+          else if (/goal|target/.test(lastMsg)) chips.push('Goals dikhao', 'Goal add karo');
+          else if (/remind|alarm|timer/.test(lastMsg)) chips.push('Reminders dikhao', 'Timer lagao');
+          else if (/image|photo|generated|generating/.test(lastMsg)) chips.push('Aur ek bana', 'Wallpaper bana');
+          else if (/battery|charge/.test(lastMsg)) chips.push('WhatsApp kholo', 'Settings kholo');
+          else if (/news|khabar/.test(lastMsg)) chips.push('Tech news?', 'India news?');
+          else if (/bitcoin|crypto|price/.test(lastMsg)) chips.push('Ethereum price?', 'Doge price?');
+          else if (/₹|usd|currency/.test(lastMsg)) chips.push('EUR to INR?', 'GBP to INR?');
+          else if (/note|save|yaad/.test(lastMsg)) chips.push('Notes dikhao', 'Memory dikhao');
+          else if (msgs.length <= 2) chips.push('Mausam batao', 'Joke suno', 'Image bana');
+          else chips.push('Aur batao', 'Example do');
+          if (!chips.length) return null;
+          return (
+            <div style={{ display: 'flex', gap: 6, padding: '2px 12px 8px', flexWrap: 'wrap' }}>
               {chips.slice(0,3).map(c => (
                 <button key={c} onClick={() => send(c)}
-                  style={{ background: 'transparent', border: '1px solid #2a2a4a', borderRadius: 16, color: '#666', padding: '5px 12px', fontSize: 12, cursor: 'pointer', whiteSpace: 'nowrap' }}>
+                  style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid #2a2a4a', borderRadius: 16, color: '#555', padding: '4px 12px', fontSize: 12, cursor: 'pointer', whiteSpace: 'nowrap', transition: 'all 0.15s' }}>
                   {c}
                 </button>
               ))}
             </div>
-          ) : null;
+          );
         })()}
         <div ref={bottomRef} />
       </div>
