@@ -672,16 +672,43 @@ export default function Home() {
       } catch { reply('Currency fetch nahi ho saka.'); return; }
     }
 
+    // ── GOLD & SILVER PRICE ────────────────────────────────────
+    if (/gold|sona|chandi|silver|bullion/i.test(t)) {
+      try {
+        const [metalRes, fxRes] = await Promise.all([
+          fetch('https://api.metals.live/v1/spot/gold,silver', { signal: AbortSignal.timeout(5000) }),
+          fetch('https://api.exchangerate-api.com/v4/latest/USD', { signal: AbortSignal.timeout(4000) }),
+        ]);
+        const metals = await metalRes.json();
+        const fx = await fxRes.json();
+        const usdInr = fx.rates?.INR || 84;
+        const g = ((metals?.gold || 2300) / 31.1035) * usdInr;
+        const s = ((metals?.silver || 28) / 31.1035) * usdInr;
+        reply(
+          '🥇 **Gold & Silver (Live)**\n\n' +
+          '🥇 Gold 24K: **₹' + Math.round(g).toLocaleString('en-IN') + '/g** | 10g = ₹' + Math.round(g*10).toLocaleString('en-IN') + '\n' +
+          '🥇 Gold 22K: **₹' + Math.round(g*0.916).toLocaleString('en-IN') + '/g** | 10g = ₹' + Math.round(g*9.16).toLocaleString('en-IN') + '\n' +
+          '🥈 Silver: **₹' + Math.round(s).toLocaleString('en-IN') + '/g** | 100g = ₹' + Math.round(s*100).toLocaleString('en-IN')
+        );
+        return;
+      } catch {
+        reply('🥇 Gold 24K: ~₹9,000/g | Gold 22K: ~₹8,250/g\n🥈 Silver: ~₹105/g\n_(Approximate — live data nahi mila)_');
+        return;
+      }
+    }
+
     // ── CRYPTO PRICE ───────────────────────────────────────────
     const cryptoMatch = text.match(/(?:price|rate|value|kitna)\s+(?:of\s+)?([a-z]+)(?:\s+coin)?/i);
-    if (/bitcoin|btc|ethereum|eth|crypto|coin price/i.test(t)) {
-      const coin = /bitcoin|btc/i.test(t) ? 'bitcoin' : /ethereum|eth/i.test(t) ? 'ethereum' : (cryptoMatch?.[1] || 'bitcoin').toLowerCase();
+    if (/bitcoin|btc|ethereum|eth|crypto|coin price|doge|solana/i.test(t)) {
+      const coin = /bitcoin|btc/i.test(t) ? 'bitcoin' : /ethereum|eth/i.test(t) ? 'ethereum' : /doge/i.test(t) ? 'dogecoin' : /solana/i.test(t) ? 'solana' : (cryptoMatch?.[1] || 'bitcoin').toLowerCase();
       try {
-        const res = await fetch('https://api.coingecko.com/api/v3/simple/price?ids=' + coin + '&vs_currencies=inr,usd');
+        const res = await fetch('https://api.coingecko.com/api/v3/simple/price?ids=' + coin + '&vs_currencies=inr,usd&include_24hr_change=true');
         const d = await res.json();
         const data = d[coin];
-        if (data) reply('₿ **' + coin.charAt(0).toUpperCase() + coin.slice(1) + '**\n₹' + data.inr?.toLocaleString('en-IN') + ' | $' + data.usd?.toLocaleString());
-        else reply('Coin nahi mila: ' + coin);
+        if (data) {
+          const ch = data.usd_24h_change?.toFixed(2);
+          reply('₿ **' + coin.charAt(0).toUpperCase() + coin.slice(1) + '**\n₹' + data.inr?.toLocaleString('en-IN') + ' | $' + data.usd?.toLocaleString() + '\n' + (parseFloat(ch) > 0 ? '📈' : '📉') + ' 24h: ' + ch + '%');
+        } else reply('Coin nahi mila: ' + coin);
         return;
       } catch { reply('Crypto price nahi mila.'); return; }
     }
