@@ -29,7 +29,7 @@ jobs:
         with:
           node-version: '20'
 
-      - name: Install Capacitor pinned versions
+      - name: Install Capacitor
         run: |
           npm install --legacy-peer-deps --ignore-scripts 2>/dev/null || true
           npm install @capacitor/core@6.2.0 @capacitor/cli@6.2.0 @capacitor/android@6.2.0 --legacy-peer-deps --save-exact
@@ -42,7 +42,7 @@ jobs:
           npx cap add android
           npx cap sync android
 
-      - name: Fix gradle duplicate classes
+      - name: Fix gradle properties
         run: |
           echo "android.useAndroidX=true" >> android/gradle.properties
           echo "android.enableJetifier=true" >> android/gradle.properties
@@ -50,28 +50,31 @@ jobs:
 
       - name: Patch AndroidManifest permissions
         run: |
-          MANIFEST="android/app/src/main/AndroidManifest.xml"
-          # Add RECORD_AUDIO permission if not present
-          if ! grep -q "RECORD_AUDIO" "$MANIFEST"; then
-            sed -i 's|<uses-permission android:name="android.permission.INTERNET"|<uses-permission android:name="android.permission.RECORD_AUDIO" />
-    <uses-permission android:name="android.permission.INTERNET"|g' "$MANIFEST"
-          fi
-          if ! grep -q "CAMERA" "$MANIFEST"; then
-            sed -i 's|<uses-permission android:name="android.permission.INTERNET"|<uses-permission android:name="android.permission.CAMERA" />
-    <uses-permission android:name="android.permission.INTERNET"|g' "$MANIFEST"
-          fi
-          if ! grep -q "POST_NOTIFICATIONS" "$MANIFEST"; then
-            sed -i 's|<uses-permission android:name="android.permission.INTERNET"|<uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
-    <uses-permission android:name="android.permission.INTERNET"|g' "$MANIFEST"
-          fi
-          echo "Permissions patched:"
-          grep "uses-permission" "$MANIFEST"
+          python3 - << 'PYEOF'
+          import re
+          path = 'android/app/src/main/AndroidManifest.xml'
+          content = open(path).read()
+          perms = [
+            'android.permission.RECORD_AUDIO',
+            'android.permission.CAMERA',
+            'android.permission.POST_NOTIFICATIONS',
+            'android.permission.VIBRATE',
+          ]
+          for p in perms:
+            if p not in content:
+              content = content.replace(
+                '<uses-permission android:name="android.permission.INTERNET" />',
+                '<uses-permission android:name="' + p + '" />\n    <uses-permission android:name="android.permission.INTERNET" />'
+              )
+          open(path, 'w').write(content)
+          print('Permissions patched')
+          PYEOF
 
       - name: Build APK
         run: |
           cd android
           chmod +x ./gradlew
-          ./gradlew assembleDebug --no-daemon -x lint -x lintDebug
+          ./gradlew assembleDebug --no-daemon -x lint
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
@@ -86,8 +89,8 @@ jobs:
           tag_name: apk-${{ github.run_number }}
           name: JARVIS AI v${{ github.run_number }}
           body: |
-            JARVIS AI APK — Install karo
-            Settings > Security > Unknown sources ON
+            JARVIS AI APK with Mic + Camera + Notifications
+            Install: Settings > Security > Unknown sources ON
             App: https://apple50.vercel.app
           files: android/app/build/outputs/apk/debug/app-debug.apk
           fail_on_unmatched_files: false
