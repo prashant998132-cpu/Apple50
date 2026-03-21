@@ -18,11 +18,11 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Java 17
+      - name: Java 21
         uses: actions/setup-java@v4
         with:
           distribution: 'zulu'
-          java-version: '17'
+          java-version: '21'
 
       - name: Node 20
         uses: actions/setup-node@v4
@@ -34,10 +34,10 @@ jobs:
           npm install --legacy-peer-deps --ignore-scripts 2>/dev/null || true
           npm install @capacitor/core @capacitor/cli @capacitor/android --legacy-peer-deps
 
-      - name: Setup Capacitor config + Android
+      - name: Setup Capacitor + Android
         run: |
           node -e "require('fs').writeFileSync('capacitor.config.json',JSON.stringify({appId:'com.jarvis.ai.pranshu',appName:'JARVIS AI',webDir:'out',server:{url:'https://apple50.vercel.app',cleartext:false}},null,2))"
-          mkdir -p out && echo '{}' > out/index.html
+          mkdir -p out && echo '<html><body></body></html>' > out/index.html
           rm -rf android
           npx cap add android
           npx cap sync android
@@ -63,7 +63,7 @@ jobs:
           body: |
             JARVIS AI APK
             Install: Settings > Security > Unknown sources ON
-            App loads from: https://apple50.vercel.app
+            App: https://apple50.vercel.app
           files: android/app/build/outputs/apk/debug/app-debug.apk
           fail_on_unmatched_files: false
         env:
