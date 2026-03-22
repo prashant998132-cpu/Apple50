@@ -294,6 +294,20 @@ export default function SettingsPage() {
           </div>
         </div>
       )}
+      {/* Sakhi — Companion */}
+      <div style={{ padding: '14px', marginTop: 8, borderTop: '1px solid #1e1e2e' }}>
+        <button
+          onClick={() => { if (typeof window !== 'undefined') window.location.href = '/sakhi'; }}
+          style={{ width: '100%', background: 'linear-gradient(135deg,rgba(255,107,157,0.12),rgba(160,34,110,0.1))', border: '1px solid rgba(255,107,157,0.25)', borderRadius: 14, padding: '14px 16px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 12, textAlign: 'left' }}>
+          <div style={{ width: 42, height: 42, borderRadius: '50%', background: 'linear-gradient(135deg,#ff6b9d,#a0226e)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 22, flexShrink: 0 }}>🌸</div>
+          <div>
+            <div style={{ color: '#ffb3d1', fontWeight: 700, fontSize: 14 }}>Sakhi</div>
+            <div style={{ color: '#555', fontSize: 11, marginTop: 2 }}>AI Companion — dost ki tarah baat karo</div>
+          </div>
+          <div style={{ marginLeft: 'auto', color: '#ff6b9d', fontSize: 18 }}>→</div>
+        </button>
+      </div>
+
       </div>
     </div>
   );
