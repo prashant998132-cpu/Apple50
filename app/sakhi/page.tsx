@@ -169,8 +169,8 @@ export default function SakhiPage() {
       const history = updated.slice(-20).map(m => ({ role: m.role === 'user' ? 'user' : 'assistant', content: m.content }))
 
       // Use saved API keys from JARVIS settings
-      const groqKey = typeof window !== 'undefined' ? localStorage.getItem('GROQ_API_KEY') : null
-      const geminiKey = typeof window !== 'undefined' ? localStorage.getItem('GEMINI_API_KEY') : null
+      const groqKey = typeof window !== 'undefined' ? localStorage.getItem('jarvis_key_GROQ_API_KEY') : null
+      const geminiKey = typeof window !== 'undefined' ? localStorage.getItem('jarvis_key_GEMINI_API_KEY') : null
 
       let reply = ''
 
