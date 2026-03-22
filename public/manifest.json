@@ -1,51 +1,180 @@
 {
   "name": "JARVIS AI",
   "short_name": "JARVIS",
-  "description": "Tony Stark ka AI — Hinglish mein, full power. Chat, Voice, Agent Mode, Image Gen.",
+  "description": "Tony Stark ka AI \u2014 Hinglish mein, full power. Chat, Voice, Agent Mode, Image Gen.",
   "start_url": "/",
   "id": "com.jarvis.ai.pranshu",
   "display": "standalone",
-  "display_override": ["window-controls-overlay", "standalone", "minimal-ui"],
+  "display_override": [
+    "window-controls-overlay",
+    "standalone",
+    "minimal-ui"
+  ],
   "background_color": "#060610",
   "theme_color": "#00d4ff",
   "orientation": "portrait-primary",
   "scope": "/",
   "lang": "hi-IN",
-  "categories": ["productivity", "utilities", "personalization"],
+  "categories": [
+    "productivity",
+    "utilities",
+    "personalization"
+  ],
   "iarc_rating_id": "e84b072d-71b3-4d3e-86ae-31a8ce4e53b7",
   "icons": [
-    { "src": "/icons/icon-72.png",   "sizes": "72x72",   "type": "image/png", "purpose": "any" },
-    { "src": "/icons/icon-96.png",   "sizes": "96x96",   "type": "image/png", "purpose": "any" },
-    { "src": "/icons/icon-128.png",  "sizes": "128x128", "type": "image/png", "purpose": "any" },
-    { "src": "/icons/icon-144.png",  "sizes": "144x144", "type": "image/png", "purpose": "any" },
-    { "src": "/icons/icon-152.png",  "sizes": "152x152", "type": "image/png", "purpose": "any" },
-    { "src": "/icons/icon-192.png",  "sizes": "192x192", "type": "image/png", "purpose": "any" },
-    { "src": "/icons/icon-384.png",  "sizes": "384x384", "type": "image/png", "purpose": "any" },
-    { "src": "/icons/icon-512.png",  "sizes": "512x512", "type": "image/png", "purpose": "any" },
-    { "src": "/icons/maskable-192.png", "sizes": "192x192", "type": "image/png", "purpose": "maskable" },
-    { "src": "/icons/maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+    {
+      "src": "/icons/icon-72.png",
+      "sizes": "72x72",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/icon-96.png",
+      "sizes": "96x96",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/icon-128.png",
+      "sizes": "128x128",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/icon-144.png",
+      "sizes": "144x144",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/icon-152.png",
+      "sizes": "152x152",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/icon-384.png",
+      "sizes": "384x384",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/maskable-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
+    {
+      "src": "/icons/maskable-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
   ],
   "screenshots": [
-    { "src": "/icons/screenshot-narrow.png", "sizes": "750x1334", "type": "image/png", "form_factor": "narrow", "label": "JARVIS Chat Interface" },
-    { "src": "/icons/screenshot-wide.png",   "sizes": "1280x720", "type": "image/png", "form_factor": "wide",   "label": "JARVIS AI Dashboard" }
+    {
+      "src": "/icons/screenshot-narrow.png",
+      "sizes": "750x1334",
+      "type": "image/png",
+      "form_factor": "narrow",
+      "label": "JARVIS Chat Interface"
+    },
+    {
+      "src": "/icons/screenshot-wide.png",
+      "sizes": "1280x720",
+      "type": "image/png",
+      "form_factor": "wide",
+      "label": "JARVIS AI Dashboard"
+    }
   ],
   "shortcuts": [
-    { "name": "Chat", "short_name": "Chat", "url": "/", "description": "JARVIS se baat karo", "icons": [{"src":"/icons/icon-96.png","sizes":"96x96","type":"image/png"}] },
-    { "name": "Voice Mode", "short_name": "Voice", "url": "/voice", "description": "Voice se bolo", "icons": [{"src":"/icons/icon-96.png","sizes":"96x96","type":"image/png"}] },
-    { "name": "Agent Mode", "short_name": "Agent", "url": "/agent", "description": "JARVIS khud tasks kare", "icons": [{"src":"/icons/icon-96.png","sizes":"96x96","type":"image/png"}] },
-    { "name": "Settings", "short_name": "Settings", "url": "/settings", "description": "Settings", "icons": [{"src":"/icons/icon-96.png","sizes":"96x96","type":"image/png"}] }
+    {
+      "name": "Chat with JARVIS",
+      "short_name": "Chat",
+      "url": "/",
+      "description": "JARVIS se baat karo",
+      "icons": [
+        {
+          "src": "/icons/icon-96.png",
+          "sizes": "96x96",
+          "type": "image/png"
+        }
+      ]
+    },
+    {
+      "name": "Sakhi",
+      "short_name": "Sakhi",
+      "url": "/sakhi",
+      "description": "Sakhi se baat karo",
+      "icons": [
+        {
+          "src": "/icons/icon-96.png",
+          "sizes": "96x96",
+          "type": "image/png"
+        }
+      ]
+    },
+    {
+      "name": "Agent Mode",
+      "short_name": "Agent",
+      "url": "/agent",
+      "description": "JARVIS auto agent",
+      "icons": [
+        {
+          "src": "/icons/icon-96.png",
+          "sizes": "96x96",
+          "type": "image/png"
+        }
+      ]
+    },
+    {
+      "name": "Briefing",
+      "short_name": "Brief",
+      "url": "/briefing",
+      "description": "Daily briefing",
+      "icons": [
+        {
+          "src": "/icons/icon-96.png",
+          "sizes": "96x96",
+          "type": "image/png"
+        }
+      ]
+    }
   ],
   "share_target": {
     "action": "/",
     "method": "GET",
-    "params": { "text": "q", "url": "url", "title": "title" }
+    "params": {
+      "text": "q",
+      "url": "url",
+      "title": "title"
+    }
   },
   "handle_links": "preferred",
-  "launch_handler": { "client_mode": "focus-existing" },
+  "launch_handler": {
+    "client_mode": "focus-existing"
+  },
   "protocol_handlers": [
-    { "protocol": "web+jarvis", "url": "/?q=%s" }
+    {
+      "protocol": "web+jarvis",
+      "url": "/?q=%s"
+    }
   ],
-  "edge_side_panel": { "preferred_width": 400 },
+  "edge_side_panel": {
+    "preferred_width": 400
+  },
   "related_applications": [],
   "prefer_related_applications": false
 }
