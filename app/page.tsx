@@ -344,6 +344,28 @@ export default function Home() {
 
   const effectiveMode = mode === 'auto' ? autoRouteMode(input) : mode;
 
+  // ── Global keyboard shortcuts ───────────────────────────────────────────
+  React.useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const onKey = (e: KeyboardEvent) => {
+      // 'j' or '/' to focus input (when not already typing)
+      if ((e.key === 'j') && document.activeElement?.tagName !== 'TEXTAREA' && document.activeElement?.tagName !== 'INPUT') {
+        e.preventDefault();
+        textareaRef.current?.focus();
+      }
+      // Escape to close any open panel
+      if (e.key === 'Escape') {
+        setHeaderMenuOpen(false);
+        setPlusOpen(false);
+        setSlashOpen(false);
+        setHistoryOpen(false);
+        setAppsOpen(false);
+      }
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, []);
+
   // ── Keyboard / Viewport fix (Android) ───────────────────────────────────
   React.useEffect(() => {
     if (typeof window === 'undefined') return;
@@ -444,12 +466,30 @@ export default function Home() {
         }
       } catch {}
       const h = new Date().getHours();
-      const greet = h < 6 ? 'Raat gehra hai boss 🌙' :
-        h < 12 ? 'Good morning boss! ☀️' :
-        h < 17 ? 'Kya haal hai! 👋' :
-        h < 20 ? 'Shaam ho gayi boss 🌆' :
-        'Raat ho gayi boss 🌙';
-      setMsgs([{ id: 'init_greet', role: 'assistant', content: greet + '\n\nKya karna hai? Kuch bhi bol — main hoon.\n\n**Quick:**\n• `mausam` — weather\n• `battery` — battery %\n• `image bana: [kuch bhi]` — image\n• `/` — sab commands', timestamp: Date.now() }]);
+      const hour = h;
+      const greetLine = hour < 5 ? '🌙 Raat gehra hai boss. Kya chal raha hai?' :
+        hour < 12 ? '☀️ Good morning boss! Aaj kya plan hai?' :
+        hour < 14 ? '🍽️ Lunch time boss! Khaana khaya?' :
+        hour < 17 ? '👋 Kya haal hai boss?' :
+        hour < 20 ? '🌆 Shaam ho gayi. Din kaisa raha?' :
+        '🌙 Raat ho gayi boss. Kya chal raha hai?';
+
+      // Get user name from onboarding
+      const userName = typeof window !== 'undefined' ? localStorage.getItem('jarvis_user_name') || '' : '';
+      const greeting = userName ? greetLine.replace('boss', userName + ' boss') : greetLine;
+
+      // Check pending reminders
+      const todayStr = new Date().toDateString();
+      const habits = typeof window !== 'undefined' ? JSON.parse(localStorage.getItem('jarvis_habits') || '{}') : {};
+      const habitCount = Object.keys(habits).length;
+      const todayHabits = Object.values(habits as Record<string,any>).filter((h:any) => h.lastDate === todayStr).length;
+      
+      let proactive = '';
+      if (habitCount > 0 && todayHabits < habitCount) {
+        proactive = '\n\n💡 _' + (habitCount - todayHabits) + ' habits pending aaj — "habit dikhao" type karo_';
+      }
+
+      setMsgs([{ id: 'init_greet', role: 'assistant', content: greeting + '\n\nKuch bhi bol — main hoon.' + proactive + '\n\n`mausam` · `battery` · `image bana: kuch` · `/` sab commands', timestamp: Date.now() }]);
     };
     initGreeting();
 
@@ -2027,12 +2067,25 @@ export default function Home() {
       {/* Messages — fills all remaining space */}
       <div style={{ flex: '1 1 0', overflowY: 'auto', overflowX: 'hidden', padding: '8px 0', minHeight: 0, WebkitOverflowScrolling: 'touch',
         background: chatBg !== 'none' ? chatBg : undefined }}
-        onTouchStart={(e) => { (window as any).__pullY = e.touches[0].clientY; }}
+        onTouchStart={(e) => {
+          (window as any).__pullY = e.touches[0].clientY;
+          (window as any).__pullX = e.touches[0].clientX;
+        }}
         onTouchEnd={(e) => {
-          const diff = e.changedTouches[0].clientY - ((window as any).__pullY || 0);
-          if (diff > 80 && !refreshing) {
+          const dy = e.changedTouches[0].clientY - ((window as any).__pullY || 0);
+          const dx = e.changedTouches[0].clientX - ((window as any).__pullX || 0);
+          // Pull down = refresh
+          if (dy > 80 && Math.abs(dx) < 40 && !refreshing) {
             setRefreshing(true);
             setTimeout(() => { setRefreshing(false); }, 1000);
+          }
+          // Swipe right = nav drawer
+          if (dx > 80 && Math.abs(dy) < 60) {
+            setHistoryOpen(true);
+          }
+          // Swipe left = settings
+          if (dx < -80 && Math.abs(dy) < 60) {
+            router.push('/settings');
           }
         }}>
         {refreshing && (
@@ -2199,7 +2252,10 @@ export default function Home() {
           </button>
 
           {/* Send */}
-          <button onClick={() => send(input)} disabled={!input.trim() || loading}
+          <button onClick={() => { 
+            if (typeof navigator !== 'undefined') navigator.vibrate?.(30);
+            send(input);
+          }} disabled={!input.trim() || loading}
             style={{ width: 38, height: 38, borderRadius: '50%', background: input.trim() && !loading ? 'linear-gradient(135deg,#00d4ff,#0077bb)' : '#1a1a2e', border: 'none', color: input.trim() && !loading ? '#000' : '#333', fontSize: 17, cursor: input.trim() && !loading ? 'pointer' : 'not-allowed', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, transition: 'all 0.2s', fontWeight: 900, boxShadow: input.trim() && !loading ? '0 2px 10px rgba(0,212,255,0.35)' : 'none' }}>
             {loading ? '⏳' : '↑'}
           </button>
