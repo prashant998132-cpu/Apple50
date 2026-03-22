@@ -164,7 +164,32 @@ export default function ToolsPage() {
     date: <>{inp('date1', 'Start Date', 'date')}{inp('date2', 'End Date', 'date')}</>,
     password: <>{inp('pwdLen', 'Length (default 16)')}{sel('pwdUpper', [{ val: 'true', label: 'Include uppercase' }, { val: 'false', label: 'Only lowercase' }])}{sel('pwdNums', [{ val: 'true', label: 'Include numbers' }, { val: 'false', label: 'No numbers' }])}{sel('pwdSymbols', [{ val: 'true', label: 'Include symbols' }, { val: 'false', label: 'No symbols' }])}</>,
     base64: <>{sel('b64mode', [{ val: 'encode', label: 'Text → Base64' }, { val: 'decode', label: 'Base64 → Text' }])}<textarea value={v('b64text')} onChange={e => set('b64text', e.target.value)} placeholder="Text yahan likho..." rows={3} style={{ width: '100%', background: '#111118', border: '1px solid #2a2a4a', borderRadius: 8, padding: '9px 12px', color: '#e0e0ff', fontSize: 13, outline: 'none', resize: 'none', boxSizing: 'border-box', marginBottom: 8 }} /></>,
-    unit: <div style={{ color: '#555', fontSize: 13 }}>Coming soon — Unit converter</div>,
+    unit: (() => {
+      const [val, setVal] = React.useState(''); const [from, setFrom] = React.useState('km'); const [to, setTo] = React.useState('m');
+      const units: Record<string,number> = { km:1000, m:1, cm:0.01, mm:0.001, mile:1609.34, yard:0.9144, foot:0.3048, inch:0.0254, kg:1, g:0.001, lb:0.453592, oz:0.0283495, litre:1, ml:0.001, gallon:3.78541, celsius:1, fahrenheit:1 };
+      const convert = () => {
+        const v = parseFloat(val); if(isNaN(v)) return '?';
+        if(from==='celsius'&&to==='fahrenheit') return ((v*9/5)+32).toFixed(2)+'°F';
+        if(from==='fahrenheit'&&to==='celsius') return (((v-32)*5/9)).toFixed(2)+'°C';
+        const f = units[from]; const t = units[to];
+        if(!f||!t) return '?';
+        return ((v*f)/t).toFixed(4);
+      };
+      const allUnits = Object.keys(units);
+      return <div>
+        <input type="number" value={val} onChange={e=>setVal(e.target.value)} placeholder="Value" style={{width:'100%',padding:'10px',background:'#111',border:'1px solid #1e1e2e',borderRadius:8,color:'#eee',fontSize:16,marginBottom:8}}/>
+        <div style={{display:'flex',gap:8,marginBottom:8}}>
+          <select value={from} onChange={e=>setFrom(e.target.value)} style={{flex:1,padding:8,background:'#111',border:'1px solid #1e1e2e',borderRadius:8,color:'#eee'}}>
+            {allUnits.map(u=><option key={u} value={u}>{u}</option>)}
+          </select>
+          <span style={{padding:'8px 4px',color:'#555'}}>→</span>
+          <select value={to} onChange={e=>setTo(e.target.value)} style={{flex:1,padding:8,background:'#111',border:'1px solid #1e1e2e',borderRadius:8,color:'#eee'}}>
+            {allUnits.map(u=><option key={u} value={u}>{u}</option>)}
+          </select>
+        </div>
+        {val && <div style={{background:'rgba(0,212,255,0.1)',border:'1px solid #00d4ff',borderRadius:8,padding:12,color:'#00d4ff',fontSize:18,fontWeight:700,textAlign:'center'}}>{val} {from} = {convert()} {to}</div>}
+      </div>;
+    })(),
   }
 
   return (
