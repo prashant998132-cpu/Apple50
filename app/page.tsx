@@ -672,6 +672,120 @@ export default function Home() {
       } catch { reply('Currency fetch nahi ho saka.'); return; }
     }
 
+    // ── LIFE SCORE ──────────────────────────────────────────────
+    if (/life score|aaj ka score|mera score|jarvis score|daily score/i.test(t)) {
+      if (typeof window !== 'undefined') {
+        const habits = JSON.parse(localStorage.getItem('jarvis_habits') || '{}');
+        const expenses = JSON.parse(localStorage.getItem('jarvis_expenses') || '[]');
+        const goals = JSON.parse(localStorage.getItem('jarvis_goals_cache') || '[]');
+        const todayHabits = Object.values(habits as Record<string,any>).filter((h:any) => h.lastDate === new Date().toDateString()).length;
+        const totalHabits = Object.keys(habits).length || 1;
+        const habitScore = Math.round((todayHabits / totalHabits) * 30);
+        const streakBonus = Math.min(20, Object.values(habits as Record<string,any>).reduce((s:number, h:any) => s + Math.min(5, h.streak || 0), 0));
+        const activeGoals = goals.filter((g:any) => !g.completed).length;
+        const goalScore = Math.max(0, 20 - activeGoals * 2);
+        const todayExpenses = expenses.filter((e:any) => new Date(e.ts).toDateString() === new Date().toDateString());
+        const todaySpend = todayExpenses.reduce((s:number, e:any) => s + e.amount, 0);
+        const expenseScore = todaySpend < 500 ? 20 : todaySpend < 1000 ? 15 : todaySpend < 2000 ? 10 : 5;
+        const total = habitScore + streakBonus + goalScore + expenseScore + 10; // 10 base
+        const emoji = total >= 80 ? '🔥' : total >= 60 ? '💪' : total >= 40 ? '😐' : '😴';
+        reply(emoji + ' **Aaj ka Life Score: ' + total + '/100**\n\n' +
+          '🏃 Habits today: ' + habitScore + '/30\n' +
+          '🔥 Streak bonus: ' + streakBonus + '/20\n' +
+          '🎯 Goals clarity: ' + goalScore + '/20\n' +
+          '💸 Spending: ' + expenseScore + '/20\n' +
+          '⭐ Base: 10/10\n\n' +
+          (total >= 80 ? 'Aaj ka din solid hai boss! 💪' : total >= 60 ? 'Achha chal raha hai, aur better ho sakta hai.' : 'Thoda aur focus karo boss!'));
+        return;
+      }
+    }
+
+    // ── SMART MATH (natural language) ───────────────────────────
+    const smartMathPatterns = [
+      { regex: /(\d+(?:\.\d+)?)\s*%\s*(?:discount|off|kam)\s+(?:on\s+|pe\s+|of\s+)?(?:rs\.?|₹)?\s*(\d+(?:\.\d+)?)/i, fn: (m: RegExpMatchArray) => { const disc = parseFloat(m[1]); const price = parseFloat(m[2]); const saved = price * disc / 100; return 'Original: ₹' + price + '\n' + disc + '% discount = ₹' + saved.toFixed(0) + ' saved\n**Final price: ₹' + (price - saved).toFixed(0) + '**'; }},
+      { regex: /(\d+(?:\.\d+)?)\s+(?:log|person|aadmi)\s+mein\s+(?:rs\.?|₹)?\s*(\d+(?:\.\d+)?)\s+(?:barabar|divide|split|baat|share)/i, fn: (m: RegExpMatchArray) => { const people = parseFloat(m[1]); const amount = parseFloat(m[2]); return '💰 ' + people + ' logon mein ₹' + amount + '\n**Har koi: ₹' + (amount/people).toFixed(0) + '**'; }},
+      { regex: /(\d+(?:\.\d+)?)\s+(?:ghante|hour|hrs?)\s+mein\s+(\d+(?:\.\d+)?)\s+(?:km|kilometer)/i, fn: (m: RegExpMatchArray) => { const hrs = parseFloat(m[1]); const km = parseFloat(m[2]); return '🚗 Speed: ' + (km/hrs).toFixed(1) + ' km/h\nAvg time for 100km: ' + (100/(km/hrs)*60).toFixed(0) + ' min'; }},
+      { regex: /(\d+(?:\.\d+)?)\s+(?:rs\.?|₹)?\s*(?:mein|per)\s+(\d+(?:\.\d+)?)\s+(?:din|day|mahina|month|saal|year)/i, fn: (m: RegExpMatchArray) => { const amount = parseFloat(m[1]); const time = parseFloat(m[2]); return '📊 ₹' + amount + ' per period:\nPer day: ₹' + (amount/time).toFixed(0); }},
+    ];
+    for (const { regex, fn } of smartMathPatterns) {
+      const m = text.match(regex);
+      if (m) { reply('🧮 ' + fn(m)); return; }
+    }
+
+    // ── PERSONALITY MODE ────────────────────────────────────────
+    if (/strict mode|focus mode|kaam.*mode|serious mode/i.test(t)) {
+      if (typeof window !== 'undefined') localStorage.setItem('jarvis_mode', 'strict');
+      reply('🎯 **Strict Mode ON**\nAb main sirf kaam ki baatein karunga. No jokes, no bakwaas. Focus karo boss!');
+      return;
+    }
+    if (/chill mode|relax mode|fun mode|casual mode/i.test(t)) {
+      if (typeof window !== 'undefined') localStorage.setItem('jarvis_mode', 'chill');
+      reply('😎 **Chill Mode ON**\nRelax boss, ab baatein karte hain. Kya chal raha hai?');
+      return;
+    }
+    if (/normal mode|default mode|mode off|mode hatao/i.test(t)) {
+      if (typeof window !== 'undefined') localStorage.removeItem('jarvis_mode');
+      reply('✅ Normal mode. Main hoon — JARVIS.');
+      return;
+    }
+
+    // ── CONTACT MEMORY ──────────────────────────────────────────
+    const contactSave = text.match(/(.+?)\s+(?:ka|ki|ke)\s+(?:number|contact|phone)\s+(?:hai|=|:)\s+([0-9+\s]{10,15})/i);
+    if (contactSave) {
+      const name = contactSave[1].trim();
+      const number = contactSave[2].replace(/\s/g, '');
+      if (typeof window !== 'undefined') {
+        const contacts = JSON.parse(localStorage.getItem('jarvis_contacts') || '{}');
+        contacts[name.toLowerCase()] = number;
+        localStorage.setItem('jarvis_contacts', JSON.stringify(contacts));
+        reply('📱 **' + name + '** ka number save ho gaya: ' + number);
+        return;
+      }
+    }
+    const contactFind = text.match(/(.+?)\s+(?:ka|ki)\s+(?:number|contact|phone)\s+(?:kya hai|batao|dedo|chahiye)/i)
+      || text.match(/(?:call|phone)\s+(?:karo\s+)?(.+?)\s+(?:ko|pe)/i);
+    if (contactFind?.[1]) {
+      const name = contactFind[1].trim().toLowerCase();
+      if (typeof window !== 'undefined') {
+        const contacts = JSON.parse(localStorage.getItem('jarvis_contacts') || '{}');
+        const num = contacts[name];
+        if (num) {
+          reply('📱 **' + contactFind[1] + '**: ' + num + '\n\nCall karna hai? "' + contactFind[1] + ' ko call karo" bolo.');
+          return;
+        } else {
+          reply('📱 **' + contactFind[1] + '** ka number mujhe nahi pata. Batao: "' + contactFind[1] + ' ka number hai +91XXXXXXXXXX"');
+          return;
+        }
+      }
+    }
+
+    // ── DAILY DIGEST ────────────────────────────────────────────
+    if (/daily digest|aaj ka digest|morning brief|subah ka update|daily update/i.test(t)) {
+      const h = new Date().getHours();
+      const greeting = h < 12 ? 'Good morning' : h < 17 ? 'Good afternoon' : 'Good evening';
+      try {
+        const { getWeather } = await import('@/lib/core/freeAPIs');
+        const weather = await getWeather('Maihar').catch(() => 'Weather unavailable');
+        const habits = JSON.parse(typeof window !== 'undefined' ? localStorage.getItem('jarvis_habits') || '{}' : '{}');
+        const expenses = JSON.parse(typeof window !== 'undefined' ? localStorage.getItem('jarvis_expenses') || '[]' : '[]');
+        const todaySpend = expenses.filter((e: any) => new Date(e.ts).toDateString() === new Date().toDateString()).reduce((s: number, e: any) => s + e.amount, 0);
+        const streaks = Object.entries(habits as Record<string,any>).map(([k,v]: any) => k + ': ' + v.streak + '🔥').join(' | ') || 'Koi habit nahi';
+        const { getAllGoals } = await import('@/lib/db');
+        const goals = await getAllGoals().catch(() => []);
+        const activeGoals = (goals as any[]).filter((g: any) => !g.completed).slice(0, 3).map((g: any) => '• ' + g.title).join('\n') || 'Koi active goal nahi';
+        reply(greeting + ' boss! 🌅\n\n' +
+          '🌤️ **Weather:**\n' + weather.split('\n')[0] + '\n\n' +
+          '🎯 **Active Goals:**\n' + activeGoals + '\n\n' +
+          '🔥 **Habits:** ' + streaks + '\n\n' +
+          '💸 **Aaj ka kharcha:** ₹' + todaySpend.toLocaleString('en-IN') + '\n\n' +
+          '_"Ek kaam achhi tarah se karo — baaki khud ho jaayega."_ 💪');
+        return;
+      } catch {
+        reply(greeting + ' boss! 🌅\n\nAaj ka din ache se shuru karo. Kya karna hai?');
+        return;
+      }
+    }
+
     // ── EXPENSE TRACKER ────────────────────────────────────────
     const expenseMatch = text.match(/(?:kharcha|kharch|spend|spent|paid|diya|lagaya)[:\s]+(?:rs\.?|₹|rupee[s]?)?\s*(\d+(?:\.\d+)?)\s+(.+)/i)
       || text.match(/(\d+(?:\.\d+)?)\s+(?:rs\.?|₹|rupee[s]?)?\s+(.+?)\s+(?:kharcha|lagaya|diya|spend|paid)/i);
@@ -1586,8 +1700,8 @@ export default function Home() {
         </div>
       )}
 
-      {/* Messages — full flex space */}
-      <div style={{ flex: 1, overflowY: 'auto', overflowX: 'hidden', padding: '8px 0', minHeight: 0, WebkitOverflowScrolling: 'touch',
+      {/* Messages — fills all remaining space */}
+      <div style={{ flex: '1 1 0', overflowY: 'auto', overflowX: 'hidden', padding: '8px 0', minHeight: 0, WebkitOverflowScrolling: 'touch',
         background: chatBg !== 'none' ? chatBg : undefined }}
         onTouchStart={(e) => { (window as any).__pullY = e.touches[0].clientY; }}
         onTouchEnd={(e) => {
