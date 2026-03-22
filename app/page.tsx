@@ -87,6 +87,9 @@ function RichCard({ card }: { card: any }) {
   if (!card) return null;
   return (
     <div className="rich-card" style={{ marginTop: 8 }}>
+      {card.audioUrl && (
+        <audio controls src={card.audioUrl} style={{ width:'100%', borderRadius:8, marginBottom:4 }} />
+      )}
       {card.imageUrl && (
         <img src={card.imageUrl} onClick={() => setZoomed(true)} style={{ cursor: "zoom-in" }} alt={card.title || ''} className="rich-card-image"
           onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }} />
@@ -301,6 +304,10 @@ export default function Home() {
   const [refreshing, setRefreshing] = useState(false);
   const [micActive, setMicActive] = useState(false);
   const [headerMenuOpen, setHeaderMenuOpen] = React.useState(false);
+  const [recording, setRecording] = useState(false);
+  const mediaRecRef = React.useRef<MediaRecorder | null>(null);
+  const photoInputRef = React.useRef<HTMLInputElement>(null);
+  const fileInputRef = React.useRef<HTMLInputElement>(null);
   const [chatBg, setChatBg] = React.useState<string>('none');
   React.useEffect(() => {
     if (typeof window === 'undefined') return;
@@ -1912,6 +1919,7 @@ export default function Home() {
     return null;
   }
 
+
   return (
     <div className="page-container" style={{ display:"flex", flexDirection:"column", height:"100dvh", overflow:"hidden" }}>
       <style>{`@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.5} }`}</style>
@@ -2185,18 +2193,92 @@ export default function Home() {
         </div>
 
         {/* Plus popup — mode select */}
+        {/* Hidden file inputs */}
+        <input ref={photoInputRef} type="file" accept="image/*" style={{ display:'none' }} onChange={async e => {
+          const f = e.target.files?.[0]; if (!f) return; e.target.value = '';
+          const reader = new FileReader();
+          reader.onload = async ev => {
+            const dataUrl = ev.target?.result as string;
+            setMsgs(prev => [...prev, { id:'u_'+Date.now(), role:'user', content:'📷 '+f.name, timestamp:Date.now(), card:{ type:'image', imageUrl:dataUrl, title:f.name } }]);
+            setLoading(true);
+            try {
+              const res = await fetch('/api/vision', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ image: dataUrl.split(',')[1], prompt:'Is image mein kya hai? Hinglish mein detail mein batao.' }) });
+              const d = await res.json();
+              setMsgs(prev => [...prev, { id:'a_'+Date.now(), role:'assistant', content:'🔍 '+(d.result||d.text||'Photo dekh li! Kuch poochho.'), timestamp:Date.now() }]);
+            } catch { setMsgs(prev => [...prev, { id:'a_'+Date.now(), role:'assistant', content:'📷 Photo receive ki! Kya jaanna hai?', timestamp:Date.now() }]); }
+            setLoading(false);
+          };
+          reader.readAsDataURL(f);
+        }} />
+        <input ref={fileInputRef} type="file" accept="*/*" style={{ display:'none' }} onChange={async e => {
+          const f = e.target.files?.[0]; if (!f) return; e.target.value = '';
+          const mb = (f.size/1024/1024).toFixed(1);
+          if (f.type.startsWith('image/')) { photoInputRef.current?.click(); return; }
+          setMsgs(prev => [...prev, { id:'u_'+Date.now(), role:'user', content:'📎 '+f.name+' ('+mb+' MB)', timestamp:Date.now() }]);
+          if (f.type === 'text/plain' || f.name.endsWith('.txt') || f.name.endsWith('.md')) {
+            const txt = await f.text();
+            setMsgs(prev => [...prev, { id:'a_'+Date.now(), role:'assistant', content:'📄 File padh li: '+f.name+'. Summarize karoon?', timestamp:Date.now() }]);
+            setInput('Summarize karo: ' + txt.slice(0,2000));
+          } else {
+            setMsgs(prev => [...prev, { id:'a_'+Date.now(), role:'assistant', content:'📎 File receive ki: '+f.name+' ('+mb+' MB).', timestamp:Date.now() }]);
+          }
+        }} />
+
         {plusOpen && (
-          <div data-plus style={{ position: 'absolute', bottom: 70, left: 14, background: '#0d0d18', border: '1px solid #1e1e2e', borderRadius: 16, padding: 10, zIndex: 9999, boxShadow: '0 -4px 20px rgba(0,0,0,0.6)', display: 'flex', gap: 6 }}>
-            {([['auto','🤖','Auto'],['flash','⚡','Flash'],['think','🧠','Think'],['deep','🔬','Deep']] as [Mode,string,string][]).map(([m,icon,label]) => (
-              <button key={m} onClick={() => { setMode(m); setPlusOpen(false); }}
-                style={{ background: mode===m?'rgba(0,212,255,0.15)':'#111118', border: `1px solid ${mode===m?'#00d4ff':'#1e1e2e'}`, borderRadius: 10, padding: '8px 12px', cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 3, minWidth: 52 }}>
-                <span style={{ fontSize: 20 }}>{icon}</span>
-                <span style={{ color: mode===m?'#00d4ff':'#666', fontSize: 10 }}>{label}</span>
-              </button>
-            ))}
+          <div data-plus onClick={e => e.stopPropagation()} style={{ position: 'absolute', bottom: 72, left: 8, right: 8, background: '#0d0d18', border: '1px solid #1e1e2e', borderRadius: 18, padding: 14, zIndex: 9999, boxShadow: '0 -8px 30px rgba(0,0,0,0.8)' }}>
+
+            {/* Row 1 — Media Actions */}
+            <div style={{ display: 'flex', gap: 8, marginBottom: 12 }}>
+              {[
+                { icon: '📷', label: 'Photo', color: '#22c55e', action: () => { photoInputRef.current?.click(); setPlusOpen(false); } },
+                { icon: '📎', label: 'File', color: '#f59e0b', action: () => { fileInputRef.current?.click(); setPlusOpen(false); } },
+                { icon: recording ? '⏹️' : '🎤', label: recording ? 'Stop' : 'Audio', color: recording ? '#ef4444' : '#8b5cf6', action: async () => {
+                  setPlusOpen(false);
+                  if (recording) { mediaRecRef.current?.stop(); setRecording(false); return; }
+                  try {
+                    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                    const rec = new MediaRecorder(stream);
+                    const chunks: BlobPart[] = [];
+                    rec.ondataavailable = e => chunks.push(e.data);
+                    rec.onstop = () => {
+                      stream.getTracks().forEach(t => t.stop());
+                      const blob = new Blob(chunks, { type: 'audio/webm' });
+                      const url = URL.createObjectURL(blob);
+                      setMsgs(prev => [...prev, { id:'u_'+Date.now(), role:'user', content:'🎤 Voice message', timestamp:Date.now(), card:{ type:'audio', audioUrl:url, title:'Voice message' } }]);
+                      setRecording(false);
+                      toastOk('Voice message saved!');
+                    };
+                    rec.start(); mediaRecRef.current = rec; setRecording(true);
+                    toastOk('🔴 Recording... Stop ke liye phir tap karo');
+                  } catch { toastErr('Mic permission do'); }
+                }},
+                { icon: '📸', label: 'Camera', color: '#00d4ff', action: () => { router.push('/camera'); setPlusOpen(false); } },
+              ].map(item => (
+                <button key={item.label} onClick={item.action}
+                  style={{ flex:1, background:'#111118', border:'1px solid #1e1e2e', borderRadius:12, padding:'10px 4px', cursor:'pointer', display:'flex', flexDirection:'column', alignItems:'center', gap:4, transition:'all 0.15s' }}>
+                  <span style={{ fontSize:22 }}>{item.icon}</span>
+                  <span style={{ color: item.color, fontSize:10, fontWeight:600 }}>{item.label}</span>
+                </button>
+              ))}
+            </div>
+
+            {/* Divider */}
+            <div style={{ borderTop:'1px solid #1a1a2e', marginBottom:10 }} />
+
+            {/* Row 2 — AI Modes */}
+            <div style={{ color:'#444', fontSize:10, marginBottom:6, paddingLeft:2 }}>AI MODE</div>
+            <div style={{ display: 'flex', gap: 6 }}>
+              {([['auto','🤖','Auto','#00d4ff'],['flash','⚡','Flash','#f59e0b'],['think','🧠','Think','#8b5cf6'],['deep','🔬','Deep','#22c55e']] as [Mode,string,string,string][]).map(([m,icon,label,col]) => (
+                <button key={m} onClick={() => { setMode(m); setPlusOpen(false); }}
+                  style={{ flex:1, background: mode===m?'rgba(0,212,255,0.1)':'#111118', border:'1px solid '+(mode===m?col:'#1e1e2e'), borderRadius:10, padding:'8px 4px', cursor:'pointer', display:'flex', flexDirection:'column', alignItems:'center', gap:3 }}>
+                  <span style={{ fontSize:18 }}>{icon}</span>
+                  <span style={{ color: mode===m?col:'#555', fontSize:10 }}>{label}</span>
+                </button>
+              ))}
+            </div>
           </div>
         )}
       </div>
     </div>
   );
-}
+}  
