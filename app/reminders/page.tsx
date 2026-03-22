@@ -13,7 +13,11 @@ export default function RemindersPage() {
   const [aiLoading, setAiLoading] = useState(false)
   const [added, setAdded] = useState(false)
 
-  useEffect(() => { load() }, [])
+  useEffect(() => {
+    // Request notification permission on load
+    if (typeof window !== 'undefined' && 'Notification' in window && Notification.permission === 'default') {
+      Notification.requestPermission()
+    } load() }, [])
 
   const load = () => {
     if (typeof window !== 'undefined') setReminders(getReminders())
