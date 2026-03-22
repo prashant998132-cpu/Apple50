@@ -19,6 +19,7 @@ const ITEMS = [
   { icon: '🎭', label: 'AI Studio',     route: '/studio' },
   { icon: '🇮🇳', label: 'India Hub',    route: '/india' },
   { icon: '🖥️', label: 'System',        route: '/system' },
+  { icon: '🌸', label: 'Sakhi',           route: '/sakhi' },
   { icon: '⚙️', label: 'Settings',      route: '/settings' },
 ]
 
