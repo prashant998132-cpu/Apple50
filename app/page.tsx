@@ -2267,6 +2267,7 @@ export default function Home() {
                   { icon: '🔌', label: 'Connected Apps', action: () => { setAppsOpen(true); setHeaderMenuOpen(false); }, active: false },
                   { icon: '🔇', label: 'Stop Speaking', action: () => { stopSpeaking(); setHeaderMenuOpen(false); }, active: false },
                   { icon: '⚡', label: 'Agent Mode', action: () => { router.push('/agent'); setHeaderMenuOpen(false); }, active: false },
+                  { icon: '🌸', label: 'Sakhi', action: () => { router.push('/sakhi'); setHeaderMenuOpen(false); }, active: false },
                   { icon: '⚙️', label: 'Settings', action: () => { router.push('/settings'); setHeaderMenuOpen(false); }, active: false },
                 ].map(item => (
                   <button key={item.label} onClick={item.action}
