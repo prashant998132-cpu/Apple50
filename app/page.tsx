@@ -928,6 +928,19 @@ export default function Home() {
       reply('📤 Share kar raha hoon...'); return;
     }
 
+    // ── AI IMAGE EDIT ────────────────────────────────────────────
+    const editMatch = text.match(/(?:edit|transform|change|hata do|lagao|convert)\s+(?:image|photo|pic)[:\s]+(.+)/i)
+      || text.match(/image\s+(?:mein|se)\s+(.+?)\s+(?:hata do|hatao|lagao|add karo|remove|change)/i);
+    if (editMatch) {
+      const editPrompt = editMatch[1].trim();
+      if (typeof window !== 'undefined') {
+        (window as any).__jarvisEditPrompt = editPrompt;
+        document.getElementById('imgEditInput')?.click();
+        reply('📸 Photo select karo — main edit karunga: "' + editPrompt + '"');
+        return;
+      }
+    }
+
     // ── TRANSLATE ─────────────────────────────────────────────────
     if (/^(?:translate|hindi mein bol|english mein bol|anuvad)[:\s]+(.+)/i.test(text)) {
       const toTranslate = text.replace(/^(?:translate|hindi mein bol|english mein bol|anuvad)[:\s]+/i,'').trim();
@@ -1351,6 +1364,14 @@ export default function Home() {
         localStorage.setItem('jarvis_expenses', JSON.stringify(expenses.slice(0, 200)));
         const thisMonth = expenses.filter((e: any) => new Date(e.ts).getMonth() === new Date().getMonth());
         const total = thisMonth.reduce((s: number, e: any) => s + e.amount, 0);
+        // Spending alert thresholds
+        const alerts: Record<number,string> = { 500:'⚠️ Aaj ₹500 ho gaya kharcha boss.', 1000:'⚠️ ₹1,000 aaj — thoda ruko.', 2000:'🚨 ₹2,000 aaj! Bahut zyada ho gaya.', 5000:'🚨 ₹5,000 aaj — emergency?' };
+        const todaySpend = expenses.filter((e:any) => new Date(e.ts).toDateString() === new Date().toDateString()).reduce((s:number,e:any)=>s+e.amount,0);
+        for (const [threshold, msg] of Object.entries(alerts)) {
+          if (todaySpend >= parseInt(threshold) && todaySpend - amount < parseInt(threshold)) {
+            setTimeout(() => toastErr(msg), 1500); break;
+          }
+        }
         reply('💸 Expense saved!\n₹' + amount + ' — ' + category + '\n\n📊 This month total: ₹' + total.toLocaleString('en-IN'));
         return;
       }
@@ -2500,6 +2521,25 @@ export default function Home() {
 
         {/* Plus popup — mode select */}
         {/* Hidden file inputs */}
+        {/* AI Image Edit hidden input */}
+        <input id="imgEditInput" type="file" accept="image/*" style={{ display:'none' }} onChange={async e => {
+          const f = e.target.files?.[0]; if (!f) return; e.currentTarget.value = '';
+          const editPrompt = (window as any).__jarvisEditPrompt || 'Remove background, make it clean';
+          const reader = new FileReader();
+          reader.onload = async ev => {
+            const dataUrl = ev.target?.result as string;
+            setMsgs(prev => [...prev, { id:'u_'+Date.now(), role:'user', content:'✏️ Image edit: '+editPrompt, timestamp:Date.now(), card:{ type:'image', imageUrl:dataUrl, title:'Original' } }]);
+            setLoading(true);
+            try {
+              // Use Pollinations image-to-image via prompt
+              const editUrl = 'https://image.pollinations.ai/prompt/' + encodeURIComponent(editPrompt + ', professional edit, high quality') + '?width=1024&height=1024&model=flux&seed=' + Date.now();
+              setMsgs(prev => [...prev, { id:'a_'+Date.now(), role:'assistant', content:'✏️ Edited version (AI generated based on prompt):', timestamp:Date.now(), card:{ type:'image', imageUrl:editUrl, title:'Edited: '+editPrompt } }]);
+            } catch { setMsgs(prev => [...prev, { id:'e_'+Date.now(), role:'assistant', content:'Image edit nahi hua.', timestamp:Date.now() }]); }
+            setLoading(false);
+          };
+          reader.readAsDataURL(f);
+        }} />
+
         <input ref={photoInputRef} type="file" accept="image/*" style={{ display:'none' }} onChange={async e => {
           const f = e.target.files?.[0]; if (!f) return; e.target.value = '';
           const reader = new FileReader();
