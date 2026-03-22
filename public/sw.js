@@ -206,3 +206,45 @@ async function fireRemindersFromSW() {
 }
 
 setInterval(fireRemindersFromSW, 30000);
+
+
+// ── Morning Brief Notification ─────────────────────────────────────────
+self.addEventListener('periodicsync', (event) => {
+  if (event.tag === 'morning-brief') {
+    event.waitUntil(showMorningBrief());
+  }
+});
+
+async function showMorningBrief() {
+  const hour = new Date().getHours();
+  if (hour >= 7 && hour <= 9) {
+    await self.registration.showNotification('🌅 JARVIS Morning Brief', {
+      body: 'Subah ho gayi boss! Weather, goals, aur aaj ka plan check karo.',
+      icon: '/icons/icon-192.png',
+      badge: '/icons/icon-72.png',
+      vibrate: [200, 100, 200],
+      actions: [
+        { action: 'open', title: '🚀 Open JARVIS' },
+        { action: 'briefing', title: '📊 Briefing dekho' },
+      ],
+      tag: 'morning-brief',
+    });
+  }
+}
+
+self.addEventListener('notificationclick', (event) => {
+  event.notification.close();
+  const action = event.action;
+  const url = action === 'briefing' ? '/briefing' : '/';
+  event.waitUntil(
+    clients.matchAll({ type: 'window' }).then(clientList => {
+      for (const client of clientList) {
+        if (client.url.includes(self.location.origin) && 'focus' in client) {
+          client.navigate(url);
+          return client.focus();
+        }
+      }
+      return clients.openWindow(url);
+    })
+  );
+});
