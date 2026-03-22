@@ -42,6 +42,34 @@ async function fetchWeather(): Promise<string> {
   }
 }
 
+async function fetchCrypto(): Promise<string> {
+  try {
+    const res = await fetch('https://api.coingecko.com/api/v3/simple/price?ids=bitcoin,ethereum,solana&vs_currencies=inr&include_24hr_change=true', { signal: AbortSignal.timeout(5000) })
+    const d = await res.json()
+    const btc = d.bitcoin; const eth = d.ethereum; const sol = d.solana;
+    return [
+      btc ? `₿ Bitcoin: ₹${btc.inr?.toLocaleString('en-IN')} (${btc.inr_24h_change?.toFixed(1)}%)` : '',
+      eth ? `Ξ Ethereum: ₹${eth.inr?.toLocaleString('en-IN')} (${eth.inr_24h_change?.toFixed(1)}%)` : '',
+      sol ? `◎ Solana: ₹${sol.inr?.toLocaleString('en-IN')} (${sol.inr_24h_change?.toFixed(1)}%)` : '',
+    ].filter(Boolean).join('\n')
+  } catch { return 'Crypto data unavailable' }
+}
+
+async function fetchGold(): Promise<string> {
+  try {
+    const [metalRes, fxRes] = await Promise.all([
+      fetch('https://api.metals.live/v1/spot/gold,silver', { signal: AbortSignal.timeout(5000) }),
+      fetch('https://api.exchangerate-api.com/v4/latest/USD', { signal: AbortSignal.timeout(4000) }),
+    ])
+    const metals = await metalRes.json()
+    const fx = await fxRes.json()
+    const usdInr = fx.rates?.INR || 84
+    const g = ((metals?.gold || 2300) / 31.1035) * usdInr
+    const s = ((metals?.silver || 28) / 31.1035) * usdInr
+    return `🥇 Gold 24K: ₹${Math.round(g).toLocaleString('en-IN')}/g | 10g = ₹${Math.round(g*10).toLocaleString('en-IN')}\n🥈 Silver: ₹${Math.round(s).toLocaleString('en-IN')}/g`
+  } catch { return '🥇 Gold: ~₹9,000/g | 🥈 Silver: ~₹105/g' }
+}
+
 async function fetchNews(): Promise<string[]> {
   try {
     const r = await fetch('https://hacker-news.firebaseio.com/v0/topstories.json', { signal: AbortSignal.timeout(5000) })
@@ -63,7 +91,11 @@ export default function BriefingPage() {
   const [speaking, setSpeaking] = useState(false)
   const [fullText, setFullText] = useState('')
 
-  useEffect(() => { buildBriefing() }, [])
+  useEffect(() => { 
+    buildBriefing()
+    const iv = setInterval(buildBriefing, 5 * 60 * 1000)
+    return () => clearInterval(iv)
+  }, [])
 
   const buildBriefing = async () => {
     setLoading(true)
@@ -102,7 +134,7 @@ export default function BriefingPage() {
     } catch {}
 
     // Section 3: Weather (parallel)
-    const [weather, news] = await Promise.all([fetchWeather(), fetchNews()])
+    const [weather, news, crypto, gold] = await Promise.all([fetchWeather(), fetchNews(), fetchCrypto(), fetchGold()])
 
     built.push({
       icon: '🌤️',
