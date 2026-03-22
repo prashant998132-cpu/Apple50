@@ -732,7 +732,130 @@ export default function Home() {
       reply('📳 Custom vibration pattern!'); return;
     }
 
-    // ── TRANSLATE ─────────────────────────────────────────────
+    // ══════════════════════════════════════════════════════════════
+    // ── JARVIS PHONE CONTROL CENTER ─────────────────────────────
+    // ══════════════════════════════════════════════════════════════
+
+    // ── CALL COMMAND ─────────────────────────────────────────────
+    const callMatch = text.match(/(?:call|phone|ring|baat karo?)\s+(?:karo?\s+)?(?:on\s+)?([+\d\s]{8,15})/i)
+      || text.match(/(\+?91\s*[6-9]\d{9})\s+(?:pe|ko|par)\s+(?:call|phone)/i);
+    const contactCallMatch = text.match(/(.+?)\s+ko\s+(?:call|phone)\s+karo?/i)
+      || text.match(/(?:call|ring)\s+(.+?)(?:\s+ko)?$/i);
+    
+    if (callMatch?.[1]) {
+      const num = callMatch[1].replace(/\s/g,'');
+      if (typeof window !== 'undefined') window.location.href = 'tel:' + num;
+      reply('📞 Calling ' + num + '...'); return;
+    }
+    if (contactCallMatch?.[1] && !callMatch) {
+      const name = contactCallMatch[1].trim().toLowerCase();
+      if (typeof window !== 'undefined') {
+        const contacts = JSON.parse(localStorage.getItem('jarvis_contacts') || '{}');
+        const num = contacts[name];
+        if (num) {
+          window.location.href = 'tel:' + num;
+          reply('📞 ' + contactCallMatch[1] + ' ko call kar raha hoon (' + num + ')...'); return;
+        }
+      }
+      reply('📞 ' + contactCallMatch[1] + ' ka number nahi pata. Pehle batao: "' + contactCallMatch[1] + ' ka number hai XXXXXXXXXX"'); return;
+    }
+
+    // ── WHATSAPP SEND ─────────────────────────────────────────────
+    const waNumMatch = text.match(/(?:whatsapp|wa)\s+(?:bhejo?|send|karo?)\s+([+\d\s]{10,15})\s+(?:ko\s+)?(.+)/i);
+    const waContactMatch = text.match(/(?:whatsapp|wa)\s+(?:pe\s+)?(.+?)\s+ko\s+(?:bhejo?|likho|msg|message)\s+(?:ki\s+|ke\s+)?(.+)/i)
+      || text.match(/(.+?)\s+ko\s+whatsapp\s+(?:karo?|bhejo?|likho)\s*[:-]?\s*(.+)/i);
+    
+    if (waNumMatch) {
+      const { sendWhatsApp } = await import('@/lib/control/phoneControl');
+      sendWhatsApp(waNumMatch[1], waNumMatch[2]);
+      reply('💬 WhatsApp bhej raha hoon: "' + waNumMatch[2].slice(0,50) + '"'); return;
+    }
+    if (waContactMatch) {
+      const name = waContactMatch[1].trim().toLowerCase();
+      const msg = waContactMatch[2].trim();
+      if (typeof window !== 'undefined') {
+        const contacts = JSON.parse(localStorage.getItem('jarvis_contacts') || '{}');
+        const num = contacts[name];
+        if (num) {
+          const { sendWhatsApp } = await import('@/lib/control/phoneControl');
+          sendWhatsApp(num, msg);
+          reply('💬 ' + waContactMatch[1] + ' ko WhatsApp: "' + msg + '"'); return;
+        }
+      }
+      // No number — open WhatsApp with just message
+      if (typeof window !== 'undefined') window.location.href = 'whatsapp://send?text=' + encodeURIComponent(msg);
+      reply('💬 WhatsApp khola — message ready: "' + msg + '"'); return;
+    }
+
+    // ── SMS SEND ──────────────────────────────────────────────────
+    const smsMatch = text.match(/(?:sms|text|message)\s+(?:bhejo?\s+)?([+\d\s]{10,15})\s+(?:ko\s+)?(.+)/i);
+    if (smsMatch) {
+      const { sendSMS } = await import('@/lib/control/phoneControl');
+      sendSMS(smsMatch[1], smsMatch[2]);
+      reply('📱 SMS bhej raha hoon...'); return;
+    }
+
+    // ── SET ALARM ─────────────────────────────────────────────────
+    const alarmMatch = text.match(/(?:alarm|wake|uthao|jagao)\s+(?:kal\s+)?(\d{1,2})(?::(\d{2}))?\s*(?:baj[ae]?|am|pm|:00)?/i)
+      || text.match(/(\d{1,2})(?::(\d{2}))?\s*(?:baj[ae]?|am|pm)\s+(?:ka\s+)?(?:alarm|wake)/i);
+    if (alarmMatch) {
+      let hr = parseInt(alarmMatch[1]);
+      const mn = parseInt(alarmMatch[2] || '0');
+      if (/pm/i.test(text) && hr < 12) hr += 12;
+      if (/am/i.test(text) && hr === 12) hr = 0;
+      const { setAlarm } = await import('@/lib/control/phoneControl');
+      setAlarm(hr, mn, 'JARVIS Alarm');
+      reply('⏰ Alarm set: ' + String(hr).padStart(2,'0') + ':' + String(mn).padStart(2,'0') + ' baje!'); return;
+    }
+
+    // ── NAVIGATE / DIRECTIONS ─────────────────────────────────────
+    const navMatch = text.match(/(?:navigate|directions?|rasta|jao|chalte hain|maps)\s+(?:to\s+|pe\s+|mein\s+)?(.+)/i)
+      || text.match(/(.+?)\s+(?:ka rasta|kaise jaun|direction|navigate karo)/i);
+    if (navMatch) {
+      const dest = navMatch[1].trim();
+      const { navigateTo } = await import('@/lib/control/phoneControl');
+      navigateTo(dest);
+      reply('🗺️ "' + dest + '" navigate kar raha hoon boss!'); return;
+    }
+
+    // ── YOUTUBE SEARCH ────────────────────────────────────────────
+    const ytMatch2 = text.match(/(?:youtube|yt)\s+(?:pe\s+|mein\s+)?(?:search|play|chalao|dekho|dhundho)\s+(.+)/i)
+      || text.match(/(.+?)\s+(?:youtube|yt)\s+(?:pe\s+)?(?:search|play|chalao|dekho)/i)
+      || text.match(/^play\s+(.+)/i);
+    if (ytMatch2) {
+      const q = ytMatch2[1].trim();
+      if (typeof window !== 'undefined') window.open('https://www.youtube.com/results?search_query=' + encodeURIComponent(q), '_blank');
+      reply('▶️ YouTube pe "' + q + '" search kar raha hoon!'); return;
+    }
+
+    // ── SPOTIFY SEARCH ────────────────────────────────────────────
+    const spotifyMatch = text.match(/(?:spotify|music)\s+(?:pe\s+)?(?:play|chalao|search)\s+(.+)/i);
+    if (spotifyMatch) {
+      const q = spotifyMatch[1].trim();
+      if (typeof window !== 'undefined') window.location.href = 'spotify:search:' + encodeURIComponent(q);
+      reply('🎵 Spotify pe "' + q + '" chal raha hai!'); return;
+    }
+
+    // ── APP OPEN (enhanced) ────────────────────────────────────────
+    const appOpenMatch = text.match(/(?:kholo?|open|launch|start|chalo|chalao)\s+(.+?)(?:\s+app)?$/i)
+      || text.match(/(.+?)\s+(?:kholo?|open|launch)\s*$/i);
+    if (appOpenMatch) {
+      const appName = appOpenMatch[1].trim().toLowerCase()
+        .replace(/\s+app$/,'').replace(/app/,'').trim();
+      const { openApp } = await import('@/lib/control/phoneControl');
+      const result = openApp(appName);
+      if (!result.includes('nahi pata')) { reply('📱 ' + result); return; }
+    }
+
+    // ── SHARE ──────────────────────────────────────────────────────
+    const shareMatch2 = text.match(/^(?:share|share karo)\s+(.+)/i);
+    if (shareMatch2) {
+      const { shareContent } = await import('@/lib/control/phoneControl');
+      await shareContent('JARVIS', shareMatch2[1].trim());
+      reply('📤 Share kar raha hoon...'); return;
+    }
+
+    // ── TRANSLATE ─────────────────────────────────────────────────
     if (/^(?:translate|hindi mein bol|english mein bol|anuvad)[:\s]+(.+)/i.test(text)) {
       const toTranslate = text.replace(/^(?:translate|hindi mein bol|english mein bol|anuvad)[:\s]+/i,'').trim();
       const toLang = /hindi/i.test(text) ? 'Hindi' : 'English';
