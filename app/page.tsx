@@ -1541,6 +1541,50 @@ export default function Home() {
       reply(result.ok ? '✅ ' + result.msg : '⚠️ ' + result.msg); return;
     }
 
+    // ── VIDEO GENERATION ───────────────────────────────────────
+    const videoMatch = text.match(/video\s+(?:bana|banao|generate|create|chahiye|de)[:\s]+(.+)/i)
+      || text.match(/(.+)\s+(?:ka|ki)\s+video\s+(?:bana|banao|create)/i);
+    if (videoMatch) {
+      const videoPrompt = (videoMatch[1] || text).replace(/video|bana|banao|create|generate|chahiye/gi,'').trim() || text.trim();
+      const videoId = 'a_vid_' + Date.now();
+      setMsgs(prev => [...prev,
+        { id:'u_'+Date.now(), role:'user', content:text.trim(), timestamp:Date.now() },
+        { id:videoId, role:'assistant', content:'🎬 Video generate kar raha hoon: "' + videoPrompt + '"\n⏳ 15-30 seconds lagenge...', timestamp:Date.now() },
+      ]);
+      setInput('');
+      (async () => {
+        try {
+          const videoUrl = 'https://image.pollinations.ai/prompt/' + encodeURIComponent(videoPrompt + ', cinematic, motion, video style') + '?width=1280&height=720&model=flux&nologo=true&seed=' + Date.now();
+          const genUrl = 'https://pollinations.ai/p/' + encodeURIComponent(videoPrompt);
+          setMsgs(prev => prev.map(m => m.id===videoId ? {...m,
+            content:'🎬 **Video:** "' + videoPrompt + '"\n\n▶️ [Pollinations pe dekho](' + genUrl + ')\n\nYa image version:',
+            card:{ type:'image', imageUrl:videoUrl, title:'Video: '+videoPrompt }
+          } : m));
+        } catch {
+          setMsgs(prev => prev.map(m => m.id===videoId ? {...m, content:'Video generate nahi hua.'} : m));
+        }
+      })();
+      return;
+    }
+
+    // ── VOICE TRANSCRIBE ───────────────────────────────────────
+    if (/transcribe|audio.*text|speech.*text|recording.*convert/i.test(t)) {
+      reply('🎙️ Voice transcription ke liye:\n1. Mic button tap karo\n2. Bol do kuch bhi\n3. JARVIS automatically text kar dega\n\nYa voice page use karo: /voice'); return;
+    }
+
+    // ── MULTI MODEL IMAGE ──────────────────────────────────────
+    const modelMatch = text.match(/(?:flux|seedream|gpt.?image|dirtberry|zimage|imagen)\s+(?:se\s+)?(?:bana|generate|image)[:\s]+(.+)/i);
+    if (modelMatch) {
+      const modelName = /seedream/i.test(text) ? 'seedream' : /gpt.?image/i.test(text) ? 'gptimage' : /dirtberry/i.test(text) ? 'dirtberry' : /zimage|z-image/i.test(text) ? 'zimage' : /flux.pro/i.test(text) ? 'flux-pro' : 'flux';
+      const prompt = modelMatch[1].trim();
+      const imgUrl = 'https://image.pollinations.ai/prompt/' + encodeURIComponent(prompt + ', high quality') + '?model=' + modelName + '&width=1024&height=1024&nologo=true&seed=' + Date.now();
+      setMsgs(prev => [...prev,
+        { id:'u_'+Date.now(), role:'user', content:text.trim(), timestamp:Date.now() },
+        { id:'a_'+Date.now(), role:'assistant', content:'🎨 ' + modelName.toUpperCase() + ' se bana raha hoon: "' + prompt + '"', timestamp:Date.now(), card:{ type:'image', imageUrl:imgUrl, title:prompt+' ('+modelName+')' } },
+      ]);
+      setInput(''); return;
+    }
+
     // ── Direct Image Generation — bypass AI refusal ──────────
     const imgMatch = text.match(/(?:image|img|photo|pic|wallpaper|banner|poster|draw|paint|sketch|generator)\s+(?:kar|bana|banao|generate|create|make|de|do|chahiye|of|ki|ka)\s*(.+)/i)
       || text.match(/(.+)\s+(?:ki|ka|ke|wala|wali)\s+(?:image|photo|pic|tasveer)/i)
@@ -1549,7 +1593,11 @@ export default function Home() {
     if (imgMatch) {
       const imgPrompt = (imgMatch[1] || text).replace(/image|generator|bana|banao|kar|create|generate|photo|chahiye|de do/gi, '').trim() || text.trim()
       const safePrompt = imgPrompt.replace(/(nude|naked|nsfw|explicit|sex|porn)/gi, 'person')
-      const pollinationsUrl = 'https://image.pollinations.ai/prompt/' + encodeURIComponent(safePrompt + ', high quality, detailed, artistic') + '?width=1024&height=1024&nologo=true&seed=' + Date.now()
+      // Smart model selection based on prompt
+      const isPortrait = /girl|woman|man|person|face|portrait|selfie|people/i.test(safePrompt);
+      const isArt = /anime|cartoon|art|painting|illustration|drawing/i.test(safePrompt);
+      const imgModel = isPortrait ? 'flux' : isArt ? 'flux' : 'flux-schnell';
+      const pollinationsUrl = 'https://image.pollinations.ai/prompt/' + encodeURIComponent(safePrompt + ', high quality, 4K, detailed') + '?width=1024&height=1024&model=' + imgModel + '&nologo=true&enhance=true&seed=' + Date.now()
       const tempId = 'a_img_' + Date.now()
       // Show loading immediately with Pollinations (instant URL)
       setMsgs(prev => [...prev,
@@ -1563,7 +1611,8 @@ export default function Home() {
       setTimeout(async () => {
         try {
           const { puterImageGen } = await import('@/lib/providers/puter');
-          const puterUrl = await puterImageGen(safePrompt, 'dall-e-3');
+          // Try best available model
+          const puterUrl = await puterImageGen(safePrompt, 'dall-e-3') || await puterImageGen(safePrompt, 'black-forest-labs/FLUX.1-schnell');
           if (puterUrl) {
             setMsgs(prev => prev.map(m => m.id === tempId
               ? { ...m, content: '🎨 "' + safePrompt + '" (DALL-E 3)', card: { type: 'image', imageUrl: puterUrl, title: safePrompt + ' (HD)' } }
