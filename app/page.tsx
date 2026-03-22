@@ -344,6 +344,19 @@ export default function Home() {
 
   const effectiveMode = mode === 'auto' ? autoRouteMode(input) : mode;
 
+  // ── Keyboard / Viewport fix (Android) ───────────────────────────────────
+  React.useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const vv = (window as any).visualViewport;
+    if (!vv) return;
+    const onResize = () => {
+      const offset = window.innerHeight - vv.height;
+      document.documentElement.style.setProperty('--keyboard-offset', offset + 'px');
+    };
+    vv.addEventListener('resize', onResize);
+    return () => vv.removeEventListener('resize', onResize);
+  }, []);
+
   // ── Init ─────────────────────────────────────────────────────────────────
   useEffect(() => {
     // PIN check
@@ -2001,7 +2014,7 @@ export default function Home() {
             if (r === 'accepted') toastOk('✅ JARVIS installed!');
           }
         }}
-          style={{ background: 'rgba(0,212,255,0.08)', borderBottom: '1px solid rgba(0,212,255,0.2)', padding: '8px 16px', display: 'flex', alignItems: 'center', gap: 10, cursor: 'pointer' }}>
+          data-pwa-banner style={{ background: 'rgba(0,212,255,0.08)', borderBottom: '1px solid rgba(0,212,255,0.2)', padding: '8px 16px', display: 'flex', alignItems: 'center', gap: 10 }}>
           <span style={{ fontSize: 20 }}>📲</span>
           <div>
             <div style={{ color: '#00d4ff', fontSize: 12, fontWeight: 600 }}>JARVIS Install karo</div>
