@@ -411,6 +411,61 @@ export default function Home() {
     }
 
     // Reminders
+    // ── PROACTIVE JARVIS ENGINE ─────────────────────────────────
+    // JARVIS khud sochta hai aur bolta hai — poochho mat
+    const proactiveEngine = setInterval(async () => {
+      const now = new Date();
+      const h = now.getHours();
+      const m = now.getMinutes();
+      const todayStr = now.toDateString();
+      if (typeof window === 'undefined') return;
+
+      // Last proactive message timestamp — spam mat karo
+      const lastProactive = parseInt(localStorage.getItem('jarvis_last_proactive') || '0');
+      const sinceLastMin = (Date.now() - lastProactive) / 60000;
+
+      // ── Night sleep reminder ─────────────────────────────────
+      if (h === 23 && m >= 0 && m <= 10 && sinceLastMin > 120) {
+        localStorage.setItem('jarvis_last_proactive', String(Date.now()));
+        setMsgs(prev => [...prev, { id: 'proactive_' + Date.now(), role: 'assistant', content: '🌙 Raat ke 11 baj gaye boss. Neend jaao — kal fresh mind se kaam karo. Koi kaam reh gaya hai kya?', timestamp: Date.now() }]);
+      }
+
+      // ── Morning energy ───────────────────────────────────────
+      if (h === 6 && m >= 0 && m <= 10 && sinceLastMin > 300) {
+        localStorage.setItem('jarvis_last_proactive', String(Date.now()));
+        const habits = JSON.parse(localStorage.getItem('jarvis_habits') || '{}');
+        const pending = Object.keys(habits).filter(k => habits[k].lastDate !== todayStr);
+        const msg = pending.length > 0
+          ? '☀️ Good morning boss! Aaj ' + pending.slice(0,2).join(', ') + ' karna mat bhuolna. Ek kaam pehle decide karo — kaunsa sabse important hai?'
+          : '☀️ Good morning boss! Naya din, naye mauke. Kya plan hai aaj ka?';
+        setMsgs(prev => [...prev, { id: 'proactive_' + Date.now(), role: 'assistant', content: msg, timestamp: Date.now() }]);
+      }
+
+      // ── Reminder warning (30 min before) ───────────────────
+      try {
+        const { getReminders: getAllReminders } = await import('@/lib/reminders');
+        const reminders = getAllReminders();
+        const soon = (reminders as any[]).filter((r: any) => !r.completed && r.time > Date.now() && r.time < Date.now() + 30 * 60 * 1000);
+        if (soon.length > 0 && sinceLastMin > 25) {
+          localStorage.setItem('jarvis_last_proactive', String(Date.now()));
+          const r = soon[0] as any;
+          const minsLeft = Math.round((r.time - Date.now()) / 60000);
+          setMsgs(prev => [...prev, { id: 'proactive_reminder_' + r.id, role: 'assistant', content: '⏰ Boss! "' + r.title + '" — ' + minsLeft + ' minute mein hai. Ready ho jaao.', timestamp: Date.now() }]);
+        }
+      } catch {}
+
+      // ── Habit nudge (afternoon if not done) ─────────────────
+      if (h >= 14 && h <= 15 && sinceLastMin > 240) {
+        const habits = JSON.parse(localStorage.getItem('jarvis_habits') || '{}');
+        const pending = Object.keys(habits).filter(k => habits[k].lastDate !== todayStr && habits[k].streak > 2);
+        if (pending.length > 0) {
+          localStorage.setItem('jarvis_last_proactive', String(Date.now()));
+          setMsgs(prev => [...prev, { id: 'proactive_habit_' + Date.now(), role: 'assistant', content: '💪 Boss! ' + pending[0] + ' aaj abhi tak nahi kiya — streak toot jaayegi. Abhi karo ya baad mein?', timestamp: Date.now() }]);
+        }
+      }
+
+    }, 60 * 1000); // Check every minute
+
     const ri = setInterval(() => {
       // Morning brief — schedule 7am notification
       if (typeof window !== 'undefined' && 'Notification' in window && Notification.permission === 'granted') {
@@ -598,6 +653,24 @@ export default function Home() {
   // ── Send message ──────────────────────────────────────────────────────
   const send = async (text: string) => {
     if (!text.trim() || loading) return;
+    // ── CONTEXT CHAIN ─────────────────────────────────────────────
+    // JARVIS last person/topic yaad rakhta hai
+    if (typeof window !== 'undefined') {
+      // Save context if person mentioned
+      const personMatch = text.match(/^(.+?)\s+ko\s+(?:call|whatsapp|message|bol|bata)/i);
+      if (personMatch) localStorage.setItem('jarvis_last_person', personMatch[1].trim());
+      
+      // Resolve "unhe/usse/unko" with context
+      const withContext = text.replace(/(?:unhe|usse|unko|isko|inhe)/gi, () => {
+        return localStorage.getItem('jarvis_last_person') || 'unhe';
+      });
+      if (withContext !== text) {
+        // Show resolved context briefly
+        const resolved = localStorage.getItem('jarvis_last_person');
+        if (resolved) toastInfo('👤 Context: ' + resolved);
+      }
+    }
+
     // Don't send bare "/" — show slash commands instead
     if (text.trim() === '/') {
       setSlashOpen(true);
@@ -1119,6 +1192,39 @@ export default function Home() {
       } catch { reply('Currency fetch nahi ho saka.'); return; }
     }
 
+    // ── LIFE TIMELINE ────────────────────────────────────────────
+    if (/aaj kya hua|din kaisa raha|today summary|aaj ka recap|life recap/i.test(t)) {
+      const today = new Date().toDateString();
+      const habits = JSON.parse(typeof window !== 'undefined' ? localStorage.getItem('jarvis_habits') || '{}' : '{}');
+      const expenses = JSON.parse(typeof window !== 'undefined' ? localStorage.getItem('jarvis_expenses') || '[]' : '[]');
+      const todayExp = expenses.filter((e: any) => new Date(e.ts).toDateString() === today);
+      const todayHabits = Object.keys(habits).filter(k => habits[k].lastDate === today);
+      const totalSpend = todayExp.reduce((s: number, e: any) => s + e.amount, 0);
+      const timeline = typeof window !== 'undefined' ? JSON.parse(localStorage.getItem('jarvis_timeline') || '[]') : [];
+      const todayEvents = timeline.filter((e: any) => new Date(e.ts).toDateString() === today);
+
+      let summary = '📅 **Aaj ka din — ' + new Date().toLocaleDateString('en-IN', { weekday:'long', day:'numeric', month:'long' }) + '**\n\n';
+      if (todayHabits.length > 0) summary += '✅ **Habits done:** ' + todayHabits.join(', ') + '\n';
+      if (totalSpend > 0) summary += '💸 **Kharcha:** ₹' + totalSpend.toLocaleString('en-IN') + ' (' + todayExp.length + ' transactions)\n';
+      if (todayEvents.length > 0) summary += '📌 **Events:** ' + todayEvents.map((e: any) => e.text).join(', ') + '\n';
+      const missedHabits = Object.keys(habits).filter(k => habits[k].lastDate !== today);
+      if (missedHabits.length > 0) summary += '⚠️ **Pending:** ' + missedHabits.join(', ') + '\n';
+      if (summary.length < 150) summary += '\n\nAaj ka din abhi shuru hai boss. Kya karna hai?';
+
+      reply(summary); return;
+    }
+
+    // ── LOG TO TIMELINE ────────────────────────────────────────────
+    if (/^log[:\s]+(.+)/i.test(text) || /^note to jarvis[:\s]+(.+)/i.test(text)) {
+      const event = text.replace(/^(?:log|note to jarvis)[:\s]+/i,'').trim();
+      if (typeof window !== 'undefined') {
+        const timeline = JSON.parse(localStorage.getItem('jarvis_timeline') || '[]');
+        timeline.unshift({ text: event, ts: Date.now(), date: new Date().toLocaleDateString('en-IN') });
+        localStorage.setItem('jarvis_timeline', JSON.stringify(timeline.slice(0,500)));
+        reply('📌 Timeline mein save kiya: "' + event + '"'); return;
+      }
+    }
+
     // ── LIFE SCORE ──────────────────────────────────────────────
     if (/life score|aaj ka score|mera score|jarvis score|daily score/i.test(t)) {
       if (typeof window !== 'undefined') {
@@ -1277,7 +1383,14 @@ export default function Home() {
         h.lastDate = today;
         if (!h.dates.includes(today)) h.dates.push(today);
         localStorage.setItem('jarvis_habits', JSON.stringify(habits));
-        reply('✅ **' + habit + '** — Done!\n🔥 Streak: **' + h.streak + ' days**\n' + (h.streak >= 7 ? '🏆 7 din ka streak! Zabardast!' : h.streak >= 3 ? '💪 ' + h.streak + ' din se consistent!' : 'Keep it up boss!'));
+        const adviceMap: Record<string,string> = {
+          'gym': h.streak >= 7 ? '💪 7 din! Ab rest day le aaj.' : h.streak >= 3 ? 'Keep pushing boss!' : 'Shuruat achhi hai!',
+          'padhai': h.streak >= 5 ? '📚 Padhne ki aadat ban gayi!' : 'Consistency hi success hai.',
+          'meditation': '🧘 ' + h.streak + ' din ka peace. Kal bhi karna.',
+          'running': h.streak >= 7 ? '🏃 Ek hafta! Body thank kar rahi hogi.' : 'Chal raha hai boss!',
+        };
+        const advice = adviceMap[habit.toLowerCase()] || (h.streak >= 7 ? '🏆 Zabardast streak boss!' : h.streak >= 3 ? '💪 Consistent ho!' : 'Kal bhi karo!');
+        reply('✅ **' + habit + '** — Done!\n🔥 Streak: **' + h.streak + ' days**\n' + advice);
         return;
       }
     }
