@@ -145,18 +145,52 @@ export default function SakhiPage() {
       const system = buildSystem(newMem)
       const history = updated.slice(-20).map(m => ({ role: m.role === 'user' ? 'user' : 'assistant', content: m.content }))
 
-      const res = await fetch('https://text.pollinations.ai/openai', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          model: 'openai',
-          messages: [{ role: 'system', content: system }, ...history],
-          seed: Math.floor(Math.random() * 9999),
-        }),
-        signal: AbortSignal.timeout(25000),
-      })
-      const d = await res.json()
-      const reply = d.choices?.[0]?.message?.content?.trim() || 'Hmm 😅'
+      // Use saved API keys from JARVIS settings
+      const groqKey = typeof window !== 'undefined' ? localStorage.getItem('GROQ_API_KEY') : null
+      const geminiKey = typeof window !== 'undefined' ? localStorage.getItem('GEMINI_API_KEY') : null
+
+      let reply = ''
+
+      // Try Groq first (fastest)
+      if (groqKey) {
+        try {
+          const r = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + groqKey },
+            body: JSON.stringify({ model: 'llama-3.3-70b-versatile', messages: [{ role: 'system', content: system }, ...history], max_tokens: 200, temperature: 0.9 }),
+            signal: AbortSignal.timeout(12000),
+          })
+          const d = await r.json()
+          reply = d.choices?.[0]?.message?.content?.trim() || ''
+        } catch {}
+      }
+
+      // Try Gemini if Groq failed
+      if (!reply && geminiKey) {
+        try {
+          const convText2 = history.map((m: any) => (m.role === 'user' ? 'User' : 'Sakhi') + ': ' + m.content).join(' | ');
+          const gemBody = { contents: [{ role: 'user', parts: [{ text: system + ' ' + convText2 }] }] };
+          const r = await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=' + geminiKey, {
+            method: 'POST', headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(gemBody), signal: AbortSignal.timeout(12000),
+          })
+          const d = await r.json()
+          reply = d.candidates?.[0]?.content?.parts?.[0]?.text?.trim() || ''
+        } catch {}
+      }
+
+      // Pollinations fallback
+      if (!reply) {
+        const r = await fetch('https://text.pollinations.ai/openai', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ model: 'openai', messages: [{ role: 'system', content: system }, ...history], seed: Math.floor(Math.random() * 9999) }),
+          signal: AbortSignal.timeout(20000),
+        })
+        const d = await r.json()
+        reply = d.choices?.[0]?.message?.content?.trim() || 'Hmm 😅'
+      }
+
       setMsgs(p => [...p, { id: 'a_' + Date.now(), role: 'sakhi', content: reply, timestamp: Date.now() }])
     } catch {
       setMsgs(p => [...p, { id: 'e_' + Date.now(), role: 'sakhi', content: 'Yaar net slow hai 😅', timestamp: Date.now() }])
