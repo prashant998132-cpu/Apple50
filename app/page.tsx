@@ -300,6 +300,7 @@ export default function Home() {
   const [wakeActive, setWakeActive] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
   const [micActive, setMicActive] = useState(false);
+  const [headerMenuOpen, setHeaderMenuOpen] = React.useState(false);
   const [chatBg, setChatBg] = React.useState<string>('none');
   React.useEffect(() => {
     if (typeof window === 'undefined') return;
@@ -1945,46 +1946,36 @@ export default function Home() {
           </div>
         </div>
 
-        <div style={{ display: 'flex', gap: 6 }}>
-          {/* Wake Word toggle */}
-          <button
-            onClick={() => {
-              if (wakeActive) {
-                stopWakeWord();
-                setWakeActive(false);
-                toastInfo('Wake word off');
-              } else {
-                const ok = startWakeWord(() => {
-                  // Wake word detected — show toast + vibrate + focus
-                  toastOk('🎙️ Haan boss, bol!');
-                  if (typeof navigator !== 'undefined') navigator.vibrate?.(100);
-                  setInput('');
-                  textareaRef.current?.focus();
-                });
-                if (ok) { setWakeActive(true); toastOk('🎙️ Wake word active — "Hey JARVIS" bolo'); }
-                else toastErr('Mic permission chahiye');
-              }
-            }}
-            style={{ background: 'none', border: 'none', fontSize: 18, cursor: 'pointer', color: wakeActive ? '#00d4ff' : '#555', filter: wakeActive ? 'drop-shadow(0 0 4px #00d4ff)' : 'none' }}
-            title="Wake Word">🎙️</button>
-          {/* Theme toggle */}
-          <button onClick={() => { const t = toggleTheme(); setThemeState(t); toastInfo(`Theme: ${t}`); }}
-            style={{ background: 'none', border: 'none', color: '#555', fontSize: 18, cursor: 'pointer' }}
-            title="Toggle theme">
-            {theme === 'dark' ? '🌑' : theme === 'light' ? '☀️' : theme === 'amoled' ? '⬛' : '🌊'}
+        <div style={{ position: 'relative' }}>
+          <button onClick={() => setHeaderMenuOpen(p => !p)}
+            style={{ background: 'none', border: 'none', color: '#888', fontSize: 22, cursor: 'pointer', padding: '0 4px', letterSpacing: 1 }}>
+            ⋮
           </button>
-          {/* Chat history */}
-          <button onClick={() => setHistoryOpen(true)}
-            style={{ background: 'none', border: 'none', color: '#555', fontSize: 18, cursor: 'pointer' }}
-            title="Chat History">💬</button>
-          {/* Connected Apps */}
-          <button onClick={() => setAppsOpen(true)}
-            style={{ background: 'none', border: 'none', color: '#555', fontSize: 18, cursor: 'pointer' }}
-            title="Connected Apps">🔌</button>
-          {/* Stop TTS */}
-          <button onClick={() => stopSpeaking()}
-            style={{ background: 'none', border: 'none', color: '#555', fontSize: 18, cursor: 'pointer' }}
-            title="Stop speaking">🔇</button>
+          {headerMenuOpen && (
+            <>
+              <div onClick={() => setHeaderMenuOpen(false)} style={{ position: 'fixed', inset: 0, zIndex: 9998 }} />
+              <div style={{ position: 'absolute', right: 0, top: 36, background: '#0d0d18', border: '1px solid #1e1e2e', borderRadius: 14, zIndex: 9999, minWidth: 180, boxShadow: '0 4px 24px rgba(0,0,0,0.7)', overflow: 'hidden' }}>
+                {[
+                  { icon: wakeActive ? '🎙️' : '🎤', label: wakeActive ? 'Wake Word OFF' : 'Wake Word ON', action: () => {
+                    if (wakeActive) { stopWakeWord(); setWakeActive(false); toastInfo('Wake word off'); }
+                    else { const ok = startWakeWord(() => { toastOk('🎙️ Bol boss!'); navigator.vibrate?.(100); setInput(''); textareaRef.current?.focus(); }); if (ok) { setWakeActive(true); toastOk('Wake word ON'); } else toastErr('Mic permission chahiye'); }
+                    setHeaderMenuOpen(false);
+                  }, active: wakeActive },
+                  { icon: theme === 'dark' ? '🌑' : theme === 'light' ? '☀️' : theme === 'amoled' ? '⬛' : '🌊', label: 'Theme: ' + theme, action: () => { const t = toggleTheme(); setThemeState(t); setHeaderMenuOpen(false); }, active: false },
+                  { icon: '💬', label: 'Chat History', action: () => { setHistoryOpen(true); setHeaderMenuOpen(false); }, active: false },
+                  { icon: '🔌', label: 'Connected Apps', action: () => { setAppsOpen(true); setHeaderMenuOpen(false); }, active: false },
+                  { icon: '🔇', label: 'Stop Speaking', action: () => { stopSpeaking(); setHeaderMenuOpen(false); }, active: false },
+                  { icon: '⚡', label: 'Agent Mode', action: () => { router.push('/agent'); setHeaderMenuOpen(false); }, active: false },
+                  { icon: '⚙️', label: 'Settings', action: () => { router.push('/settings'); setHeaderMenuOpen(false); }, active: false },
+                ].map(item => (
+                  <button key={item.label} onClick={item.action}
+                    style={{ width: '100%', background: item.active ? 'rgba(0,212,255,0.1)' : 'transparent', border: 'none', borderBottom: '1px solid #111', color: item.active ? '#00d4ff' : '#ccc', padding: '12px 16px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 10, fontSize: 13, textAlign: 'left' }}>
+                    <span style={{ fontSize: 16 }}>{item.icon}</span>{item.label}
+                  </button>
+                ))}
+              </div>
+            </>
+          )}
         </div>
       </div>
 
