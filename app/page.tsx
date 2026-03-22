@@ -352,14 +352,18 @@ export default function Home() {
     // New session
     createSession('New Chat').then(id => setSessionId(id));
 
-    // Location (GPS → reverse geocode)
-    if (navigator.geolocation) {
+    // Location — onboarding se pehle, phir GPS
+    const savedCity = typeof window !== 'undefined' ? localStorage.getItem('jarvis_city') || localStorage.getItem('jarvis_user_city') : '';
+    if (savedCity) {
+      setLocation(savedCity);
+    } else if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(async pos => {
         try {
-          const res = await fetch(`https://nominatim.openstreetmap.org/reverse?lat=${pos.coords.latitude}&lon=${pos.coords.longitude}&format=json`);
+          const res = await fetch('https://nominatim.openstreetmap.org/reverse?lat=' + pos.coords.latitude + '&lon=' + pos.coords.longitude + '&format=json&zoom=10&addressdetails=1');
           const d = await res.json();
-          const city = d?.address?.city || d?.address?.town || d?.address?.village || '';
-          if (city) { setLocation(city); toastInfo(`📍 Location: ${city}`); }
+          // Prefer district/city over small village
+          const city = d?.address?.city || d?.address?.county || d?.address?.state_district || d?.address?.town || d?.address?.village || '';
+          if (city) { setLocation(city); }
         } catch {}
       }, () => {});
     }
