@@ -7,7 +7,6 @@ const ITEMS = [
   { icon: '📱', label: 'Phone Control', route: '/macrodroid' },
   { icon: '📷', label: 'Camera AI',     route: '/camera' },
   { icon: '🎙️', label: 'Voice',         route: '/voice' },
-  { icon: '⚡', label: 'Agent Mode',     route: '/agent' },
   { icon: '📡', label: 'Briefing',      route: '/briefing' },
   { icon: '📝', label: 'Notes',         route: '/notes' },
   { icon: '🎯', label: 'Goals',         route: '/target' },
