@@ -559,6 +559,114 @@ export default function Home() {
       setInput('');
     };
 
+    // ── GPS LOCATION ────────────────────────────────────────────
+    if (/(?:meri|my|exact|precise)\s+(?:location|jagah|position|gps)|gps\s+(?:on|check|batao)/i.test(t)) {
+      try {
+        const { getGPSLocation } = await import('@/lib/browser/powers');
+        const loc = await getGPSLocation();
+        if (loc) {
+          reply('📍 **Exact Location:**\nLat: ' + loc.lat.toFixed(6) + '\nLng: ' + loc.lng.toFixed(6) + '\nAccuracy: ' + loc.accuracy.toFixed(0) + 'm' + (loc.city ? '\nCity: ' + loc.city : '') + '\n\n[Maps pe dekho](https://maps.google.com/?q=' + loc.lat + ',' + loc.lng + ')');
+        } else { reply('📍 GPS permission do ya enable karo.'); }
+        return;
+      } catch { reply('GPS nahi mila.'); return; }
+    }
+
+    // ── NETWORK STATUS ───────────────────────────────────────────
+    if (/network|internet.*speed|connection.*type|wifi.*speed|data.*speed/i.test(t)) {
+      const { getNetworkInfo } = await import('@/lib/browser/powers');
+      const net = getNetworkInfo();
+      reply('📶 **Network Status:**\n' +
+        '• Online: ' + (net.online ? '✅ Yes' : '❌ No') + '\n' +
+        '• Type: ' + net.type.toUpperCase() + '\n' +
+        '• Speed: ' + net.speed + '\n' +
+        '• Latency: ' + net.rtt);
+      return;
+    }
+
+    // ── CLIPBOARD ────────────────────────────────────────────────
+    if (/clipboard.*kya hai|clipboard.*padho|copy.*kya hai|paste.*kya/i.test(t)) {
+      const { readClipboard } = await import('@/lib/browser/powers');
+      const text2 = await readClipboard();
+      if (text2) reply('📋 **Clipboard:**\n"' + text2.slice(0, 200) + (text2.length > 200 ? '...' : '') + '"');
+      else reply('📋 Clipboard empty hai ya permission nahi.');
+      return;
+    }
+
+    // ── SCREEN WAKE LOCK ─────────────────────────────────────────
+    if (/screen.*on|screen.*jag|jaag.*raho|wake.*lock|screen.*band.*mat/i.test(t)) {
+      const { keepScreenOn } = await import('@/lib/browser/powers');
+      const ok = await keepScreenOn(true);
+      reply(ok ? '🔆 Screen ON rakhunga — band nahi hogi.' : '🔆 Wake Lock support nahi is browser mein.');
+      return;
+    }
+    if (/screen.*off|screen.*band|wake.*lock.*off/i.test(t)) {
+      const { keepScreenOn } = await import('@/lib/browser/powers');
+      await keepScreenOn(false);
+      reply('🔅 Screen auto-off normal ho gayi.'); return;
+    }
+
+    // ── FULLSCREEN ───────────────────────────────────────────────
+    if (/fullscreen|full.*screen|poora.*screen/i.test(t)) {
+      const { toggleFullscreen } = await import('@/lib/browser/powers');
+      const isFullscreen = await toggleFullscreen();
+      reply(isFullscreen ? '⛶ Fullscreen mode ON!' : '⛶ Fullscreen OFF.'); return;
+    }
+
+    // ── STORAGE INFO ─────────────────────────────────────────────
+    if (/storage|jagah.*kitna|memory.*kitna|phone.*storage.*check/i.test(t)) {
+      const [{ getStorageInfo }, { getBatteryInfo }] = await Promise.all([
+        import('@/lib/browser/powers'), import('@/lib/browser/powers')
+      ]);
+      const [storage, battery] = await Promise.all([getStorageInfo(), getBatteryInfo()]);
+      let reply_text = '💾 **Device Status:**\n';
+      if (battery) reply_text += '🔋 Battery: ' + battery.level + '%' + (battery.charging ? ' ⚡' : '') + '\n';
+      if (storage) reply_text += '💾 Storage used: ' + storage.used + ' (' + storage.percent + '%)\nFree: ' + storage.available + '\n';
+      reply(reply_text); return;
+    }
+
+    // ── PERMISSIONS CHECK ────────────────────────────────────────
+    if (/permissions|permission.*check|konsi.*permission|permission.*status/i.test(t)) {
+      const { checkPermissions } = await import('@/lib/browser/powers');
+      const perms = await checkPermissions();
+      const icons: Record<string,string> = { camera:'📷', microphone:'🎙️', geolocation:'📍', notifications:'🔔' };
+      const statusIcons: Record<string,string> = { granted:'✅', denied:'❌', prompt:'⚠️', unknown:'❓' };
+      reply('🔐 **App Permissions:**\n' + Object.entries(perms).map(([k,v]) => (icons[k]||'•') + ' ' + k + ': ' + (statusIcons[v]||v)).join('\n'));
+      return;
+    }
+
+    // ── DEVICE INFO ──────────────────────────────────────────────
+    if (/device info|phone info|device.*details|mera.*phone.*kya/i.test(t)) {
+      const { getDeviceInfo, getNetworkInfo } = await import('@/lib/browser/powers');
+      const dev = getDeviceInfo();
+      const net = getNetworkInfo();
+      reply('📱 **Device Info:**\n' +
+        '🖥️ Screen: ' + dev.screen + ' (DPR: ' + dev.dpr + ')\n' +
+        '⚙️ CPU Cores: ' + dev.cores + '\n' +
+        '💾 RAM: ' + dev.memory + '\n' +
+        '👆 Touch: ' + dev.touch + '\n' +
+        '🌐 Language: ' + dev.language + '\n' +
+        '📲 PWA: ' + dev.pwa + '\n' +
+        '📶 Network: ' + net.type.toUpperCase() + ' · ' + net.speed);
+      return;
+    }
+
+    // ── NATIVE SHARE ─────────────────────────────────────────────
+    if (/^(?:share|share karo)\s+(.+)/i.test(text)) {
+      const shareText = text.replace(/^(?:share|share karo)\s+/i,'').trim();
+      const { nativeShare } = await import('@/lib/browser/powers');
+      const ok = await nativeShare('JARVIS', shareText);
+      if (!ok) { navigator.clipboard?.writeText(shareText); reply('📤 Copy kar liya — share manually karo.'); }
+      else reply('📤 Sharing...');
+      return;
+    }
+
+    // ── VIBRATE PATTERN ──────────────────────────────────────────
+    if (/vibrate|buzz|haptic/i.test(t) && /pattern|custom|baar|times/i.test(t)) {
+      const { vibrate } = await import('@/lib/browser/powers');
+      vibrate([200,100,200,100,400]);
+      reply('📳 Custom vibration pattern!'); return;
+    }
+
     // ── TRANSLATE ─────────────────────────────────────────────
     if (/^(?:translate|hindi mein bol|english mein bol|anuvad)[:\s]+(.+)/i.test(text)) {
       const toTranslate = text.replace(/^(?:translate|hindi mein bol|english mein bol|anuvad)[:\s]+/i,'').trim();
