@@ -7,6 +7,10 @@ function AgentContent() {
   const router = useRouter()
   const params = useSearchParams()
   const [goal, setGoal] = useState(params?.get('goal') || '')
+  const [history, setHistory] = React.useState<{goal:string; steps:number; ts:number}[]>(() => {
+    if (typeof window === 'undefined') return []
+    try { return JSON.parse(localStorage.getItem('jarvis_agent_history') || '[]') } catch { return [] }
+  })
   const [steps, setSteps] = useState<AgentStep[]>([])
   const [status, setStatus] = useState<'idle' | 'running' | 'done' | 'error'>('idle')
   const [finalAnswer, setFinalAnswer] = useState('')
@@ -35,6 +39,11 @@ function AgentContent() {
         })
       },
       (answer) => {
+        // Save to history
+        const run = { goal: goal.trim(), steps: steps.length, ts: Date.now() }
+        const updated = [run, ...history].slice(0, 20)
+        setHistory(updated)
+        if (typeof window !== 'undefined') localStorage.setItem('jarvis_agent_history', JSON.stringify(updated))
         setFinalAnswer(answer)
         setStatus('done')
       },
@@ -79,6 +88,20 @@ function AgentContent() {
       <div style={{ flex: 1, overflowY: 'auto', padding: 14, minHeight: 0 }}>
 
         {/* Idle state — show examples */}
+        {/* Run History */}
+        {status === 'idle' && history.length > 0 && (
+          <div style={{ marginBottom: 16 }}>
+            <div style={{ color: '#444', fontSize: 11, marginBottom: 8 }}>RECENT RUNS</div>
+            {history.slice(0, 5).map((h, i) => (
+              <button key={i} onClick={() => { setGoal(h.goal); }}
+                style={{ width: '100%', background: '#0d0d18', border: '1px solid #1e1e2e', borderRadius: 10, padding: '8px 12px', color: '#666', fontSize: 12, cursor: 'pointer', textAlign: 'left', marginBottom: 6, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: '80%' }}>{h.goal}</span>
+                <span style={{ color: '#333', fontSize: 10, flexShrink: 0 }}>{h.steps} steps</span>
+              </button>
+            ))}
+          </div>
+        )}
+
         {status === 'idle' && steps.length === 0 && (
           <div>
             <div style={{ color: '#888', fontSize: 13, marginBottom: 14, lineHeight: 1.8 }}>
