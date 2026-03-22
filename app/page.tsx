@@ -559,6 +559,47 @@ export default function Home() {
       setInput('');
     };
 
+    // ── TRANSLATE ─────────────────────────────────────────────
+    if (/^(?:translate|hindi mein bol|english mein bol|anuvad)[:\s]+(.+)/i.test(text)) {
+      const toTranslate = text.replace(/^(?:translate|hindi mein bol|english mein bol|anuvad)[:\s]+/i,'').trim();
+      const toLang = /hindi/i.test(text) ? 'Hindi' : 'English';
+      try {
+        const res = await fetch('https://text.pollinations.ai/openai', {
+          method:'POST', headers:{'Content-Type':'application/json'},
+          body: JSON.stringify({ model:'openai', messages:[{ role:'user', content:'Translate to ' + toLang + '. Only translation, no explanation: ' + toTranslate }] })
+        });
+        const d = await res.json();
+        reply('🌐 **' + toLang + ' mein:**\n' + (d.choices?.[0]?.message?.content || '')); return;
+      } catch { reply('Translation nahi hua.'); return; }
+    }
+
+    // ── PASSWORD GENERATOR ────────────────────────────────────
+    if (/password|passcode.*(?:bana|generate|chahiye)/i.test(t)) {
+      const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789@#$!';
+      let pwd = '';
+      for (let i = 0; i < 12; i++) pwd += chars[Math.floor(Math.random() * chars.length)];
+      reply('🔐 **Strong Password:**\n`' + pwd + '`\n\nYaad nahi rahega — password manager mein save karo.'); return;
+    }
+
+    // ── QR CODE ──────────────────────────────────────────────
+    if (/qr\s*(?:code|bana|generate)/i.test(t)) {
+      const qrText = text.replace(/qr\s*(?:code|bana|generate)[:\s]*/i,'').trim() || 'https://apple50.vercel.app';
+      const qrUrl = 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=' + encodeURIComponent(qrText) + '&bgcolor=060610&color=00d4ff';
+      setMsgs(prev => [...prev,
+        { id: 'u_' + Date.now(), role:'user', content: text.trim(), timestamp: Date.now() },
+        { id: 'a_' + Date.now(), role:'assistant', content:'📱 QR Code: "' + qrText + '"', timestamp: Date.now(), card:{ type:'image', imageUrl:qrUrl, title:'QR: '+qrText } },
+      ]);
+      setInput(''); return;
+    }
+
+    // ── RANDOM PICK ───────────────────────────────────────────
+    if (/^(?:choose|pick|random|kya khaun|kaun sa)\s+(.+)/i.test(text)) {
+      const opts = text.replace(/^(?:choose|pick|random|kya khaun|kaun sa)\s+/i,'').split(/,|\s+ya\s+|\s+or\s+/i).map(s=>s.trim()).filter(Boolean);
+      if (opts.length >= 2) {
+        reply('🎲 **' + opts[Math.floor(Math.random()*opts.length)] + '**\n\n_(Random choice from: ' + opts.join(', ') + ')_'); return;
+      }
+    }
+
     // ── GOALS ──────────────────────────────────────────────────
     if (/goals?\s*(dikhao|show|list|kya hai|batao|dekho)/i.test(text) || t === 'goals' || t === 'goal') {
       try {
@@ -1700,8 +1741,8 @@ export default function Home() {
         </div>
       )}
 
-      {/* Messages — full flex space */}
-      <div style={{ flex: 1, overflowY: 'auto', overflowX: 'hidden', padding: '8px 0', minHeight: 0, WebkitOverflowScrolling: 'touch',
+      {/* Messages — fills all remaining space */}
+      <div style={{ flex: '1 1 0', overflowY: 'auto', overflowX: 'hidden', padding: '8px 0', minHeight: 0, WebkitOverflowScrolling: 'touch',
         background: chatBg !== 'none' ? chatBg : undefined }}
         onTouchStart={(e) => { (window as any).__pullY = e.touches[0].clientY; }}
         onTouchEnd={(e) => {
