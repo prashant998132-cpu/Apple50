@@ -90,11 +90,34 @@ export default function SakhiPage() {
   const [loading, setLoading] = useState(false)
   const [memory, setMemory] = useState<SakhiMemory>(DEFAULT_MEM)
   const [showInfo, setShowInfo] = useState(false)
+  const [voiceOn, setVoiceOn] = useState(false)
   const bottomRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLTextAreaElement>(null)
 
   useEffect(() => {
     if (typeof window === 'undefined') return
+
+    // Daily good morning from Sakhi
+    const today = new Date().toDateString()
+    const lastGM = localStorage.getItem('sakhi_last_gm')
+    const hour = new Date().getHours()
+    if (lastGM !== today && hour >= 6 && hour <= 11) {
+      localStorage.setItem('sakhi_last_gm', today)
+      const greetings = [
+        'Good morning! ☀️ Aaj kaisa din lagega?',
+        'Hey! Uth gaya? 😊 Aaj kya plan hai?',
+        'Good morning yaar! ☀️ Aaj kuch interesting hoga?',
+        'Hey good morning! 🌸 Neend achhi aayi?',
+      ]
+      const gm = greetings[Math.floor(Math.random() * greetings.length)]
+      setTimeout(() => {
+        setMsgs(prev => {
+          if (prev[prev.length - 1]?.content === gm) return prev
+          return [...prev, { id: 'gm_' + Date.now(), role: 'sakhi', content: gm, timestamp: Date.now() }]
+        })
+      }, 1000)
+    }
+
     try {
       const m = localStorage.getItem('sakhi_mem_v3')
       if (m) setMemory({ ...DEFAULT_MEM, ...JSON.parse(m) })
@@ -192,6 +215,19 @@ export default function SakhiPage() {
       }
 
       setMsgs(p => [...p, { id: 'a_' + Date.now(), role: 'sakhi', content: reply, timestamp: Date.now() }])
+      // Voice — speak Sakhi's reply if enabled
+      if (voiceOn && reply && typeof window !== 'undefined') {
+        try {
+          const audio = new Audio('https://text.pollinations.ai/' + encodeURIComponent(reply) + '?model=openai-audio&voice=nova')
+          audio.volume = 0.9
+          audio.play().catch(() => {
+            // Fallback to Web Speech
+            const u = new SpeechSynthesisUtterance(reply.slice(0, 150))
+            u.lang = 'hi-IN'; u.rate = 0.95; u.pitch = 1.1
+            window.speechSynthesis.speak(u)
+          })
+        } catch {}
+      }
     } catch {
       setMsgs(p => [...p, { id: 'e_' + Date.now(), role: 'sakhi', content: 'Yaar net slow hai 😅', timestamp: Date.now() }])
     }
@@ -226,6 +262,11 @@ export default function SakhiPage() {
           <div style={{ color:'#ffb3d1', fontWeight:700, fontSize:15 }}>Sakhi</div>
           <div style={{ color:'#3a3a4a', fontSize:10 }}>{loading ? <span style={{ color:'#ff9ebb', animation:'blink 1s infinite' }}>typing...</span> : lvlLabel + ' · ' + memory.totalMessages + ' messages'}</div>
         </div>
+        <button onClick={() => setVoiceOn(v => !v)}
+          style={{ background: voiceOn ? 'rgba(255,107,157,0.15)' : 'none', border: 'none', borderRadius: 8, color: voiceOn ? '#ff9ebb' : '#333', fontSize: 16, cursor: 'pointer', padding: '4px 6px' }}
+          title="Sakhi ki awaaz">
+          {voiceOn ? '🔊' : '🔈'}
+        </button>
         <button onClick={() => { if(!confirm('Delete chat?')) return; localStorage.removeItem('sakhi_msgs_v3'); setMsgs([{ id:'r'+Date.now(), role:'sakhi', content:'Fresh start! 😊 Bata kya ho raha hai?', timestamp:Date.now() }]) }} style={{ background:'none', border:'none', color:'#222', fontSize:15, cursor:'pointer' }}>🗑️</button>
       </div>
 
@@ -268,6 +309,41 @@ export default function SakhiPage() {
             </div>
           </div>
         )}
+        {/* Mood check — raat 9-11 baje */}
+        {(() => {
+          if (typeof window === 'undefined') return null
+          const h = new Date().getHours()
+          const today = new Date().toDateString()
+          const lastMood = localStorage.getItem('sakhi_last_mood_ask')
+          if (h >= 21 && h <= 23 && lastMood !== today && msgs.length > 2) {
+            return (
+              <div style={{ display:'flex', justifyContent:'center', padding:'8px 0' }}>
+                <div style={{ background:'rgba(255,107,157,0.08)', border:'1px solid rgba(255,107,157,0.2)', borderRadius:12, padding:'10px 14px', textAlign:'center' }}>
+                  <div style={{ color:'#ff9ebb', fontSize:12, marginBottom:8 }}>Aaj ka din kaisa tha? 🌙</div>
+                  <div style={{ display:'flex', gap:8, justifyContent:'center' }}>
+                    {[['😄','Achha'],['😐','Theek'],['😔','Bura'],['😤','Stressed'],['🔥','Amazing']].map(([emoji, label]) => (
+                      <button key={label} onClick={() => {
+                        if (typeof window !== 'undefined') {
+                          localStorage.setItem('sakhi_last_mood_ask', new Date().toDateString())
+                          const moods = JSON.parse(localStorage.getItem('sakhi_moods') || '[]')
+                          moods.push({ date: new Date().toLocaleDateString('en-IN'), mood: label, emoji, ts: Date.now() })
+                          localStorage.setItem('sakhi_moods', JSON.stringify(moods.slice(-30)))
+                        }
+                        setInput('Aaj ka din ' + label.toLowerCase() + ' tha ' + emoji)
+                        setTimeout(() => send(), 100)
+                      }}
+                      style={{ background:'rgba(255,255,255,0.05)', border:'1px solid rgba(255,107,157,0.15)', borderRadius:8, padding:'6px 10px', cursor:'pointer', color:'#e0c8d4', fontSize:11 }}>
+                        {emoji} {label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            )
+          }
+          return null
+        })()}
+
         <div ref={bottomRef} style={{ height:4 }}/>
       </div>
 
