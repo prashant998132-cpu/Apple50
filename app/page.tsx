@@ -600,6 +600,116 @@ export default function Home() {
       }
     }
 
+    // ── DEEP RESEARCH MODE ──────────────────────────────────────
+    if (/^(?:research|deep research|investigate|sab dhundho)[:\s]+(.+)/i.test(text)) {
+      const topic = text.replace(/^(?:research|deep research|investigate|sab dhundho)[:\s]+/i,'').trim();
+      const resId = 'a_res_' + Date.now();
+      setMsgs(prev => [...prev,
+        { id: 'u_' + Date.now(), role:'user', content: text.trim(), timestamp: Date.now() },
+        { id: resId, role:'assistant', content:'🔬 Deep research shuru kar raha hoon: "' + topic + '"\n\n⏳ 3-4 searches kar raha hoon...', timestamp: Date.now() },
+      ]);
+      setInput('');
+      (async () => {
+        try {
+          const searches = await Promise.allSettled([
+            fetch('/api/search?q=' + encodeURIComponent(topic)).then(r=>r.json()),
+            fetch('/api/search?q=' + encodeURIComponent(topic + ' latest 2026')).then(r=>r.json()),
+            fetch('/api/search?q=' + encodeURIComponent(topic + ' explained simply')).then(r=>r.json()),
+          ]);
+          const allResults = searches.flatMap((s:any) => s.status==='fulfilled' ? (s.value.results||[]) : []);
+          const context = allResults.slice(0,6).map((r:any) => r.title + ': ' + (r.text||'').slice(0,200)).join('\n');
+          const res = await fetch('https://text.pollinations.ai/openai', {
+            method:'POST', headers:{'Content-Type':'application/json'},
+            body: JSON.stringify({ model:'openai', messages:[
+              { role:'system', content:'You are JARVIS, a research assistant. Respond in Hinglish. Be comprehensive but concise. Use bullet points.' },
+              { role:'user', content:'Research this topic comprehensively: ' + topic + '\n\nWeb search results:\n' + context + '\n\nGive a detailed research summary with key facts, insights, and conclusions.' }
+            ]})
+          });
+          const d = await res.json();
+          const result = d.choices?.[0]?.message?.content || 'Research complete.';
+          setMsgs(prev => prev.map(m => m.id===resId ? {...m, content:'🔬 **Deep Research: ' + topic + '**\n\n' + result} : m));
+        } catch {
+          setMsgs(prev => prev.map(m => m.id===resId ? {...m, content:'Research nahi ho saka. Retry karo.'} : m));
+        }
+      })();
+      return;
+    }
+
+    // ── CODE WRITER + EXPLAINER ──────────────────────────────────
+    if (/^(?:code|program|script|likhdo|write code)[:\s]+(.+)/i.test(text) || /(?:python|javascript|java|html|css|sql)\s+(?:code|program|script)\s+(?:likhdo|banao|chahiye)/i.test(t)) {
+      const task = text.replace(/^(?:code|program|script|likhdo|write code)[:\s]+/i,'').trim();
+      const lang = /python/i.test(t) ? 'Python' : /javascript|js/i.test(t) ? 'JavaScript' : /html/i.test(t) ? 'HTML' : /sql/i.test(t) ? 'SQL' : /java/i.test(t) ? 'Java' : 'Python';
+      try {
+        const res = await fetch('https://text.pollinations.ai/openai', {
+          method:'POST', headers:{'Content-Type':'application/json'},
+          body: JSON.stringify({ model:'openai', messages:[
+            { role:'system', content:'You are an expert programmer. Write clean, commented ' + lang + ' code. Add brief explanation in Hinglish after the code.' },
+            { role:'user', content:'Write ' + lang + ' code for: ' + task }
+          ]})
+        });
+        const d = await res.json();
+        const code = d.choices?.[0]?.message?.content || '';
+        setMsgs(prev => [...prev,
+          { id:'u_'+Date.now(), role:'user', content:text.trim(), timestamp:Date.now() },
+          { id:'a_'+Date.now(), role:'assistant', content:code, timestamp:Date.now() },
+        ]);
+        setInput(''); return;
+      } catch { /* fall to AI */ }
+    }
+
+    // ── SMART SUMMARIZE ──────────────────────────────────────────
+    if (/^(?:summarize|summary|saransh|short mein|tldr)[:\s]+(.+)/i.test(text) && text.length > 50) {
+      const toSum = text.replace(/^(?:summarize|summary|saransh|short mein|tldr)[:\s]+/i,'').trim();
+      try {
+        const res = await fetch('https://text.pollinations.ai/openai', {
+          method:'POST', headers:{'Content-Type':'application/json'},
+          body: JSON.stringify({ model:'openai', messages:[
+            { role:'user', content:'Summarize in 3-4 bullet points in Hinglish, keep it short and clear:\n\n' + toSum }
+          ]})
+        });
+        const d = await res.json();
+        reply('📝 **Summary:**\n' + (d.choices?.[0]?.message?.content||'')); return;
+      } catch {}
+    }
+
+    // ── WRITE ANYTHING ───────────────────────────────────────────
+    const writeMatch = text.match(/^(?:likho|write|draft|banao)[:\s]+(.+)/i);
+    if (writeMatch) {
+      const what = writeMatch[1].trim();
+      try {
+        const res = await fetch('https://text.pollinations.ai/openai', {
+          method:'POST', headers:{'Content-Type':'application/json'},
+          body: JSON.stringify({ model:'openai', messages:[
+            { role:'system', content:'You are JARVIS. Write in Hinglish, natural and helpful. Keep it concise unless asked for long form.' },
+            { role:'user', content:'Write this for me: ' + what }
+          ]})
+        });
+        const d = await res.json();
+        const written = d.choices?.[0]?.message?.content || '';
+        setMsgs(prev => [...prev,
+          { id:'u_'+Date.now(), role:'user', content:text.trim(), timestamp:Date.now() },
+          { id:'a_'+Date.now(), role:'assistant', content:'✍️ ' + written, timestamp:Date.now() },
+        ]);
+        setInput(''); return;
+      } catch {}
+    }
+
+    // ── EXPLAIN ANYTHING ────────────────────────────────────────
+    if (/^(?:explain|samjhao|kya hota hai|batao kya hai)[:\s]+(.+)/i.test(text)) {
+      const topic = text.replace(/^(?:explain|samjhao|kya hota hai|batao kya hai)[:\s]+/i,'').trim();
+      try {
+        const res = await fetch('https://text.pollinations.ai/openai', {
+          method:'POST', headers:{'Content-Type':'application/json'},
+          body: JSON.stringify({ model:'openai', messages:[
+            { role:'system', content:'Explain like talking to a smart 16-year-old. Use Hinglish. Simple examples. Max 150 words.' },
+            { role:'user', content:'Explain: ' + topic }
+          ]})
+        });
+        const d = await res.json();
+        reply('💡 ' + (d.choices?.[0]?.message?.content||'')); return;
+      } catch {}
+    }
+
     // ── GOALS ──────────────────────────────────────────────────
     if (/goals?\s*(dikhao|show|list|kya hai|batao|dekho)/i.test(text) || t === 'goals' || t === 'goal') {
       try {
