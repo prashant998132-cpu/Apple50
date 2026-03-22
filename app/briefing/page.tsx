@@ -42,6 +42,19 @@ async function fetchWeather(): Promise<string> {
   }
 }
 
+async function fetchStocks(): Promise<string> {
+  try {
+    const res = await fetch('https://query1.finance.yahoo.com/v8/finance/chart/%5ENSEI?interval=1d&range=1d', { signal: AbortSignal.timeout(5000) })
+    const d = await res.json()
+    const nifty = d?.chart?.result?.[0]?.meta?.regularMarketPrice
+    const prev = d?.chart?.result?.[0]?.meta?.previousClose
+    if (!nifty) return 'Market data unavailable'
+    const change = prev ? ((nifty - prev) / prev * 100).toFixed(2) : '0'
+    const arrow = parseFloat(change) > 0 ? '📈' : '📉'
+    return `${arrow} Nifty 50: ${nifty?.toLocaleString('en-IN')} (${change}%)`
+  } catch { return '📈 Market: NSE India check karo' }
+}
+
 async function fetchCrypto(): Promise<string> {
   try {
     const res = await fetch('https://api.coingecko.com/api/v3/simple/price?ids=bitcoin,ethereum,solana&vs_currencies=inr&include_24hr_change=true', { signal: AbortSignal.timeout(5000) })
@@ -134,7 +147,7 @@ export default function BriefingPage() {
     } catch {}
 
     // Section 3: Weather (parallel)
-    const [weather, news, crypto, gold] = await Promise.all([fetchWeather(), fetchNews(), fetchCrypto(), fetchGold()])
+    const [weather, news, crypto, gold, stocks] = await Promise.all([fetchWeather(), fetchNews(), fetchCrypto(), fetchGold(), fetchStocks()])
 
     built.push({
       icon: '🌤️',
