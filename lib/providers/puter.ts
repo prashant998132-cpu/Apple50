@@ -27,12 +27,14 @@ export function loadPuter(): Promise<any> {
   })
 }
 
-// ── Text generation — GPT-5.4, Gemini 3.1, Claude 3 ─────────────────
+// ── Text generation — Latest 2026 models FREE via Puter ─────────────
 const PUTER_TEXT_MODELS = [
-  'gpt-5.4-nano',       // Fastest, free
-  'gemini-3-flash-preview', // Google free
-  'gpt-4o-mini',        // Reliable free
-  'claude-3-5-haiku',   // Anthropic free via Puter
+  'gpt-5.4-nano',         // GPT-5.4 Nano — fastest
+  'gpt-5.3',              // GPT-5.3 — reliable
+  'gemini-3-flash-preview', // Gemini 3 Flash — Google free
+  'claude-3-5-haiku',     // Claude 3.5 Haiku — Anthropic free
+  'deepseek-r1',          // DeepSeek R1 — reasoning
+  'gpt-4o-mini',          // Fallback
 ]
 
 export async function puterChat(prompt: string, systemPrompt?: string, model?: string): Promise<string | null> {
