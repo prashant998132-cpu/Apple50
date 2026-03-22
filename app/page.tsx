@@ -1700,8 +1700,8 @@ export default function Home() {
         </div>
       )}
 
-      {/* Messages — fills all remaining space */}
-      <div style={{ flex: '1 1 0', overflowY: 'auto', overflowX: 'hidden', padding: '8px 0', minHeight: 0, WebkitOverflowScrolling: 'touch',
+      {/* Messages — full flex space */}
+      <div style={{ flex: 1, overflowY: 'auto', overflowX: 'hidden', padding: '8px 0', minHeight: 0, WebkitOverflowScrolling: 'touch',
         background: chatBg !== 'none' ? chatBg : undefined }}
         onTouchStart={(e) => { (window as any).__pullY = e.touches[0].clientY; }}
         onTouchEnd={(e) => {
