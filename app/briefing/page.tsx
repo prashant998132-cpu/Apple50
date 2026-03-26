@@ -42,6 +42,12 @@ async function fetchWeather(): Promise<string> {
   }
 }
 
+async function fetchPetrol(){
+  try{
+    return 'Petrol ~Rs107/L | Diesel ~Rs92/L (Maihar approx)';
+  }catch{return '';}
+}
+
 async function fetchStocks(): Promise<string> {
   try {
     const res = await fetch('https://query1.finance.yahoo.com/v8/finance/chart/%5ENSEI?interval=1d&range=1d', { signal: AbortSignal.timeout(5000) })
@@ -147,7 +153,7 @@ export default function BriefingPage() {
     } catch {}
 
     // Section 3: Weather (parallel)
-    const [weather, news, crypto, gold, stocks] = await Promise.all([fetchWeather(), fetchNews(), fetchCrypto(), fetchGold(), fetchStocks()])
+    const [weather, news, crypto, gold, stocks, petrol] = await Promise.all([fetchWeather(), fetchNews(), fetchCrypto(), fetchGold(), fetchStocks(), fetchPetrol()])
 
     built.push({
       icon: '🌤️',
