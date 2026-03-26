@@ -201,6 +201,10 @@ export const OFFLINE_ANSWERS: Record<string, string | (() => string)> = {
   'reading habit': '📚 Reading: Roz 20 pages = saal mein 7200 pages = 20+ books. Morning reading best. Phone se door raho while reading.',
   'focus improve': '🎯 Focus: Single tasking. Pomodoro (25 min work, 5 break). Phone dusre room. Brain se 1 priority decide karo pehle.',
 
+  'jarvis kya hai': 'JARVIS = Just A Rather Very Intelligent System. Tony Stark ka AI. Aur tu abhi usse baat kar raha hai!',
+  'sakhi kya hai': 'Sakhi = JARVIS ka companion mode. Ek AI dost jo baat karti hai, yaad rakhti hai, support karti hai.',
+  'best ai': 'JARVIS boss! Free, fast, India-specific, offline bhi kaam karta hai. Kya chahiye?',
+
   // ── CRICKET EXTRA ─────────────────────────────────────────────────────
   'virat kohli': '🏏 Virat Kohli: Delhi. Run machine. 100+ international centuries. ODI average 58+. Test cricket ka captain reh chuka hai.',
   'sachin tendulkar': '🏏 Sachin Tendulkar: "God of Cricket". 100 international centuries. 34,000+ runs. 1989-2013. Bharat Ratna received.',
