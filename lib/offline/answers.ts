@@ -205,6 +205,10 @@ export const OFFLINE_ANSWERS: Record<string, string | (() => string)> = {
   'sakhi kya hai': 'Sakhi = JARVIS ka companion mode. Ek AI dost jo baat karti hai, yaad rakhti hai, support karti hai.',
   'best ai': 'JARVIS boss! Free, fast, India-specific, offline bhi kaam karta hai. Kya chahiye?',
 
+  'jarvis kya hai': 'JARVIS = Just A Rather Very Intelligent System. Tony Stark ka AI. Aur tu abhi usse baat kar raha hai!',
+  'sakhi kya hai': 'Sakhi = JARVIS ka companion mode. Ek AI dost jo baat karti hai, yaad rakhti hai, support karti hai.',
+  'best ai': 'JARVIS boss! Free, fast, India-specific, offline bhi kaam karta hai. Kya chahiye?',
+
   // ── CRICKET EXTRA ─────────────────────────────────────────────────────
   'virat kohli': '🏏 Virat Kohli: Delhi. Run machine. 100+ international centuries. ODI average 58+. Test cricket ka captain reh chuka hai.',
   'sachin tendulkar': '🏏 Sachin Tendulkar: "God of Cricket". 100 international centuries. 34,000+ runs. 1989-2013. Bharat Ratna received.',
