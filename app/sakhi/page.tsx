@@ -164,6 +164,10 @@ export default function SakhiPage() {
     const newMem = updateMemory(text, memory)
     setMemory(newMem)
 
+    // Nickname check
+    var savedNick2 = (typeof window!=="undefined") ? localStorage.getItem("sakhi_user_nickname") : null;
+    if(savedNick2) newMem = {...newMem, userName: savedNick2};
+
     try {
       const system = buildSystem(newMem)
       const history = updated.slice(-20).map(m => ({ role: m.role === 'user' ? 'user' : 'assistant', content: m.content }))
