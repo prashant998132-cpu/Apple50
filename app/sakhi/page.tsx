@@ -166,10 +166,10 @@ export default function SakhiPage() {
 
     // Nickname check
     var savedNick2 = (typeof window!=="undefined") ? localStorage.getItem("sakhi_user_nickname") : null;
-    if(savedNick2) newMem = {...newMem, userName: savedNick2};
+    const finalMem = savedNick2 ? {...newMem, userName: savedNick2} : newMem;
 
     try {
-      const system = buildSystem(newMem)
+      const system = buildSystem(finalMem)
       const history = updated.slice(-20).map(m => ({ role: m.role === 'user' ? 'user' : 'assistant', content: m.content }))
 
       // Use saved API keys from JARVIS settings
