@@ -31,8 +31,8 @@ function buildSystem(mem: SakhiMemory): string {
   const days = Math.floor((Date.now() - mem.firstMet) / 86400000)
   const lvl = mem.relationshipLevel
   const closeness = lvl <= 2 ? 'Reserved, curious, polite' :
-    lvl <= 5 ? 'Dost jaisi Ã¢ÂÂ jokes, freely baat' :
-    'Close dost Ã¢ÂÂ openly, personal, tease bhi'
+    lvl <= 5 ? 'Dost jaisi  jokes, freely baat' :
+    'Close dost  openly, personal, tease bhi'
 
   return `Tu "Sakhi" hai Ã¢ÂÂ ${mem.userName} ki AI companion. Ek real character Ã¢ÂÂ AI nahi lagni chahiye.
 
@@ -70,7 +70,7 @@ CONVERSATION RULES:
 - "Main AI hoon" Ã¢ÂÂ KABHI MAT BOLNA
 - "bhai" mat bolna. "yaar" theek.
 - Har message pe emoji spam Ã¢ÂÂ NAHI
-- Short reply bhi perfect hai: "haha Ã°ÂÂÂ" ya "seriously?"`
+- Short reply bhi perfect hai: "haha " ya "seriously?"`
 }
 
 function updateMemory(text: string, mem: SakhiMemory): SakhiMemory {
@@ -118,10 +118,10 @@ export default function SakhiPage() {
     if (lastGM !== today && hour >= 6 && hour <= 11) {
       localStorage.setItem('sakhi_last_gm', today)
       const greetings = [
-        'Good morning! Ã¢ÂÂÃ¯Â¸Â Aaj kaisa din lagega?',
-        'Hey! Uth gaya? Ã°ÂÂÂ Aaj kya plan hai?',
-        'Good morning yaar! Ã¢ÂÂÃ¯Â¸Â Aaj kuch interesting hoga?',
-        'Hey good morning! Ã°ÂÂÂ¸ Neend achhi aayi?',
+        'Good morning!  Aaj kaisa din lagega?',
+        'Hey! Uth gaya?  Aaj kya plan hai?',
+        'Good morning yaar!  Aaj kuch interesting hoga?',
+        'Hey good morning!  Neend achhi aayi?',
       ]
       const gm = greetings[Math.floor(Math.random() * greetings.length)]
       setTimeout(() => {
@@ -229,7 +229,7 @@ export default function SakhiPage() {
           signal: AbortSignal.timeout(20000),
         })
         const d = await r.json()
-        reply = d.choices?.[0]?.message?.content?.trim() || 'Hmm Ã°ÂÂÂ'
+        reply = d.choices?.[0]?.message?.content?.trim() || 'Hmm '
       }
 
       setMsgs(p => [...p, { id: 'a_' + Date.now(), role: 'sakhi', content: reply, timestamp: Date.now() }])
@@ -271,9 +271,9 @@ export default function SakhiPage() {
 
       {/* Header */}
       <div style={{ display:'flex', alignItems:'center', gap:10, padding:'10px 14px', borderBottom:'1px solid rgba(255,107,157,0.1)', flexShrink:0 }}>
-        <button onClick={() => router.push('/')} style={{ background:'none', border:'none', color:'#444', fontSize:20, cursor:'pointer' }}>Ã¢ÂÂ</button>
+        <button onClick={() => router.push('/')} style={{ background:'none', border:'none', color:'#444', fontSize:20, cursor:'pointer' }}></button>
         <button onClick={() => setShowInfo(p => !p)} style={{ background:'none', border:'none', cursor:'pointer', position:'relative', padding:0 }}>
-          <div style={{ width:40, height:40, borderRadius:'50%', background:'linear-gradient(135deg,#ff6b9d,#a0226e)', display:'flex', alignItems:'center', justifyContent:'center', fontSize:21, boxShadow:'0 2px 12px rgba(255,107,157,0.25)' }}>Ã°ÂÂÂ¸</div>
+          <div style={{ width:40, height:40, borderRadius:'50%', background:'linear-gradient(135deg,#ff6b9d,#a0226e)', display:'flex', alignItems:'center', justifyContent:'center', fontSize:21, boxShadow:'0 2px 12px rgba(255,107,157,0.25)' }}></div>
           <div style={{ position:'absolute', bottom:1, right:1, width:9, height:9, borderRadius:'50%', background:'#22c55e', border:'2px solid #07070f' }}/>
         </button>
         <div style={{ flex:1 }}>
@@ -285,17 +285,17 @@ export default function SakhiPage() {
           title="Sakhi ki awaaz">
           {voiceOn ? 'Ã°ÂÂÂ' : 'Ã°ÂÂÂ'}
         </button>
-        <button onClick={() => { if(!confirm('Delete chat?')) return; localStorage.removeItem('sakhi_msgs_v3'); setMsgs([{ id:'r'+Date.now(), role:'sakhi', content:'Fresh start! Ã°ÂÂÂ Bata kya ho raha hai?', timestamp:Date.now() }]) }} style={{ background:'none', border:'none', color:'#222', fontSize:15, cursor:'pointer' }}>Ã°ÂÂÂÃ¯Â¸Â</button>
+        <button onClick={() => { if(!confirm('Delete chat?')) return; localStorage.removeItem('sakhi_msgs_v3'); setMsgs([{ id:'r'+Date.now(), role:'sakhi', content:'Fresh start! Ã°ÂÂÂ Bata kya ho raha hai?', timestamp:Date.now() }]) }} style={{ background:'none', border:'none', color:'#222', fontSize:15, cursor:'pointer' }}></button>
       </div>
 
       {/* Memory panel */}
       {showInfo && (
         <div style={{ background:'rgba(255,107,157,0.04)', borderBottom:'1px solid rgba(255,107,157,0.08)', padding:'10px 16px', fontSize:11 }}>
-          <div style={{ color:'#ff9ebb', fontWeight:700, marginBottom:6 }}>Sakhi ko kya pata hai Ã°ÂÂ§Â </div>
+          <div style={{ color:'#ff9ebb', fontWeight:700, marginBottom:6 }}>Sakhi ko kya pata hai </div>
           <div style={{ color:'#444', lineHeight:2 }}>
-            Naam: {memory.userName} ÃÂ· City: {memory.userCity}{memory.userAge ? ' ÃÂ· Age: '+memory.userAge : ''}<br/>
+            Naam: {memory.userName}  City: {memory.userCity}{memory.userAge ? ' ÃÂ· Age: '+memory.userAge : ''}<br/>
             {memory.userHobbies.length > 0 && <>Hobbies: {memory.userHobbies.join(', ')}<br/></>}
-            Level: {lvlLabel} ({memory.relationshipLevel}/10) ÃÂ· {memory.personalFacts.length} facts yaad hain
+            Level: {lvlLabel} ({memory.relationshipLevel}/10)  {memory.personalFacts.length} facts yaad hain
           </div>
         </div>
       )}
@@ -319,7 +319,7 @@ export default function SakhiPage() {
         })}
         {loading && (
           <div style={{ display:'flex', alignItems:'flex-end', gap:6, marginBottom:5 }}>
-            <div style={{ width:28, height:28, borderRadius:'50%', background:'linear-gradient(135deg,#ff6b9d,#a0226e)', display:'flex', alignItems:'center', justifyContent:'center', fontSize:13 }}>Ã°ÂÂÂ¸</div>
+            <div style={{ width:28, height:28, borderRadius:'50%', background:'linear-gradient(135deg,#ff6b9d,#a0226e)', display:'flex', alignItems:'center', justifyContent:'center', fontSize:13 }}></div>
             <div style={{ background:'rgba(255,107,157,0.07)', border:'1px solid rgba(255,107,157,0.12)', borderRadius:'4px 18px 18px 18px', padding:'12px 16px', display:'flex', gap:4, alignItems:'center' }}>
               <div className="d1" style={{ width:7, height:7, borderRadius:'50%', background:'#ff6b9d' }}/>
               <div className="d2" style={{ width:7, height:7, borderRadius:'50%', background:'#ff6b9d' }}/>
@@ -327,7 +327,7 @@ export default function SakhiPage() {
             </div>
           </div>
         )}
-        {/* Mood check Ã¢ÂÂ raat 9-11 baje */}
+        {/* Mood check  raat 9-11 baje */}
         {(() => {
           if (typeof window === 'undefined') return null
           const h = new Date().getHours()
@@ -337,7 +337,7 @@ export default function SakhiPage() {
             return (
               <div style={{ display:'flex', justifyContent:'center', padding:'8px 0' }}>
                 <div style={{ background:'rgba(255,107,157,0.08)', border:'1px solid rgba(255,107,157,0.2)', borderRadius:12, padding:'10px 14px', textAlign:'center' }}>
-                  <div style={{ color:'#ff9ebb', fontSize:12, marginBottom:8 }}>Aaj ka din kaisa tha? Ã°ÂÂÂ</div>
+                  <div style={{ color:'#ff9ebb', fontSize:12, marginBottom:8 }}>Aaj ka din kaisa tha? </div>
                   <div style={{ display:'flex', gap:8, justifyContent:'center' }}>
                     {[['Ã°ÂÂÂ','Achha'],['Ã°ÂÂÂ','Theek'],['Ã°ÂÂÂ','Bura'],['Ã°ÂÂÂ¤','Stressed'],['Ã°ÂÂÂ¥','Amazing']].map(([emoji, label]) => (
                       <button key={label} onClick={() => {
