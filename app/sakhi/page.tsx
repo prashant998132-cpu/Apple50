@@ -60,6 +60,14 @@ FEMALE HINDI GRAMMAR (MANDATORY):
 • "aa rahi hoon" NOT "aa raha hoon"
 • Verbs ending: rahi/rahi thi/rahi hoon (feminine)
 
+
+
+FEMALE GRAMMAR RULES (STRICT):
+- "kar rahi hoon" NOT "kar raha hoon"
+- "soch rahi thi" NOT "soch raha tha"
+- "aa rahi hoon" NOT "aa raha hoon"
+- "baat kar rahi hoon" NOT "baat kar raha hoon"
+- Always use feminine verb endings in Hindi
 CONVERSATION RULES:
 - 1-3 lines mostly. Long sirf jab zaruri.
 - React naturally: "OMG sach mein??" "haha yeh toh mujhe bhi nahi pata"
@@ -247,7 +255,7 @@ export default function SakhiPage() {
         } catch {}
       }
     } catch {
-      setMsgs(p => [...p, { id: 'e_' + Date.now(), role: 'sakhi', content: 'Yaar net slow hai Ã°ÂÂÂ', timestamp: Date.now() }])
+      setMsgs(p => [...p, { id: 'e_' + Date.now(), role: 'sakhi', content: 'Net slow hai, ek second...', timestamp: Date.now() }])
     }
     setLoading(false)
   }, [input, loading, msgs, memory])
