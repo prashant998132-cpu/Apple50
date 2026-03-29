@@ -56,9 +56,9 @@ async function fetchStocks(): Promise<string> {
     const prev = d?.chart?.result?.[0]?.meta?.previousClose
     if (!nifty) return 'Market data unavailable'
     const change = prev ? ((nifty - prev) / prev * 100).toFixed(2) : '0'
-    const arrow = parseFloat(change) > 0 ? '📈' : '📉'
+    const arrow = parseFloat(change) > 0 ? '\uD83D\uDCC8' : '\uD83D\uDCC9'
     return `${arrow} Nifty 50: ${nifty?.toLocaleString('en-IN')} (${change}%)`
-  } catch { return '📈 Market: NSE India check karo' }
+  } catch { return '\uD83D\uDCC8 Market: NSE India check karo' }
 }
 
 async function fetchCrypto(): Promise<string> {
@@ -85,8 +85,8 @@ async function fetchGold(): Promise<string> {
     const usdInr = fx.rates?.INR || 84
     const g = ((metals?.gold || 2300) / 31.1035) * usdInr
     const s = ((metals?.silver || 28) / 31.1035) * usdInr
-    return `🥇 Gold 24K: ₹${Math.round(g).toLocaleString('en-IN')}/g | 10g = ₹${Math.round(g*10).toLocaleString('en-IN')}\n🥈 Silver: ₹${Math.round(s).toLocaleString('en-IN')}/g`
-  } catch { return '🥇 Gold: ~₹9,000/g | 🥈 Silver: ~₹105/g' }
+    return `\uD83E\uDD47 Gold 24K: ₹${Math.round(g).toLocaleString('en-IN')}/g | 10g = ₹${Math.round(g*10).toLocaleString('en-IN')}\n\uD83E\uDD48 Silver: ₹${Math.round(s).toLocaleString('en-IN')}/g`
+  } catch { return '\uD83E\uDD47 Gold: ~₹9,000/g | \uD83E\uDD48 Silver: ~₹105/g' }
 }
 
 async function fetchNews(): Promise<string[]> {
@@ -130,7 +130,7 @@ export default function BriefingPage() {
 
     // Section 1: Time + Greeting
     built.push({
-      icon: '🌅',
+      icon: '\uD83C\uDF05',
       title: `${greeting} — ${dayName}, ${dateStr}`,
       content: `${hour}:${String(now.getMinutes()).padStart(2, '0')} baj rahe hain. JARVIS ready hai.`,
       color: '#00d4ff',
@@ -144,9 +144,9 @@ export default function BriefingPage() {
       ])
       const streak = (() => { try { return getStreak() } catch { return { current: 0, best: 0 } } })()
       built.push({
-        icon: '🔥',
+        icon: '\uD83D\uDD25',
         title: 'Aaj ka Progress',
-        content: `Streak: ${streak.current} din 🔥 (Best: ${streak.best})\nAaj ke messages: ${todayChats.length}\n${streak.current >= 3 ? 'Keep it up bhai — consistency hi key hai!' : 'Aaj kuch karo — streak shuru karo!'}`,
+        content: `Streak: ${streak.current} din \uD83D\uDD25 (Best: ${streak.best})\nAaj ke messages: ${todayChats.length}\n${streak.current >= 3 ? 'Keep it up bhai — consistency hi key hai!' : 'Aaj kuch karo — streak shuru karo!'}`,
         color: '#f59e0b',
       })
       setSections([...built])
@@ -156,7 +156,7 @@ export default function BriefingPage() {
     const [weather, news, crypto, gold, stocks, petrol] = await Promise.all([fetchWeather(), fetchNews(), fetchCrypto(), fetchGold(), fetchStocks(), fetchPetrol()])
 
     built.push({
-      icon: '🌤️',
+      icon: '\uD83C\uDF24\uFE0F',
       title: 'Maihar ka Mausam',
       content: weather,
       color: '#3b82f6',
@@ -165,7 +165,7 @@ export default function BriefingPage() {
 
     // Section 4: News
     built.push({
-      icon: '📰',
+      icon: '\uD83D\uDCF0',
       title: 'Aaj ki Headlines',
       content: news.map((n, i) => `${i + 1}. ${n}`).join('\n'),
       color: '#8b5cf6',
@@ -180,7 +180,7 @@ export default function BriefingPage() {
       )
       if (studyMemories.length > 0) {
         built.push({
-          icon: '🧠',
+          icon: '\uD83E\uDDE0',
           title: 'JARVIS ko pata hai',
           content: studyMemories.slice(0, 3).map(m => `• ${m.data}`).join('\n'),
           color: '#22c55e',
@@ -192,7 +192,7 @@ export default function BriefingPage() {
     // Section 6: Padhai tip of the day
     const tip = STUDY_TIPS[now.getDate() % STUDY_TIPS.length]
     built.push({
-      icon: '💡',
+      icon: '\uD83D\uDCA1',
       title: 'Aaj ka JARVIS Tip',
       content: tip,
       color: '#f59e0b',
@@ -229,7 +229,7 @@ export default function BriefingPage() {
       }
       if (aiText.trim()) {
         built.push({
-          icon: '🎯',
+          icon: '\uD83C\uDFAF',
           title: 'JARVIS ka Aaj ka Plan',
           content: aiText.trim(),
           color: '#00d4ff',
@@ -262,7 +262,7 @@ export default function BriefingPage() {
           onClick={handleSpeak}
           style={{ background: speaking ? '#ef4444' : '#1a1a2e', border: '1px solid #2a2a4a', borderRadius: 8, color: speaking ? '#fff' : '#888', padding: '6px 12px', cursor: 'pointer', fontSize: 12 }}
         >
-          {speaking ? '⏹ Stop' : '🔊 Sunao'}
+          {speaking ? '⏹ Stop' : '\uD83D\uDD0A Sunao'}
         </button>
         <button
           onClick={buildBriefing}
