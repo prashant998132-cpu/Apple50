@@ -504,7 +504,7 @@ export default function Home() {
       }
 
       checkAndFireReminders(r => {
-        showToast(`Ã¢ÂÂ° ${r.message}`, 'ok', '');
+        showToast(`\u00C3\u00A2\u00C2\u008F\u00C2\u00B0 ${r.message}`, 'ok', '');
         speakText(`Reminder: ${r.message}`);
       });
     }, 30000);
@@ -568,7 +568,7 @@ export default function Home() {
 
     // Smart context-aware greeting
     getSmartGreeting().then(smartGreet => {
-      const baseWelcome = `Kya haal hai! Main **JARVIS** hun Ã°ÂÂ¤Â\n\nHinglish mein bol, main samajh lunga. Slash commands: \`/nasa\` \`/joke\` \`/wiki topic\` \`/shayari\``;
+      const baseWelcome = `Kya haal hai! Main **JARVIS** hun \u00C3\u00B0\u00C2\u009F\u00C2\u00A4\u00C2\u0096\n\nHinglish mein bol, main samajh lunga. Slash commands: \`/nasa\` \`/joke\` \`/wiki topic\` \`/shayari\``;
       setMsgs([{
         id: 'welcome', role: 'assistant', timestamp: Date.now(),
         content: smartGreet ? `${smartGreet}\n\n_Kuch naya poochna ho toh bhi bol._` : baseWelcome,
@@ -576,7 +576,7 @@ export default function Home() {
     }).catch(() => {
       setMsgs([{
         id: 'welcome', role: 'assistant', timestamp: Date.now(),
-        content: `Kya haal hai! Main **JARVIS** hun Ã°ÂÂ¤Â\n\nHinglish mein bol, main samajh lunga. \`/nasa\` \`/joke\` \`/wiki topic\` try karo!`,
+        content: `Kya haal hai! Main **JARVIS** hun \u00C3\u00B0\u00C2\u009F\u00C2\u00A4\u00C2\u0096\n\nHinglish mein bol, main samajh lunga. \`/nasa\` \`/joke\` \`/wiki topic\` try karo!`,
       }]);
     });
 
@@ -1561,7 +1561,7 @@ export default function Home() {
       } catch { reply('Dictionary fetch nahi ho saka.'); return; }
     }
 
-    // Ã¢ÂÂÃ¢ÂÂ NEWS Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂ
+    // \u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080 NEWS \u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080
     if (/(?:aaj ki|latest|today) news|top news|khabar|headlines/i.test(t)) {
       try {
         const res = await fetch('https://hacker-news.firebaseio.com/v0/topstories.json');
@@ -1574,7 +1574,7 @@ export default function Home() {
       } catch { reply('News fetch nahi ho saki.'); return; }
     }
 
-    // Ã¢ÂÂÃ¢ÂÂ MATH INLINE Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂ
+    // \u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080 MATH INLINE \u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080
     const mathExpr = text.match(/^(?:calc(?:ulate)?|calculate|solve|compute|=)\s+(.+)$/i);
     if (mathExpr?.[1]) {
       try {
@@ -1585,7 +1585,7 @@ export default function Home() {
       } catch { /* fall through to AI */ }
     }
 
-    // Ã¢ÂÂÃ¢ÂÂ WEATHER Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂ
+    // \u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080 WEATHER \u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080
     if (/weather|mausam|garmi|sardi|barish|temperature/i.test(t)) {
       const cityM = text.match(/(?:of|in|at|ka|mein|for)\s+(\w+)/i);
       const city = cityM?.[1] || location || 'Maihar';
@@ -1595,7 +1595,7 @@ export default function Home() {
       } catch { reply('Weather nahi mila. Internet check karo.'); return; }
     }
 
-    // Ã¢ÂÂÃ¢ÂÂ ISS LOCATION Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂ
+    // \u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080 ISS LOCATION \u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080
     if (/iss|space station|antariksha station|satellite location/i.test(t)) {
       try {
         const { getISS } = await import('@/lib/core/freeAPIs');
@@ -1603,7 +1603,7 @@ export default function Home() {
       } catch { reply('ISS location nahi mili.'); return; }
     }
 
-    // Ã¢ÂÂÃ¢ÂÂ COUNTRY INFO Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂ
+    // \u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080 COUNTRY INFO \u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080
     const countryMatch = text.match(/(?:about|info|details?|tell me about|batao)\s+(.+?)(?:\s+(?:country|desh|nation))?$/i);
     if (/which country|kis desh|country info|desh ki jankari/i.test(t) && countryMatch?.[1]) {
       try {
@@ -1612,25 +1612,25 @@ export default function Home() {
       } catch { reply('Country info nahi mili.'); return; }
     }
 
-    // Ã¢ÂÂÃ¢ÂÂ RANDOM ADVICE Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂ
+    // \u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080 RANDOM ADVICE \u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080
     if (/^(?:advice|sujhao|give me advice|kya karu|suggest karo|help me decide)$/i.test(t.trim())) {
       const { getAdvice } = await import('@/lib/core/freeAPIs');
       reply(await getAdvice()); return;
     }
 
-    // Ã¢ÂÂÃ¢ÂÂ QUOTES Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂ
+    // \u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080 QUOTES \u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080
     if (/^(?:quote|suvichar|anmol vachan|motivat(?:ion)?|inspir(?:ation)?)$/i.test(t.trim())) {
       const { getQuote } = await import('@/lib/core/freeAPIs');
       reply(await getQuote()); return;
     }
 
-    // Ã¢ÂÂÃ¢ÂÂ JOKES Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂ
+    // \u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080 JOKES \u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080
     if (/^(?:joke|chutkula|funny|hasao|ek joke suno)$/i.test(t.trim()) || /tell.*joke|joke.*suno|ek.*joke/i.test(t)) {
       const { getJoke } = await import('@/lib/core/freeAPIs');
       reply(await getJoke()); return;
     }
 
-    // Ã¢ÂÂÃ¢ÂÂ TIMER Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂ
+    // \u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080 TIMER \u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080
     const timerM = text.match(/(\d+)\s*(?:minute|min|second|sec)\s*(?:ka\s*)?timer/i);
     if (timerM) {
       const n = parseInt(timerM[1]);
@@ -1643,7 +1643,7 @@ export default function Home() {
       reply(' **' + n + ' ' + unit + ' timer** set ho gaya! Baj jaayega.'); return;
     }
 
-    // Ã¢ÂÂÃ¢ÂÂ APPS OPEN Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂ
+    // \u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080 APPS OPEN \u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080
     const appMap: Record<string, string> = {
       whatsapp: 'whatsapp://', wa: 'whatsapp://',
       youtube: 'vnd.youtube:', yt: 'vnd.youtube:',
@@ -1685,7 +1685,7 @@ export default function Home() {
       }
     }
 
-    // Ã¢ÂÂÃ¢ÂÂ SYSTEM INFO Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂ
+    // \u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080 SYSTEM INFO \u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080
     if (/system|status|info|sab kuch batao/i.test(t) && /batao|dikhao|check|kya hai/i.test(t)) {
       try {
         const { getAllGoals, getStreak, getTodayChats } = await import('@/lib/db');
@@ -1705,7 +1705,7 @@ export default function Home() {
       } catch { /* fall through */ }
     }
 
-    // Ã¢ÂÂÃ¢ÂÂ CHAT SEARCH Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂ
+    // \u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080 CHAT SEARCH \u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080
     const searchMatch = text.match(/(?:search|dhundho|find|kahan)\s+(?:chat|baat|conversation|messages?)[:\s]+(.+)/i)
       || text.match(/(.+)\s+wali\s+(?:baat|chat)\s+dhundho/i);
     if (searchMatch) {
@@ -1720,7 +1720,7 @@ export default function Home() {
       } catch { reply('Chat search nahi ho saka.'); return; }
     }
 
-    // Ã¢ÂÂÃ¢ÂÂ WEEKLY PROGRESS REPORT Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂ
+    // \u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080 WEEKLY PROGRESS REPORT \u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080
     if (/progress report|weekly report|hafte ka|week.*summary|report banao/i.test(text)) {
       try {
         const { getAllGoals, getStreak, getTodayChats } = await import('@/lib/db');
@@ -1761,7 +1761,7 @@ export default function Home() {
       reply('Pehle "progress report" type karo, phir share karo.'); return;
     }
 
-    // Ã¢ÂÂÃ¢ÂÂ MUSIC GENERATION Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂ
+    // \u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080 MUSIC GENERATION \u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080
     if (/^music|^song|gaana bana|music generate/i.test(t)) {
       const mood = text.replace(/music|song|gaana|bana|generate/gi,'').trim() || 'relaxing hindi'
       // Open Suno + Udio as alternatives
@@ -1771,7 +1771,7 @@ export default function Home() {
       return
     }
 
-    // Ã¢ÂÂÃ¢ÂÂ VIDEO GENERATION Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂ
+    // \u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080 VIDEO GENERATION \u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080
     if (/^video|video bana|clip generate/i.test(t)) {
       const prompt = text.replace(/video|bana|generate|clip/gi,'').trim() || 'cinematic short clip'
       const klingUrl = 'https://klingai.com/create?prompt=' + encodeURIComponent(prompt)
@@ -1780,7 +1780,7 @@ export default function Home() {
       return
     }
 
-    // Ã¢ÂÂÃ¢ÂÂ TTS / VOICE Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂ
+    // \u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080 TTS / VOICE \u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080
     if (/^(?:bol|speak|tts|voice|read aloud|padho)\s+(.+)/i.test(text)) {
       const sayText = text.replace(/^(?:bol|speak|tts|voice|read aloud|padho)\s+/i,'').trim()
       if (sayText) {
@@ -1791,7 +1791,7 @@ export default function Home() {
       }
     }
 
-    // Ã¢ÂÂÃ¢ÂÂ CHAT EXPORT Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂ
+    // \u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080 CHAT EXPORT \u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080
     if (/export|share chat|chat export|save chat|download chat/i.test(text)) {
       const chatText = msgs.map(m => (m.role === 'user' ? ' You: ' : ' JARVIS: ') + m.content).join('\n\n');
       const blob = new Blob([chatText], { type: 'text/plain' });
@@ -1809,7 +1809,7 @@ export default function Home() {
       reply(' WhatsApp pe bhej raha hoon...'); return;
     }
 
-    // Ã¢ÂÂÃ¢ÂÂ SESSION TIMER Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂ
+    // \u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080 SESSION TIMER \u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080
     if (/session.*start|kaam.*start|timer.*start|work.*start/i.test(text)) {
       const startTime = Date.now();
       if (typeof window !== 'undefined') localStorage.setItem('jarvis_session_start', String(startTime));
@@ -1824,7 +1824,7 @@ export default function Home() {
       reply(' Session khatam!\n\n Total time: **' + (hrs > 0 ? hrs + ' hr ' : '') + remMins + ' min**\n\nGood work boss! '); return;
     }
 
-    // Ã¢ÂÂÃ¢ÂÂ PINNED MESSAGES Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂ
+    // \u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080 PINNED MESSAGES \u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080
     if (/pinned|pin.*dikhao|saved.*messages|important.*messages/i.test(text)) {
       if (typeof window === 'undefined') { reply('Pinned messages load nahi ho sake.'); return; }
       const pins = JSON.parse(localStorage.getItem('jarvis_pins') || '[]');
@@ -1834,7 +1834,7 @@ export default function Home() {
       return;
     }
 
-    // Ã¢ÂÂÃ¢ÂÂ PAGE NAVIGATION Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂ
+    // \u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080 PAGE NAVIGATION \u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080
     const navMap: [RegExp, string, string][] = [
       [/settings.*jao|settings.*kholo|open.*settings/i, '/settings', 'Settings'],
       [/study.*jao|study.*kholo|exam.*page/i, '/study', 'Study Hub'],
@@ -1856,14 +1856,14 @@ export default function Home() {
       }
     }
 
-    // Ã¢ÂÂÃ¢ÂÂ AUTOMATION Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂ
+    // \u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080 AUTOMATION \u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080
     const autoAction = detectAutomationIntent(text);
     if (autoAction) {
       const result = await triggerMacro(autoAction);
       reply(result.ok ? ' ' + result.msg : ' ' + result.msg); return;
     }
 
-    // Ã¢ÂÂÃ¢ÂÂ VIDEO GENERATION Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂ
+    // \u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080 VIDEO GENERATION \u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080
     const videoMatch = text.match(/video\s+(?:bana|banao|generate|create|chahiye|de)[:\s]+(.+)/i)
       || text.match(/(.+)\s+(?:ka|ki)\s+video\s+(?:bana|banao|create)/i);
     if (videoMatch) {
@@ -1889,12 +1889,12 @@ export default function Home() {
       return;
     }
 
-    // Ã¢ÂÂÃ¢ÂÂ VOICE TRANSCRIBE Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂ
+    // \u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080 VOICE TRANSCRIBE \u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080
     if (/transcribe|audio.*text|speech.*text|recording.*convert/i.test(t)) {
       reply(' Voice transcription ke liye:\n1. Mic button tap karo\n2. Bol do kuch bhi\n3. JARVIS automatically text kar dega\n\nYa voice page use karo: /voice'); return;
     }
 
-    // Ã¢ÂÂÃ¢ÂÂ MULTI MODEL IMAGE Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂ
+    // \u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080 MULTI MODEL IMAGE \u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080
     const modelMatch = text.match(/(?:flux|seedream|gpt.?image|dirtberry|zimage|imagen)\s+(?:se\s+)?(?:bana|generate|image)[:\s]+(.+)/i);
     if (modelMatch) {
       const modelName = /seedream/i.test(text) ? 'seedream' : /gpt.?image/i.test(text) ? 'gptimage' : /dirtberry/i.test(text) ? 'dirtberry' : /zimage|z-image/i.test(text) ? 'zimage' : /flux.pro/i.test(text) ? 'flux-pro' : 'flux';
@@ -1907,7 +1907,7 @@ export default function Home() {
       setInput(''); return;
     }
 
-    // Ã¢ÂÂÃ¢ÂÂ Direct Image Generation Ã¢ÂÂ bypass AI refusal Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂ
+    // \u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080 Direct Image Generation \u00C3\u00A2\u00C2\u0080\u00C2\u0094 bypass AI refusal \u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080
     const imgMatch = text.match(/(?:image|img|photo|pic|wallpaper|banner|poster|draw|paint|sketch|generator)\s+(?:kar|bana|banao|generate|create|make|de|do|chahiye|of|ki|ka)\s*(.+)/i)
       || text.match(/(.+)\s+(?:ki|ka|ke|wala|wali)\s+(?:image|photo|pic|tasveer)/i)
       || text.match(/^(?:generate|create|bana|draw)\s+(?:a\s+)?(?:image|photo|picture|pic)\s+(?:of\s+)?(.+)/i)
@@ -1952,7 +1952,7 @@ export default function Home() {
     setMsgs(prev => [...prev, userMsg]);
     setInput('');
     setLoading(true);
-    // Safety timeout Ã¢ÂÂ 30 sec ke baad loading reset
+    // Safety timeout \u00C3\u00A2\u00C2\u0080\u00C2\u0094 30 sec ke baad loading reset
     const loadingTimeout = setTimeout(() => {
       setLoading(false);
       setMsgs(prev => {
@@ -1977,7 +1977,7 @@ export default function Home() {
       if (isFirstMsg) generateTitle(text.trim(), sessionId);
     }
 
-    // Ã¢ÂÂÃ¢ÂÂ Smart API Router Ã¢ÂÂ auto-detect and call free APIs Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂ
+    // \u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080 Smart API Router \u00C3\u00A2\u00C2\u0080\u00C2\u0094 auto-detect and call free APIs \u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080
     try {
       const { smartAPIRouter } = await import('@/lib/core/freeAPIs');
       const apiResult = await smartAPIRouter(text.trim());
@@ -1991,7 +1991,7 @@ export default function Home() {
       }
     } catch {}
 
-    // Ã¢ÂÂÃ¢ÂÂ Offline fallback Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂ
+    // \u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080 Offline fallback \u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080
     if (!navigator.onLine) {
       try {
         const { getOfflineAnswer } = await import('@/lib/offline/answers');
@@ -2015,10 +2015,10 @@ export default function Home() {
 
     // Rich personality system prompt (Jons Bhai + memory + time context)
     const systemPrompt = await buildSystemPrompt().catch(() =>
-      `You are JARVIS Ã¢ÂÂ "Jons Bhai". Hinglish mein baat karo. Short answers. Never "As an AI".`
+      `You are JARVIS \u00C3\u00A2\u00C2\u0080\u00C2\u0094 "Jons Bhai". Hinglish mein baat karo. Short answers. Never "As an AI".`
     );
 
-    // Load user-saved API keys from localStorage Ã¢ÂÂ send to server
+    // Load user-saved API keys from localStorage \u00C3\u00A2\u00C2\u0086\u00C2\u0092 send to server
     const clientKeys: Record<string, string> = {}
     if (typeof window !== 'undefined') {
       const keyNames = ['GROQ_API_KEY','GEMINI_API_KEY','CEREBRAS_API_KEY','TOGETHER_API_KEY','MISTRAL_API_KEY','COHERE_API_KEY','FIREWORKS_API_KEY','OPENROUTER_API_KEY','DEEPINFRA_API_KEY','HUGGINGFACE_API_KEY']
@@ -2027,7 +2027,7 @@ export default function Home() {
 
     const history = msgs.slice(-8).map(m => ({ role: m.role, content: m.content }));
 
-    // Smart web search injection Ã¢ÂÂ auto-trigger on factual queries
+    // Smart web search injection \u00C3\u00A2\u00C2\u0080\u00C2\u0094 auto-trigger on factual queries
     const searchTrigger = /latest|news|khabar|price|stock|score|result|who is|kya hai|search|find|current|today|2025|2026|released|launched|happened|broke|won|lost|died|born|invented|discovered/.test(text.toLowerCase())
     let searchContext = ''
     if (searchTrigger && text.length > 8 && !(/weather|mausam|battery|reminder|goal|note|timer|whatsapp|open app/i.test(text))) {
@@ -2146,7 +2146,7 @@ export default function Home() {
       }
       // Track user behavior
       trackInteraction(text.trim(), eMode).catch(() => {});
-      // Proactive suggestion Ã¢ÂÂ JARVIS suggests without being asked
+      // Proactive suggestion \u00C3\u00A2\u00C2\u0080\u00C2\u0094 JARVIS suggests without being asked
       const suggestion = getProactiveSuggestion(text.trim());
       if (suggestion) {
         setTimeout(() => {
@@ -2159,12 +2159,12 @@ export default function Home() {
         }, 1800);
       }
 
-      // Proactive action Ã¢ÂÂ JARVIS takes initiative
+      // Proactive action \u00C3\u00A2\u00C2\u0080\u00C2\u0094 JARVIS takes initiative
       if (!suggestion) {
         const lc = fullText.toLowerCase()
-        // If JARVIS mentions a link Ã¢ÂÂ auto-make it tappable
-        // If JARVIS gives a phone number Ã¢ÂÂ auto-show call button
-        // If JARVIS mentions a time Ã¢ÂÂ check if reminder needed
+        // If JARVIS mentions a link \u00C3\u00A2\u00C2\u0086\u00C2\u0092 auto-make it tappable
+        // If JARVIS gives a phone number \u00C3\u00A2\u00C2\u0086\u00C2\u0092 auto-show call button
+        // If JARVIS mentions a time \u00C3\u00A2\u00C2\u0086\u00C2\u0092 check if reminder needed
         const timeMatch = fullText.match(/(\d{1,2}(?::\d{2})?\s*(?:am|pm|baje|AM|PM))/)
         if (timeMatch && /remind|yaad|alarm|timer/i.test(text)) {
           setTimeout(() => {
@@ -2177,7 +2177,7 @@ export default function Home() {
         }
       }
 
-      // Mood detection Ã¢ÂÂ frustrated/tired Ã¢ÂÂ gentle suggestion
+      // Mood detection \u00C3\u00A2\u00C2\u0080\u00C2\u0094 frustrated/tired \u00C3\u00A2\u00C2\u0086\u00C2\u0092 gentle suggestion
       const stressWords = /pareshan|thak|bore|stress|tension|headache|rona|samajh nahi|kya karu|help|stuck|confused|frustrat/i;
       const lateNight = new Date().getHours() >= 23 || new Date().getHours() < 4;
       if (stressWords.test(text.trim()) && !suggestion) {
@@ -2260,8 +2260,8 @@ export default function Home() {
         <div style={{ textAlign: 'center', flex: 1 }}>
           <div style={{ color: '#00d4ff', fontWeight: 800, fontSize: 17, letterSpacing: 1 }}>
             JARVIS
-            {!online && <span style={{ fontSize: 9, color: '#ef4444', marginLeft: 6 }}>Ã¢ÂÂ Offline</span>}
-            {reconnected && <span style={{ fontSize: 9, color: '#22c55e', marginLeft: 6 }}>Ã¢ÂÂ Online</span>}
+            {!online && <span style={{ fontSize: 9, color: '#ef4444', marginLeft: 6 }}>\u00C3\u00A2\u00C2\u0097\u00C2\u008F Offline</span>}
+            {reconnected && <span style={{ fontSize: 9, color: '#22c55e', marginLeft: 6 }}>\u00C3\u00A2\u00C2\u0097\u00C2\u008F Online</span>}
           </div>
           <div style={{ color: '#444', fontSize: 9, marginTop: 1 }}>
             {location ? ' ' + location : online ? 'Online' : 'Offline'}
@@ -2271,7 +2271,7 @@ export default function Home() {
         <div style={{ position: 'relative' }}>
           <button onClick={() => setHeaderMenuOpen(p => !p)}
             style={{ background: 'none', border: 'none', color: '#888', fontSize: 22, cursor: 'pointer', padding: '0 4px', letterSpacing: 1 }}>
-            Ã¢ÂÂ®
+            \u00C3\u00A2\u00C2\u008B\u00C2\u00AE
           </button>
           {headerMenuOpen && (
             <>
@@ -2313,16 +2313,16 @@ export default function Home() {
           }
         }}
           data-pwa-banner style={{ background: 'rgba(0,212,255,0.08)', borderBottom: '1px solid rgba(0,212,255,0.2)', padding: '8px 16px', display: 'flex', alignItems: 'center', gap: 10 }}>
-          <span style={{ fontSize: 20 }}>Ã°ÂÂÂ²</span>
+          <span style={{ fontSize: 20 }}>\u00C3\u00B0\u00C2\u009F\u00C2\u0093\u00C2\u00B2</span>
           <div>
             <div style={{ color: '#00d4ff', fontSize: 12, fontWeight: 600 }}>JARVIS Install karo</div>
-            <div style={{ color: '#555', fontSize: 10 }}>Home screen pe add karo Ã¢ÂÂ faster, offline ready</div>
+            <div style={{ color: '#555', fontSize: 10 }}>Home screen pe add karo \u00C3\u00A2\u00C2\u0080\u00C2\u0094 faster, offline ready</div>
           </div>
-          <span style={{ marginLeft: 'auto', color: '#00d4ff', fontSize: 12 }}>Install Ã¢ÂÂ</span>
+          <span style={{ marginLeft: 'auto', color: '#00d4ff', fontSize: 12 }}>Install \u00C3\u00A2\u00C2\u0086\u00C2\u0092</span>
         </div>
       )}
 
-      {/* Messages Ã¢ÂÂ fills all remaining space */}
+      {/* Messages \u00C3\u00A2\u00C2\u0080\u00C2\u0094 fills all remaining space */}
       <div style={{ flex: '1 1 0', overflowY: 'auto', overflowX: 'hidden', padding: '8px 0', minHeight: 0, WebkitOverflowScrolling: 'touch',
         background: chatBg !== 'none' ? chatBg : undefined }}
         onTouchStart={(e) => {
@@ -2347,7 +2347,7 @@ export default function Home() {
           }
         }}>
         {refreshing && (
-          <div style={{ textAlign: 'center', padding: 10, color: '#00d4ff', fontSize: 12 }}>Ã°ÂÂÂ Refreshing...</div>
+          <div style={{ textAlign: 'center', padding: 10, color: '#00d4ff', fontSize: 12 }}>\u00C3\u00B0\u00C2\u009F\u00C2\u0094\u00C2\u0084 Refreshing...</div>
         )}
         {msgs.map((msg: Msg) => {
           const msgDel = (id: string) => setMsgs(prev => prev.filter(m => m.id !== id));
@@ -2361,14 +2361,14 @@ export default function Home() {
           const lastMsg = msgs[msgs.length-1].content.toLowerCase();
           const lastUser = [...msgs].reverse().find(m => m.role === 'user')?.content.toLowerCase() || '';
           const chips: string[] = [];
-          if (/weather|mausam|ÃÂ°c|forecast/.test(lastMsg)) chips.push('Kal ka mausam?', 'Barish hogi?');
+          if (/weather|mausam|\u00C3\u0082\u00C2\u00B0c|forecast/.test(lastMsg)) chips.push('Kal ka mausam?', 'Barish hogi?');
           else if (/goal|target/.test(lastMsg)) chips.push('Goals dikhao', 'Goal add karo');
           else if (/remind|alarm|timer/.test(lastMsg)) chips.push('Reminders dikhao', 'Timer lagao');
           else if (/image|photo|generated|generating/.test(lastMsg)) chips.push('Aur ek bana', 'Wallpaper bana');
           else if (/battery|charge/.test(lastMsg)) chips.push('WhatsApp kholo', 'Settings kholo');
           else if (/news|khabar/.test(lastMsg)) chips.push('Tech news?', 'India news?');
           else if (/bitcoin|crypto|price/.test(lastMsg)) chips.push('Ethereum price?', 'Doge price?');
-          else if (/Ã¢ÂÂ¹|usd|currency/.test(lastMsg)) chips.push('EUR to INR?', 'GBP to INR?');
+          else if (/\u00C3\u00A2\u00C2\u0082\u00C2\u00B9|usd|currency/.test(lastMsg)) chips.push('EUR to INR?', 'GBP to INR?');
           else if (/note|save|yaad/.test(lastMsg)) chips.push('Notes dikhao', 'Memory dikhao');
           else if (msgs.length <= 2) chips.push('Mausam batao', 'Joke suno', 'Image bana');
           else chips.push('Aur batao', 'Example do');
@@ -2390,7 +2390,7 @@ export default function Home() {
       {/* Slash Command Autocomplete */}
       {slashOpen && (
         <div style={{ position: 'absolute', bottom: 120, left: 12, right: 12, background: '#0d0d18', border: '1px solid #1e1e2e', borderRadius: 12, zIndex: 9000, maxHeight: 220, overflowY: 'auto', boxShadow: '0 -4px 20px rgba(0,0,0,0.5)' }}>
-          <div style={{ padding: '6px 12px', color: '#444', fontSize: 10, borderBottom: '1px solid #1a1a2a' }}>Ã¢ÂÂ¡ Slash Commands Ã¢ÂÂ Tab se select karo</div>
+          <div style={{ padding: '6px 12px', color: '#444', fontSize: 10, borderBottom: '1px solid #1a1a2a' }}>\u00C3\u00A2\u00C2\u009A\u00C2\u00A1 Slash Commands \u00C3\u00A2\u00C2\u0080\u00C2\u0094 Tab se select karo</div>
           {SLASH_COMMANDS.filter(c => c.cmd.startsWith(slashFilter) || c.desc.toLowerCase().includes(slashFilter.slice(1))).slice(0, 8).map(c => (
             <button key={c.cmd}
               onClick={() => { setInput(c.cmd + ' '); setSlashOpen(false); textareaRef.current?.focus(); }}
@@ -2405,25 +2405,25 @@ export default function Home() {
         </div>
       )}
 
-      {/* Bottom strip Ã¢ÂÂ Compress = USER ka typed message compress karo */}
+      {/* Bottom strip \u00C3\u00A2\u00C2\u0080\u00C2\u0094 Compress = USER ka typed message compress karo */}
       <div className="bottom-strip">
         <span style={{ fontSize: 11, color: '#555' }}>
           {mode === 'auto'
-            ? `Ã°ÂÂ¤Â Auto Ã¢ÂÂ ${effectiveMode.charAt(0).toUpperCase() + effectiveMode.slice(1)}`
+            ? `\u00C3\u00B0\u00C2\u009F\u00C2\u00A4\u00C2\u0096 Auto \u00C3\u00A2\u00C2\u0086\u00C2\u0092 ${effectiveMode.charAt(0).toUpperCase() + effectiveMode.slice(1)}`
             : `${mode === 'flash' ? '' : mode === 'think' ? '' : ''} ${mode.charAt(0).toUpperCase() + mode.slice(1)}`}
         </span>
 
-        {/* Compress dropdown Ã¢ÂÂ input mein likhi hua shorten karo */}
+        {/* Compress dropdown \u00C3\u00A2\u00C2\u0080\u00C2\u0094 input mein likhi hua shorten karo */}
         {input.trim().length > 20 && (
           <div style={{ display: 'flex', gap: 4 }}>
-            <span style={{ color: '#444', fontSize: 10, alignSelf: 'center' }}>Ã°ÂÂÂÃ¯Â¸Â</span>
+            <span style={{ color: '#444', fontSize: 10, alignSelf: 'center' }}>\u00C3\u00B0\u00C2\u009F\u00C2\u0097\u00C2\u009C\u00C3\u00AF\u00C2\u00B8\u00C2\u008F</span>
             {(['tiny', 'short', 'medium'] as CompressLevel[]).map(level => (
               <button
                 key={level}
                 onClick={() => {
                   const compressed = compressUserMessage(input, level);
                   setInput(compressed);
-                  toastInfo(`Ã¢ÂÂÃ¯Â¸Â ${level}: ${compressed.split(' ').length} words`);
+                  toastInfo(`\u00C3\u00A2\u00C2\u009C\u00C2\u0082\u00C3\u00AF\u00C2\u00B8\u00C2\u008F ${level}: ${compressed.split(' ').length} words`);
                 }}
                 style={{
                   background: 'none', border: '1px solid #2a2a4a',
@@ -2439,7 +2439,7 @@ export default function Home() {
         )}
       </div>
 
-      {/* Ã¢ÂÂÃ¢ÂÂ Input Bar v3 Ã¢ÂÂ ChatGPT style Ã¢ÂÂÃ¢ÂÂ */}
+      {/* \u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080 Input Bar v3 \u00C3\u00A2\u00C2\u0080\u00C2\u0094 ChatGPT style \u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080 */}
       <div style={{ padding: '8px 12px 12px', borderTop: '1px solid #1e1e2e', background: 'var(--bg)' }}>
         <div style={{
           display: 'flex', alignItems: 'flex-end',
@@ -2449,7 +2449,7 @@ export default function Home() {
           transition: 'border-color 0.2s',
           boxShadow: input.trim() ? '0 0 12px rgba(0,212,255,0.08)' : 'none',
         }}>
-          {/* Plus Ã¢ÂÂ mode selector inside */}
+          {/* Plus \u00C3\u00A2\u00C2\u0080\u00C2\u0094 mode selector inside */}
           <div style={{ position: 'relative' }}>
             <button onClick={() => setPlusOpen(p => !p)} data-plus
               title="Mode & options"
@@ -2465,7 +2465,7 @@ export default function Home() {
             style={{ flex: 1, background: 'transparent', border: 'none', color: '#e0e0ff', fontSize: 15, outline: 'none', resize: 'none', minHeight: 34, maxHeight: 120, lineHeight: 1.5, fontFamily: 'inherit', overflowY: 'auto', padding: '7px 6px', opacity: loading ? 0.5 : 1 }}
           />
 
-          {/* Mic Ã¢ÂÂ onClick with permission request (APK compatible) */}
+          {/* Mic \u00C3\u00A2\u00C2\u0080\u00C2\u0094 onClick with permission request (APK compatible) */}
           <button
             onClick={async () => {
               // Request mic permission first (important for APK)
@@ -2477,7 +2477,7 @@ export default function Home() {
               }
               const SR = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
               if (!SR) {
-                // APK fallback Ã¢ÂÂ Puter Whisper
+                // APK fallback \u00C3\u00A2\u00C2\u0080\u00C2\u0094 Puter Whisper
                 toastErr('Voice browser mein nahi chala. Voice page try karo.');
                 return;
               }
@@ -2519,7 +2519,7 @@ export default function Home() {
           </button>
         </div>
 
-        {/* Plus popup Ã¢ÂÂ mode select */}
+        {/* Plus popup \u00C3\u00A2\u00C2\u0080\u00C2\u0094 mode select */}
         {/* Hidden file inputs */}
         {/* AI Image Edit hidden input */}
         <input id="imgEditInput" type="file" accept="image/*" style={{ display:'none' }} onChange={async e => {
@@ -2573,7 +2573,7 @@ export default function Home() {
         {plusOpen && (
           <div data-plus onClick={e => e.stopPropagation()} style={{ position: 'absolute', bottom: 72, left: 8, right: 8, background: '#0d0d18', border: '1px solid #1e1e2e', borderRadius: 18, padding: 14, zIndex: 9999, boxShadow: '0 -8px 30px rgba(0,0,0,0.8)' }}>
 
-            {/* Row 1 Ã¢ÂÂ Media Actions */}
+            {/* Row 1 \u00C3\u00A2\u00C2\u0080\u00C2\u0094 Media Actions */}
             <div style={{ display: 'flex', gap: 8, marginBottom: 12 }}>
               {[
                 { icon: '', label: 'Photo', color: '#22c55e', action: () => { photoInputRef.current?.click(); setPlusOpen(false); } },
@@ -2611,7 +2611,7 @@ export default function Home() {
             {/* Divider */}
             <div style={{ borderTop:'1px solid #1a1a2e', marginBottom:10 }} />
 
-            {/* Row 2 Ã¢ÂÂ AI Modes */}
+            {/* Row 2 \u00C3\u00A2\u00C2\u0080\u00C2\u0094 AI Modes */}
             <div style={{ color:'#444', fontSize:10, marginBottom:6, paddingLeft:2 }}>AI MODE</div>
             <div style={{ display: 'flex', gap: 6 }}>
               {([['auto','','Auto','#00d4ff'],['flash','','Flash','#f59e0b'],['think','','Think','#8b5cf6'],['deep','','Deep','#22c55e']] as [Mode,string,string,string][]).map(([m,icon,label,col]) => (
