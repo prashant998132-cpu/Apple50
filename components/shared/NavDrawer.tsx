@@ -4,33 +4,35 @@ import { useRouter, usePathname } from 'next/navigation'
 
 const ITEMS = [
   { icon: '⚡', label: 'Agent',         route: '/agent' },
-  { icon: '📱', label: 'Phone Control', route: '/macrodroid' },
+  { icon: '🤖', label: 'Phone Control', route: '/macrodroid' },
   { icon: '📷', label: 'Camera AI',     route: '/camera' },
-  { icon: '🎙️', label: 'Voice',         route: '/voice' },
+  { icon: '🎙️', label: 'Voice',   route: '/voice' },
   { icon: '📡', label: 'Briefing',      route: '/briefing' },
+  { icon: '🔮', label: 'JARVIS Orb',    route: '/orb' },
   { icon: '📝', label: 'Notes',         route: '/notes' },
   { icon: '🎯', label: 'Goals',         route: '/target' },
-  { icon: '⏰', label: 'Reminders',     route: '/reminders' },
+  { icon: '⏰', label: 'Reminders',         route: '/reminders' },
   { icon: '💬', label: 'History',       route: '/chat-history' },
-  { icon: '🛠️', label: 'Tools',         route: '/tools' },
+  { icon: '🛠️', label: 'Tools',   route: '/tools' },
   { icon: '📱', label: 'Apps Hub',      route: '/apps' },
   { icon: '🎨', label: 'Media Hub',     route: '/media' },
-  { icon: '🖌️', label: 'Canva AI',     route: '/canva' },
+  { icon: '🖌️', label: 'Canva AI', route: '/canva' },
   { icon: '🎭', label: 'AI Studio',     route: '/studio' },
-  { icon: '🇮🇳', label: 'India Hub',    route: '/india' },
-  { icon: '🖥️', label: 'System',        route: '/system' },
-  { icon: '🌸', label: 'Sakhi',           route: '/sakhi' },
-  { icon: '⚙️', label: 'Settings',      route: '/settings' },
+  { icon: '🇮🇳', label: 'India Hub', route: '/india' },
+  { icon: '🖥️', label: 'System',  route: '/system' },
+  { icon: '🌸', label: 'Sakhi',         route: '/sakhi' },
+  { icon: '⚙️', label: 'Settings',    route: '/settings' },
 ]
 
 const CATS: Record<string, string[]> = {
-  '🤖 AI':           ['/agent', '/macrodroid', '/camera', '/voice', '/briefing'],
-  '📖 Learn':        ['/notes', '/target'],
-  '✅ Productivity': ['/reminders', '/chat-history'],
-  '🔧 Tools':        ['/tools', '/apps'],
-  '🎨 Create':       ['/media', '/canva', '/studio'],
-  '🇮🇳 India':       ['/india'],
-  '⚙️ System':       ['/system', '/settings'],
+  '🤖 AI':              ['/agent', '/macrodroid', '/camera', '/voice', '/briefing', '/orb'],
+  '📖 Learn':           ['/notes', '/target'],
+  '✅ Productivity':        ['/reminders', '/chat-history'],
+  '🔧 Tools':           ['/tools', '/apps'],
+  '🎨 Create':          ['/media', '/canva', '/studio'],
+  '🇮🇳 India': ['/india'],
+  '🌸 Companion':       ['/sakhi'],
+  '⚙️ System':        ['/system', '/settings'],
 }
 
 interface Props { open: boolean; onClose: () => void }
@@ -39,7 +41,6 @@ export default function NavDrawer({ open, onClose }: Props) {
   const router = useRouter()
   const pathname = usePathname()
 
-  // Close on back button / escape
   useEffect(() => {
     if (!open) return
     const handler = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose() }
@@ -47,35 +48,26 @@ export default function NavDrawer({ open, onClose }: Props) {
     return () => window.removeEventListener('keydown', handler)
   }, [open, onClose])
 
-  // Prevent body scroll when open
   useEffect(() => {
     if (typeof document === 'undefined') return
     document.body.style.overflow = open ? 'hidden' : ''
     return () => { document.body.style.overflow = '' }
   }, [open])
 
-  if (!open) return null  // ← THE FIX: not mounted when closed
+  if (!open) return null
 
   const go = (route: string) => { router.push(route); onClose() }
 
   return (
     <div style={{ position: 'fixed', inset: 0, zIndex: 200 }}>
-      {/* Overlay — tap anywhere to close */}
-      <div
-        onClick={onClose}
-        style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.75)' }}
-      />
-
-      {/* Drawer panel */}
+      <div onClick={onClose} style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.75)' }} />
       <div style={{
         position: 'absolute', left: 0, top: 0, bottom: 0, width: 260,
         background: '#08080f', borderRight: '1px solid #1e1e2e',
         display: 'flex', flexDirection: 'column', overflowY: 'auto',
         animation: 'slideIn 0.2s ease',
       }}>
-        <style>{`@keyframes slideIn { from { transform: translateX(-100%) } to { transform: translateX(0) } }`}</style>
-
-        {/* Header */}
+        <style>{'@keyframes slideIn { from { transform: translateX(-100%) } to { transform: translateX(0) } }'}</style>
         <div style={{ padding: '16px 14px 12px', borderBottom: '1px solid #1e1e2e', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <div>
             <div style={{ color: '#00d4ff', fontWeight: 900, fontSize: 18, letterSpacing: 2 }}>JARVIS</div>
@@ -83,13 +75,11 @@ export default function NavDrawer({ open, onClose }: Props) {
           </div>
           <button onClick={onClose} style={{ background: 'none', border: 'none', color: '#555', fontSize: 22, cursor: 'pointer', lineHeight: 1 }}>✕</button>
         </div>
-
-        {/* Home */}
-        <button onClick={() => go('/')} style={{ margin: '10px 14px 6px', background: pathname === '/' ? 'rgba(0,212,255,0.1)' : '#111118', border: `1px solid ${pathname === '/' ? '#00d4ff' : '#1e1e2e'}`, borderRadius: 10, color: pathname === '/' ? '#00d4ff' : '#888', padding: '10px 14px', cursor: 'pointer', fontSize: 14, display: 'flex', gap: 10, alignItems: 'center', textAlign: 'left' }}>
+        <button
+          onClick={() => go('/')}
+          style={{ margin: '10px 14px 6px', background: pathname === '/' ? 'rgba(0,212,255,0.1)' : '#111118', border: '1px solid ' + (pathname === '/' ? '#00d4ff' : '#1e1e2e'), borderRadius: 10, color: pathname === '/' ? '#00d4ff' : '#888', padding: '10px 14px', cursor: 'pointer', fontSize: 14, display: 'flex', gap: 10, alignItems: 'center', textAlign: 'left' }}>
           🏠 <span>Home Chat</span>
         </button>
-
-        {/* Categorized */}
         {Object.entries(CATS).map(([cat, routes]) => (
           <div key={cat} style={{ marginBottom: 2 }}>
             <div style={{ color: '#333', fontSize: 10, fontWeight: 600, padding: '8px 14px 3px', letterSpacing: 1 }}>{cat}</div>
@@ -102,7 +92,6 @@ export default function NavDrawer({ open, onClose }: Props) {
             ))}
           </div>
         ))}
-
         <div style={{ flex: 1 }} />
         <div style={{ padding: 14, color: '#1a1a2e', fontSize: 11, textAlign: 'center' }}>
           Made with ❤️ Pranshu · Maihar
