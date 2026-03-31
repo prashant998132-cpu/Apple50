@@ -241,7 +241,7 @@ export default function SakhiPage() {
       }
 
       setMsgs(p => [...p, { id: 'a_' + Date.now(), role: 'sakhi', content: reply, timestamp: Date.now() }])
-      // Voice Ã¢ÂÂ speak Sakhi's reply if enabled
+      // Voice â speak Sakhi's reply if enabled
       if (voiceOn && reply && typeof window !== 'undefined') {
         try {
           const audio = new Audio('https://text.pollinations.ai/' + encodeURIComponent(reply) + '?model=openai-audio&voice=nova')
@@ -286,14 +286,14 @@ export default function SakhiPage() {
         </button>
         <div style={{ flex:1 }}>
           <div style={{ color:'#ffb3d1', fontWeight:700, fontSize:15 }}>Sakhi</div>
-          <div style={{ color:'#3a3a4a', fontSize:10 }}>{loading ? <span style={{ color:'#ff9ebb', animation:'blink 1s infinite' }}>typing...</span> : lvlLabel + ' ÃÂ· ' + memory.totalMessages + ' messages'}</div>
+          <div style={{ color:'#3a3a4a', fontSize:10 }}>{loading ? <span style={{ color:'#ff9ebb', animation:'blink 1s infinite' }}>typing...</span> : lvlLabel + ' Â· ' + memory.totalMessages + ' messages'}</div>
         </div>
         <button onClick={() => setVoiceOn(v => !v)}
           style={{ background: voiceOn ? 'rgba(255,107,157,0.15)' : 'none', border: 'none', borderRadius: 8, color: voiceOn ? '#ff9ebb' : '#333', fontSize: 16, cursor: 'pointer', padding: '4px 6px' }}
           title="Sakhi ki awaaz">
-          {voiceOn ? 'Ã°ÂÂÂ' : 'Ã°ÂÂÂ'}
+          {voiceOn ? 'ð' : 'ð'}
         </button>
-        <button onClick={() => { if(!confirm('Delete chat?')) return; localStorage.removeItem('sakhi_msgs_v3'); setMsgs([{ id:'r'+Date.now(), role:'sakhi', content:'Fresh start! Ã°ÂÂÂ Bata kya ho raha hai?', timestamp:Date.now() }]) }} style={{ background:'none', border:'none', color:'#222', fontSize:15, cursor:'pointer' }}></button>
+        <button onClick={() => { if(!confirm('Delete chat?')) return; localStorage.removeItem('sakhi_msgs_v3'); setMsgs([{ id:'r'+Date.now(), role:'sakhi', content:'Fresh start! ð Bata kya ho raha hai?', timestamp:Date.now() }]) }} style={{ background:'none', border:'none', color:'#222', fontSize:15, cursor:'pointer' }}></button>
       </div>
 
       {/* Memory panel */}
@@ -301,7 +301,7 @@ export default function SakhiPage() {
         <div style={{ background:'rgba(255,107,157,0.04)', borderBottom:'1px solid rgba(255,107,157,0.08)', padding:'10px 16px', fontSize:11 }}>
           <div style={{ color:'#ff9ebb', fontWeight:700, marginBottom:6 }}>Sakhi ko kya pata hai </div>
           <div style={{ color:'#444', lineHeight:2 }}>
-            Naam: {memory.userName}  City: {memory.userCity}{memory.userAge ? ' ÃÂ· Age: '+memory.userAge : ''}<br/>
+            Naam: {memory.userName}  City: {memory.userCity}{memory.userAge ? ' Â· Age: '+memory.userAge : ''}<br/>
             {memory.userHobbies.length > 0 && <>Hobbies: {memory.userHobbies.join(', ')}<br/></>}
             Level: {lvlLabel} ({memory.relationshipLevel}/10)  {memory.personalFacts.length} facts yaad hain
           </div>
@@ -315,7 +315,7 @@ export default function SakhiPage() {
           const showAv = !isU && (i === 0 || msgs[i-1]?.role === 'user')
           return (
             <div key={msg.id} className="mi" style={{ display:'flex', justifyContent:isU?'flex-end':'flex-start', marginBottom:5, alignItems:'flex-end', gap:6 }}>
-              {!isU && <div style={{ width:28, height:28, borderRadius:'50%', background:showAv?'linear-gradient(135deg,#ff6b9d,#a0226e)':'transparent', display:'flex', alignItems:'center', justifyContent:'center', fontSize:13, flexShrink:0 }}>{showAv?'Ã°ÂÂÂ¸':''}</div>}
+              {!isU && <div style={{ width:28, height:28, borderRadius:'50%', background:showAv?'linear-gradient(135deg,#ff6b9d,#a0226e)':'transparent', display:'flex', alignItems:'center', justifyContent:'center', fontSize:13, flexShrink:0 }}>{showAv?'ð¸':''}</div>}
               <div style={{ maxWidth:'78%', padding:'9px 13px', borderRadius:isU?'18px 18px 4px 18px':'4px 18px 18px 18px', background:isU?'linear-gradient(135deg,#3b7dd8,#1e4db7)':'rgba(255,107,157,0.07)', border:isU?'none':'1px solid rgba(255,107,157,0.12)', color:isU?'#fff':'#e0c8d4', fontSize:14, lineHeight:1.65, wordBreak:'break-word' }}>
                 {msg.content}
                 <div style={{ color:'rgba(255,255,255,0.2)', fontSize:9, marginTop:2, textAlign:'right' }}>
@@ -347,7 +347,7 @@ export default function SakhiPage() {
                 <div style={{ background:'rgba(255,107,157,0.08)', border:'1px solid rgba(255,107,157,0.2)', borderRadius:12, padding:'10px 14px', textAlign:'center' }}>
                   <div style={{ color:'#ff9ebb', fontSize:12, marginBottom:8 }}>Aaj ka din kaisa tha? </div>
                   <div style={{ display:'flex', gap:8, justifyContent:'center' }}>
-                    {[['Ã°ÂÂÂ','Achha'],['Ã°ÂÂÂ','Theek'],['Ã°ÂÂÂ','Bura'],['Ã°ÂÂÂ¤','Stressed'],['Ã°ÂÂÂ¥','Amazing']].map(([emoji, label]) => (
+                    {[['ð','Achha'],['ð','Theek'],['ð','Bura'],['ð¤','Stressed'],['ð¥','Amazing']].map(([emoji, label]) => (
                       <button key={label} onClick={() => {
                         if (typeof window !== 'undefined') {
                           localStorage.setItem('sakhi_last_mood_ask', new Date().toDateString())
@@ -382,7 +382,7 @@ export default function SakhiPage() {
             style={{ flex:1, background:'rgba(255,255,255,0.03)', border:'1px solid rgba(255,107,157,0.12)', borderRadius:22, padding:'10px 16px', color:'#e0c8d4', fontSize:14, outline:'none', resize:'none', minHeight:42, maxHeight:100, fontFamily:'inherit', lineHeight:1.5 }}/>
           <button onClick={send} disabled={!input.trim()||loading}
             style={{ width:42, height:42, borderRadius:'50%', flexShrink:0, background:input.trim()&&!loading?'linear-gradient(135deg,#ff6b9d,#c44569)':'rgba(255,255,255,0.03)', border:'1px solid '+(input.trim()&&!loading?'transparent':'rgba(255,107,157,0.08)'), cursor:input.trim()&&!loading?'pointer':'not-allowed', display:'flex', alignItems:'center', justifyContent:'center', fontSize:16, transition:'all 0.2s', boxShadow:input.trim()&&!loading?'0 2px 14px rgba(255,107,157,0.3)':'none' }}>
-            {loading ? <div style={{ width:14, height:14, borderRadius:'50%', border:'2px solid rgba(255,107,157,0.3)', borderTopColor:'#ff6b9d', animation:'spin 0.7s linear infinite' }}/> : 'Ã¢ÂÂ¤'}
+            {loading ? <div style={{ width:14, height:14, borderRadius:'50%', border:'2px solid rgba(255,107,157,0.3)', borderTopColor:'#ff6b9d', animation:'spin 0.7s linear infinite' }}/> : 'â¤'}
           </button>
         </div>
       </div>
