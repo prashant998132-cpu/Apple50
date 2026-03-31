@@ -11,14 +11,14 @@ const QUICK_LINKS = [
   { icon: '📰', label: 'Times of India', url: 'https://timesofindia.com' },
   { icon: '🏛️', label: 'Govt Portal', url: 'https://india.gov.in' },
   { icon: '💊', label: 'Aarogya Setu', url: 'https://www.aarogyasetu.gov.in' },
-  { icon: '🎓', label: 'NTA NEET', url: 'https://neet.nta.nic.in' },
+
 ]
 
 const INDIA_SHORTCUTS = [
   { icon: '🚂', label: 'PNR status?', prompt: 'PNR status check karne ka process batao step by step' },
   { icon: '🏏', label: 'Cricket score?', prompt: 'Aaj ka live cricket score kaise check karein? Apps batao' },
   { icon: '💰', label: 'UPI problems?', prompt: 'UPI transaction fail ho gayi — kya karna chahiye? Steps batao' },
-  { icon: '🏥', label: 'NEET 2025?', prompt: 'NEET 2025 exam date, syllabus aur preparation tips batao' },
+  { icon: '💰', label: 'Scholarship?', prompt: 'India ke top government scholarships 2025 batao — eligibility aur apply karne ka tarika' },
   { icon: '📱', label: 'Aadhaar update?', prompt: 'Aadhaar card mein address update karne ka process batao' },
   { icon: '📊', label: 'NSE/BSE?', prompt: 'Indian stock market basics — NSE BSE kaise kaam karta hai beginners ke liye' },
   { icon: '🌦️', label: 'IMD forecast?', prompt: 'India mein monsoon forecast kaise check karein aur IMD kya hai' },
