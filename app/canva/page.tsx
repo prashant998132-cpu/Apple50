@@ -4,18 +4,18 @@ import { useRouter } from 'next/navigation'
 import { buildSystemPrompt } from '@/lib/personality'
 
 const TEMPLATES = [
-  { name: 'Study Schedule', icon: '📚', prompt: 'NEET study timetable, colorful, organized, motivational poster' },
-  { name: 'Motivational Poster', icon: '💪', prompt: 'motivational quote poster for students, bold text, inspiring' },
-  { name: 'Mind Map', icon: '🧠', prompt: 'mind map diagram, colorful branches, knowledge tree, educational' },
-  { name: 'Biology Cell', icon: '🔬', prompt: 'biology animal cell diagram, detailed labeled, educational illustration' },
-  { name: 'Chemistry Lab', icon: '⚗️', prompt: 'chemistry laboratory illustration, test tubes, colorful, science' },
-  { name: 'Physics Diagram', icon: '⚡', prompt: 'physics force diagram, vectors, clean scientific illustration' },
-  { name: 'India Map', icon: '🗺️', prompt: 'India map illustration, artistic, colorful states, detailed' },
-  { name: 'Space Poster', icon: '🚀', prompt: 'space exploration poster, galaxy, planets, astronaut, cinematic' },
-  { name: 'Human Anatomy', icon: '🫀', prompt: 'human anatomy diagram, heart, lungs, detailed medical illustration' },
-  { name: 'Periodic Table', icon: '⚛️', prompt: 'periodic table elements, colorful, beautiful chemistry poster' },
-  { name: 'DNA Structure', icon: '🧬', prompt: 'DNA double helix structure, colorful, scientific, detailed' },
-  { name: 'Neuron Diagram', icon: '🧪', prompt: 'neuron synapse diagram, axon dendrite, detailed biology illustration' },
+  { name: 'Cyberpunk City', icon: '🌇', prompt: 'cyberpunk neon city night rain reflections futuristic 4k wallpaper' },
+  { name: 'Motivational', icon: '💪', prompt: 'motivational poster bold typography dark background glowing text fire' },
+  { name: 'Space Galaxy', icon: '🌌', prompt: 'ultra hd space galaxy nebula stars cosmic purple blue cinematic 4k' },
+  { name: 'Iron Man JARVIS', icon: '🤖', prompt: 'Iron Man JARVIS holographic blue sci-fi interface HUD cinematic' },
+  { name: 'India Map Art', icon: '🗺️', prompt: 'India map artistic colorful illustration vibrant states detailed' },
+  { name: 'Anime Aesthetic', icon: '🌸', prompt: 'anime lofi aesthetic city night cherry blossom rain cozy 4k wallpaper' },
+  { name: 'Abstract Art', icon: '🎨', prompt: 'colorful abstract geometric fluid art modern digital vibrant 4k' },
+  { name: 'Logo Design', icon: '✨', prompt: 'modern minimalist logo design clean vector style professional' },
+  { name: 'Portrait Art', icon: '👤', prompt: 'digital portrait art cinematic lighting dramatic colors ultra detailed' },
+  { name: 'Meme Template', icon: '😂', prompt: 'funny meme template blank text boxes bold impact font white background' },
+  { name: 'YouTube Thumbnail', icon: '📹', prompt: 'YouTube thumbnail design bold text face reaction high contrast clickbait style' },
+  { name: 'Social Post', icon: '📱', prompt: 'Instagram social media post template modern clean gradient aesthetic' },
 ]
 
 interface SavedImage { url: string; prompt: string; timestamp: number }
