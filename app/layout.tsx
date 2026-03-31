@@ -1,9 +1,12 @@
 import type { Metadata, Viewport } from 'next';
 import './globals.css';
+import dynamic from 'next/dynamic';
+
+const BottomNav = dynamic(() => import('@/components/shared/BottomNav'), { ssr: false });
 
 export const metadata: Metadata = {
   title: 'JARVIS AI',
-  description: 'Your personal Iron Man AI assistant — Hinglish mein',
+  description: 'Your personal Iron Man AI assistant -- Hinglish mein',
   manifest: '/manifest.json',
   appleWebApp: {
     capable: true,
@@ -24,7 +27,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
-    <meta charSet="utf-8" />
+        <meta charSet="utf-8" />
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         <link
@@ -36,18 +39,12 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css"
           crossOrigin="anonymous"
         />
-        <script
-          src="https://js.puter.com/v2/"
-          defer
-        />
-        <script dangerouslySetInnerHTML={{ __html: `
-          if('serviceWorker' in navigator){
-            window.addEventListener('load',()=>navigator.serviceWorker.register('/sw.js').catch(()=>{}));
-          }
-        `}} />
+        <script src="https://js.puter.com/v2/" defer />
+        <script dangerouslySetInnerHTML={{ __html: "if('serviceWorker' in navigator){ window.addEventListener('load',()=>navigator.serviceWorker.register('/sw.js').catch(()=>{})); }" }} />
       </head>
       <body suppressHydrationWarning>
         {children}
+        <BottomNav />
       </body>
     </html>
   );
