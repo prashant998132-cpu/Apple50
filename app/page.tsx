@@ -25,7 +25,7 @@ import { detectAutomationIntent, triggerMacro, sendLocalNotification } from '@/l
 import { saveResult, trackInteraction, getSmartGreeting } from '@/lib/db';
 import { getProactiveSuggestion, autoRouteMode } from '@/lib/core/smartRouter';
 
-// Agent intent keywords Ã¢ÂÂ yeh queries agent mode mein jayenge
+// Agent intent keywords â yeh queries agent mode mein jayenge
 function isAgentIntent(text: string): boolean {
   const t = text.toLowerCase()
   return /study plan|schedule bana|research kar|image bana|generate image|todo list|task list|news summarize|video script|workflow|step by step|automatically kar|auto.*karo/.test(t)
@@ -46,7 +46,7 @@ interface Msg {
   widget?: string;
 }
 
-// Ã¢ÂÂÃ¢ÂÂ Connected Apps config (with/without API key) Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂ
+// ââ Connected Apps config (with/without API key) ââââââââââââââââââââââââââ
 const CONNECTED_APPS = [
   { id: 'groq',       icon: '', name: 'Groq',       free: true,  envKey: 'GROQ_API_KEY',    color: '#f97316' },
   { id: 'gemini',     icon: '', name: 'Gemini',     free: true,  envKey: 'GEMINI_API_KEY',   color: '#4285f4' },
@@ -60,7 +60,7 @@ const CONNECTED_APPS = [
   { id: 'gnews',      icon: '', name: 'GNews',      free: true,  envKey: 'GNEWS_API_KEY',    color: '#fb923c' },
 ];
 
-// Ã¢ÂÂÃ¢ÂÂ Helper Components Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂ
+// ââ Helper Components âââââââââââââââââââââââââââââââââââââââââââââââââââââ
 function TypingDots() {
   return (
     <div style={{ display: 'flex', gap: 4, padding: '8px 0', alignItems: 'center' }}>
@@ -77,10 +77,10 @@ function RichCard({ card }: { card: any }) {
   if (zoomed && card.imageUrl) return (
     <div onClick={() => setZoomed(false)} style={{ position:'fixed', inset:0, background:'rgba(0,0,0,0.95)', zIndex:9999, display:'flex', alignItems:'center', justifyContent:'center', cursor:'zoom-out' }}>
       <img src={card.imageUrl} alt={card.title} style={{ maxWidth:'100%', maxHeight:'100%', objectFit:'contain', borderRadius:8 }} />
-      <div style={{ position:'absolute', top:16, right:16, color:'#fff', fontSize:24, cursor:'pointer' }}>Ã¢ÂÂ</div>
+      <div style={{ position:'absolute', top:16, right:16, color:'#fff', fontSize:24, cursor:'pointer' }}>â</div>
       <a href={card.imageUrl} download target="_blank" rel="noopener noreferrer" onClick={e=>e.stopPropagation()}
         style={{ position:'absolute', bottom:20, background:'rgba(0,212,255,0.9)', color:'#000', padding:'8px 20px', borderRadius:20, textDecoration:'none', fontWeight:700, fontSize:14 }}>
-        Ã¢Â¬ÂÃ¯Â¸Â Download
+        â¬ï¸ Download
       </a>
     </div>
   );
@@ -100,7 +100,7 @@ function RichCard({ card }: { card: any }) {
         {card.linkUrl  && (
           <a href={card.linkUrl} target="_blank" rel="noopener noreferrer"
             style={{ color: '#00d4ff', fontSize: 12, display: 'inline-block', marginTop: 4 }}>
-            Open Ã¢ÂÂ
+            Open â
           </a>
         )}
       </div>
@@ -159,7 +159,7 @@ function MsgItem({ msg, onDelete, onRegenerate }: { msg: Msg; onDelete?: (id: st
           {msg.widget && <CommandWidgetRenderer userText={msg.widget} aiText={msg.content} />}
           <div style={{ display: 'flex', gap: 6, marginTop: 4 }}>
             <button onClick={() => speakText(msg.content)}
-              style={{ background: 'none', border: 'none', color: '#333', fontSize: 12, cursor: 'pointer', padding: '2px 0' }}>Ã°ÂÂÂ</button>
+              style={{ background: 'none', border: 'none', color: '#333', fontSize: 12, cursor: 'pointer', padding: '2px 0' }}>ð</button>
           </div>
           {menuOpen && (
             <div style={{ position: 'absolute', left: 0, background: '#0d0d18', border: '1px solid #1e1e2e', borderRadius: 12, padding: 6, zIndex: 1000, display: 'flex', gap: 4, boxShadow: '0 4px 20px rgba(0,0,0,0.6)', whiteSpace: 'nowrap' }}>
@@ -190,7 +190,7 @@ function PlusPopup({ open, mode, onMode, onClose }: { open: boolean; mode: Mode;
   return null; // Handled inline in input bar
 }
 
-// Ã¢ÂÂÃ¢ÂÂ Chat History Sidebar Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂ
+// ââ Chat History Sidebar ââââââââââââââââââââââââââââââââââââââââââââââââââ
 function HistorySidebar({ open, onClose, onSelect, currentId }: {
   open: boolean; onClose: () => void;
   onSelect: (id: string) => void; currentId: string;
@@ -204,15 +204,15 @@ function HistorySidebar({ open, onClose, onSelect, currentId }: {
     <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, zIndex: 9998, background: 'rgba(0,0,0,0.6)' }} onClick={onClose}>
       <div style={{ position: 'absolute', top: 0, right: 0, width: '80%', maxWidth: 320, height: '100%', background: '#0d0d16', borderLeft: '1px solid #1e1e2e', overflowY: 'auto', padding: 16 }} onClick={e => e.stopPropagation()}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
-          <span style={{ color: '#00d4ff', fontWeight: 700 }}>Ã°ÂÂÂ¬ Chat History</span>
-          <button onClick={onClose} style={{ background: 'none', border: 'none', color: '#555', fontSize: 20, cursor: 'pointer' }}>Ã¢ÂÂ</button>
+          <span style={{ color: '#00d4ff', fontWeight: 700 }}>ð¬ Chat History</span>
+          <button onClick={onClose} style={{ background: 'none', border: 'none', color: '#555', fontSize: 20, cursor: 'pointer' }}>â</button>
         </div>
         {sessions.length === 0 && <div style={{ color: '#444', fontSize: 13 }}>Koi history nahi abhi.</div>}
         {sessions.map(s => (
           <button key={s.sessionId} onClick={() => { onSelect(s.sessionId); onClose(); }}
             style={{ width: '100%', background: s.sessionId === currentId ? 'rgba(0,212,255,0.1)' : '#111118', border: s.sessionId === currentId ? '1px solid #00d4ff' : '1px solid #1e1e2e', borderRadius: 10, padding: '10px 12px', marginBottom: 8, cursor: 'pointer', textAlign: 'left' }}>
             <div style={{ color: '#e0e0ff', fontSize: 13, marginBottom: 2 }}>{s.title || 'Untitled Chat'}</div>
-            <div style={{ color: '#444', fontSize: 10 }}>{s.messageCount} msgs ÃÂ· {new Date(s.updatedAt).toLocaleDateString('en-IN')}</div>
+            <div style={{ color: '#444', fontSize: 10 }}>{s.messageCount} msgs Â· {new Date(s.updatedAt).toLocaleDateString('en-IN')}</div>
           </button>
         ))}
       </div>
@@ -220,7 +220,7 @@ function HistorySidebar({ open, onClose, onSelect, currentId }: {
   );
 }
 
-// Ã¢ÂÂÃ¢ÂÂ Connected Apps Panel Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂ
+// ââ Connected Apps Panel âââââââââââââââââââââââââââââââââââââââââââââââââââ
 function ConnectedAppsPanel({ open, onClose }: { open: boolean; onClose: () => void }) {
   const [usage, setUsage] = useState<Record<string, any>>({});
   useEffect(() => {
@@ -233,24 +233,24 @@ function ConnectedAppsPanel({ open, onClose }: { open: boolean; onClose: () => v
     <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, zIndex: 9998, background: 'rgba(0,0,0,0.6)' }} onClick={onClose}>
       <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, background: '#0d0d16', borderTop: '1px solid #1e1e2e', borderRadius: '20px 20px 0 0', padding: 20, maxHeight: '70vh', overflowY: 'auto' }} onClick={e => e.stopPropagation()}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
-          <span style={{ color: '#00d4ff', fontWeight: 700 }}>Ã°ÂÂÂ Connected Apps</span>
-          <button onClick={onClose} style={{ background: 'none', border: 'none', color: '#555', fontSize: 20, cursor: 'pointer' }}>Ã¢ÂÂ</button>
+          <span style={{ color: '#00d4ff', fontWeight: 700 }}>ð Connected Apps</span>
+          <button onClick={onClose} style={{ background: 'none', border: 'none', color: '#555', fontSize: 20, cursor: 'pointer' }}>â</button>
         </div>
 
         {/* Without API key (always connected) */}
-        <div style={{ color: '#555', fontSize: 10, marginBottom: 8, letterSpacing: 1 }}>Ã¢ÂÂ ALWAYS CONNECTED (No API Key)</div>
+        <div style={{ color: '#555', fontSize: 10, marginBottom: 8, letterSpacing: 1 }}>â ALWAYS CONNECTED (No API Key)</div>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 8, marginBottom: 16 }}>
           {CONNECTED_APPS.filter(a => !a.envKey).map(app => (
             <div key={app.id} style={{ background: '#111118', border: `1px solid ${app.color}33`, borderRadius: 10, padding: '10px 6px', textAlign: 'center' }}>
               <div style={{ fontSize: 22 }}>{app.icon}</div>
               <div style={{ color: app.color, fontSize: 10, marginTop: 3 }}>{app.name}</div>
-              <div style={{ color: '#22c55e', fontSize: 9, marginTop: 1 }}>Ã¢ÂÂ Live</div>
+              <div style={{ color: '#22c55e', fontSize: 9, marginTop: 1 }}>â Live</div>
             </div>
           ))}
         </div>
 
         {/* With API key */}
-        <div style={{ color: '#555', fontSize: 10, marginBottom: 8, letterSpacing: 1 }}>Ã°ÂÂÂ WITH API KEY</div>
+        <div style={{ color: '#555', fontSize: 10, marginBottom: 8, letterSpacing: 1 }}>ð WITH API KEY</div>
         {CONNECTED_APPS.filter(a => a.envKey).map(app => {
           const u = usage[app.id];
           const pct = u ? u.pct : 0;
@@ -283,7 +283,7 @@ function ConnectedAppsPanel({ open, onClose }: { open: boolean; onClose: () => v
   );
 }
 
-// Ã¢ÂÂÃ¢ÂÂ Main Page Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂ
+// ââ Main Page âââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
 export default function Home() {
   const router = useRouter();
   const [msgs, setMsgs]           = useState<Msg[]>([]);
@@ -344,7 +344,7 @@ export default function Home() {
 
   const effectiveMode = mode === 'auto' ? autoRouteMode(input) : mode;
 
-  // Ã¢ÂÂÃ¢ÂÂ Global keyboard shortcuts Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂ
+  // ââ Global keyboard shortcuts âââââââââââââââââââââââââââââââââââââââââââ
   React.useEffect(() => {
     if (typeof window === 'undefined') return;
     const onKey = (e: KeyboardEvent) => {
@@ -366,7 +366,7 @@ export default function Home() {
     return () => window.removeEventListener('keydown', onKey);
   }, []);
 
-  // Ã¢ÂÂÃ¢ÂÂ Keyboard / Viewport fix (Android) Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂ
+  // ââ Keyboard / Viewport fix (Android) âââââââââââââââââââââââââââââââââââ
   React.useEffect(() => {
     if (typeof window === 'undefined') return;
     const vv = (window as any).visualViewport;
@@ -379,7 +379,7 @@ export default function Home() {
     return () => vv.removeEventListener('resize', onResize);
   }, []);
 
-  // Ã¢ÂÂÃ¢ÂÂ Init Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂ
+  // ââ Init âââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
   useEffect(() => {
     // PIN check
     if (localStorage.getItem('jarvis_pin_hash')) setShowPin(true);
@@ -394,7 +394,7 @@ export default function Home() {
     // New session
     createSession('New Chat').then(id => setSessionId(id));
 
-    // Location Ã¢ÂÂ onboarding se pehle, phir GPS
+    // Location â onboarding se pehle, phir GPS
     const savedCity = typeof window !== 'undefined' ? localStorage.getItem('jarvis_city') || localStorage.getItem('jarvis_user_city') : '';
     if (savedCity) {
       setLocation(savedCity);
@@ -411,8 +411,8 @@ export default function Home() {
     }
 
     // Reminders
-    // Ã¢ÂÂÃ¢ÂÂ PROACTIVE JARVIS ENGINE Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂ
-    // JARVIS khud sochta hai aur bolta hai Ã¢ÂÂ poochho mat
+    // ââ PROACTIVE JARVIS ENGINE âââââââââââââââââââââââââââââââââ
+    // JARVIS khud sochta hai aur bolta hai â poochho mat
     const proactiveEngine = setInterval(async () => {
       const now = new Date();
       const h = now.getHours();
@@ -420,17 +420,17 @@ export default function Home() {
       const todayStr = now.toDateString();
       if (typeof window === 'undefined') return;
 
-      // Last proactive message timestamp Ã¢ÂÂ spam mat karo
+      // Last proactive message timestamp â spam mat karo
       const lastProactive = parseInt(localStorage.getItem('jarvis_last_proactive') || '0');
       const sinceLastMin = (Date.now() - lastProactive) / 60000;
 
-      // Ã¢ÂÂÃ¢ÂÂ Night sleep reminder Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂ
+      // ââ Night sleep reminder âââââââââââââââââââââââââââââââââ
       if (h === 23 && m >= 0 && m <= 10 && sinceLastMin > 120) {
         localStorage.setItem('jarvis_last_proactive', String(Date.now()));
         setMsgs(prev => [...prev, { id: 'proactive_' + Date.now(), role: 'assistant', content: ' Raat ke 11 baj gaye boss. Neend jaao  kal fresh mind se kaam karo. Koi kaam reh gaya hai kya?', timestamp: Date.now() }]);
       }
 
-      // Ã¢ÂÂÃ¢ÂÂ Morning energy Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂ
+      // ââ Morning energy âââââââââââââââââââââââââââââââââââââââ
       if (h === 6 && m >= 0 && m <= 10 && sinceLastMin > 300) {
         localStorage.setItem('jarvis_last_proactive', String(Date.now()));
         const habits = JSON.parse(localStorage.getItem('jarvis_habits') || '{}');
@@ -441,7 +441,7 @@ export default function Home() {
         setMsgs(prev => [...prev, { id: 'proactive_' + Date.now(), role: 'assistant', content: msg, timestamp: Date.now() }]);
       }
 
-      // Ã¢ÂÂÃ¢ÂÂ Reminder warning (30 min before) Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂ
+      // ââ Reminder warning (30 min before) âââââââââââââââââââ
       try {
         const { getReminders: getAllReminders } = await import('@/lib/reminders');
         const reminders = getAllReminders();
@@ -454,7 +454,7 @@ export default function Home() {
         }
       } catch {}
 
-      // Ã¢ÂÂÃ¢ÂÂ Habit nudge (afternoon if not done) Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂ
+      // ââ Habit nudge (afternoon if not done) âââââââââââââââââ
       if (h >= 14 && h <= 15 && sinceLastMin > 240) {
         const habits = JSON.parse(localStorage.getItem('jarvis_habits') || '{}');
         const pending = Object.keys(habits).filter(k => habits[k].lastDate !== todayStr && habits[k].streak > 2);
@@ -467,7 +467,7 @@ export default function Home() {
     }, 5 * 60 * 1000); // Check every 5 minutes (battery friendly)
 
     const ri = setInterval(() => {
-      // Morning brief Ã¢ÂÂ schedule 7am notification
+      // Morning brief â schedule 7am notification
       if (typeof window !== 'undefined' && 'Notification' in window && Notification.permission === 'granted') {
         const now = new Date();
         const next7am = new Date();
@@ -586,7 +586,7 @@ export default function Home() {
   // Auto-scroll
   useEffect(() => { bottomRef.current?.scrollIntoView({ behavior: 'smooth' }); }, [msgs, loading]);
 
-  // Ã¢ÂÂÃ¢ÂÂ Load session history Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂ
+  // ââ Load session history âââââââââââââââââââââââââââââââââââââââââââââââ
   const loadSession = useCallback(async (sid: string) => {
     const saved = await getMessages(sid);
     if (saved.length === 0) return;
@@ -601,7 +601,7 @@ export default function Home() {
     })));
   }, []);
 
-  // Ã¢ÂÂÃ¢ÂÂ App Commands Ã¢ÂÂ full controller Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂ
+  // ââ App Commands â full controller ââââââââââââââââââââââââââââââââââââ
   const execAppCommand = useCallback((cmd: string) => {
     executeCommand(cmd, {
       navigate:     (path) => { window.location.href = path; },
@@ -621,7 +621,7 @@ export default function Home() {
     });
   }, [showToast, stopSpeaking]);
 
-  // Ã¢ÂÂÃ¢ÂÂ Session title generation (instant keyword Ã¢ÂÂ Groq background) Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂ
+  // ââ Session title generation (instant keyword â Groq background) ââââââ
   const generateTitle = useCallback(async (firstMsg: string, sid: string) => {
     // 1. Instant keyword title
     const instant = generateInstantTitle(firstMsg);
@@ -650,10 +650,10 @@ export default function Home() {
     return msg.split(' ').slice(0, 4).join(' ') || 'New Chat';
   }
 
-  // Ã¢ÂÂÃ¢ÂÂ Send message Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂ
+  // ââ Send message ââââââââââââââââââââââââââââââââââââââââââââââââââââââ
   const send = async (text: string) => {
     if (!text.trim() || loading) return;
-    // Ã¢ÂÂÃ¢ÂÂ CONTEXT CHAIN Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂ
+    // ââ CONTEXT CHAIN âââââââââââââââââââââââââââââââââââââââââââââ
     // JARVIS last person/topic yaad rakhta hai
     if (typeof window !== 'undefined') {
       // Save context if person mentioned
@@ -703,8 +703,8 @@ export default function Home() {
         const { getGPSLocation } = await import('@/lib/browser/powers');
         const loc = await getGPSLocation();
         if (loc) {
-          reply('Ã°ÂÂÂ **Exact Location:**\nLat: ' + loc.lat.toFixed(6) + '\nLng: ' + loc.lng.toFixed(6) + '\nAccuracy: ' + loc.accuracy.toFixed(0) + 'm' + (loc.city ? '\nCity: ' + loc.city : '') + '\n\n[Maps pe dekho](https://maps.google.com/?q=' + loc.lat + ',' + loc.lng + ')');
-        } else { reply('Ã°ÂÂÂ GPS permission do ya enable karo.'); }
+          reply('ð **Exact Location:**\nLat: ' + loc.lat.toFixed(6) + '\nLng: ' + loc.lng.toFixed(6) + '\nAccuracy: ' + loc.accuracy.toFixed(0) + 'm' + (loc.city ? '\nCity: ' + loc.city : '') + '\n\n[Maps pe dekho](https://maps.google.com/?q=' + loc.lat + ',' + loc.lng + ')');
+        } else { reply('ð GPS permission do ya enable karo.'); }
         return;
       } catch { reply('GPS nahi mila.'); return; }
     }
@@ -713,11 +713,11 @@ export default function Home() {
     if (/network|internet.*speed|connection.*type|wifi.*speed|data.*speed/i.test(t)) {
       const { getNetworkInfo } = await import('@/lib/browser/powers');
       const net = getNetworkInfo();
-      reply('Ã°ÂÂÂ¶ **Network Status:**\n' +
-        'Ã¢ÂÂ¢ Online: ' + (net.online ? 'Ã¢ÂÂ Yes' : 'Ã¢ÂÂ No') + '\n' +
-        'Ã¢ÂÂ¢ Type: ' + net.type.toUpperCase() + '\n' +
-        'Ã¢ÂÂ¢ Speed: ' + net.speed + '\n' +
-        'Ã¢ÂÂ¢ Latency: ' + net.rtt);
+      reply('ð¶ **Network Status:**\n' +
+        'â¢ Online: ' + (net.online ? 'â Yes' : 'â No') + '\n' +
+        'â¢ Type: ' + net.type.toUpperCase() + '\n' +
+        'â¢ Speed: ' + net.speed + '\n' +
+        'â¢ Latency: ' + net.rtt);
       return;
     }
 
@@ -725,8 +725,8 @@ export default function Home() {
     if (/clipboard.*kya hai|clipboard.*padho|copy.*kya hai|paste.*kya/i.test(t)) {
       const { readClipboard } = await import('@/lib/browser/powers');
       const text2 = await readClipboard();
-      if (text2) reply('Ã°ÂÂÂ **Clipboard:**\n"' + text2.slice(0, 200) + (text2.length > 200 ? '...' : '') + '"');
-      else reply('Ã°ÂÂÂ Clipboard empty hai ya permission nahi.');
+      if (text2) reply('ð **Clipboard:**\n"' + text2.slice(0, 200) + (text2.length > 200 ? '...' : '') + '"');
+      else reply('ð Clipboard empty hai ya permission nahi.');
       return;
     }
 
@@ -734,20 +734,20 @@ export default function Home() {
     if (/screen.*on|screen.*jag|jaag.*raho|wake.*lock|screen.*band.*mat/i.test(t)) {
       const { keepScreenOn } = await import('@/lib/browser/powers');
       const ok = await keepScreenOn(true);
-      reply(ok ? 'Ã°ÂÂÂ Screen ON rakhunga Ã¢ÂÂ band nahi hogi.' : 'Ã°ÂÂÂ Wake Lock support nahi is browser mein.');
+      reply(ok ? 'ð Screen ON rakhunga â band nahi hogi.' : 'ð Wake Lock support nahi is browser mein.');
       return;
     }
     if (/screen.*off|screen.*band|wake.*lock.*off/i.test(t)) {
       const { keepScreenOn } = await import('@/lib/browser/powers');
       await keepScreenOn(false);
-      reply('Ã°ÂÂÂ Screen auto-off normal ho gayi.'); return;
+      reply('ð Screen auto-off normal ho gayi.'); return;
     }
 
     //  FULLSCREEN 
     if (/fullscreen|full.*screen|poora.*screen/i.test(t)) {
       const { toggleFullscreen } = await import('@/lib/browser/powers');
       const isFullscreen = await toggleFullscreen();
-      reply(isFullscreen ? 'Ã¢ÂÂ¶ Fullscreen mode ON!' : 'Ã¢ÂÂ¶ Fullscreen OFF.'); return;
+      reply(isFullscreen ? 'â¶ Fullscreen mode ON!' : 'â¶ Fullscreen OFF.'); return;
     }
 
     //  STORAGE INFO 
@@ -756,9 +756,9 @@ export default function Home() {
         import('@/lib/browser/powers'), import('@/lib/browser/powers')
       ]);
       const [storage, battery] = await Promise.all([getStorageInfo(), getBatteryInfo()]);
-      let reply_text = 'Ã°ÂÂÂ¾ **Device Status:**\n';
-      if (battery) reply_text += 'Ã°ÂÂÂ Battery: ' + battery.level + '%' + (battery.charging ? ' Ã¢ÂÂ¡' : '') + '\n';
-      if (storage) reply_text += 'Ã°ÂÂÂ¾ Storage used: ' + storage.used + ' (' + storage.percent + '%)\nFree: ' + storage.available + '\n';
+      let reply_text = 'ð¾ **Device Status:**\n';
+      if (battery) reply_text += 'ð Battery: ' + battery.level + '%' + (battery.charging ? ' â¡' : '') + '\n';
+      if (storage) reply_text += 'ð¾ Storage used: ' + storage.used + ' (' + storage.percent + '%)\nFree: ' + storage.available + '\n';
       reply(reply_text); return;
     }
 
@@ -766,9 +766,9 @@ export default function Home() {
     if (/permissions|permission.*check|konsi.*permission|permission.*status/i.test(t)) {
       const { checkPermissions } = await import('@/lib/browser/powers');
       const perms = await checkPermissions();
-      const icons: Record<string,string> = { camera:'Ã°ÂÂÂ·', microphone:'Ã°ÂÂÂÃ¯Â¸Â', geolocation:'Ã°ÂÂÂ', notifications:'Ã°ÂÂÂ' };
-      const statusIcons: Record<string,string> = { granted:'Ã¢ÂÂ', denied:'Ã¢ÂÂ', prompt:'Ã¢ÂÂ Ã¯Â¸Â', unknown:'Ã¢ÂÂ' };
-      reply('Ã°ÂÂÂ **App Permissions:**\n' + Object.entries(perms).map(([k,v]) => (icons[k]||'Ã¢ÂÂ¢') + ' ' + k + ': ' + (statusIcons[v]||v)).join('\n'));
+      const icons: Record<string,string> = { camera:'ð·', microphone:'ðï¸', geolocation:'ð', notifications:'ð' };
+      const statusIcons: Record<string,string> = { granted:'â', denied:'â', prompt:'â ï¸', unknown:'â' };
+      reply('ð **App Permissions:**\n' + Object.entries(perms).map(([k,v]) => (icons[k]||'â¢') + ' ' + k + ': ' + (statusIcons[v]||v)).join('\n'));
       return;
     }
 
@@ -777,14 +777,14 @@ export default function Home() {
       const { getDeviceInfo, getNetworkInfo } = await import('@/lib/browser/powers');
       const dev = getDeviceInfo();
       const net = getNetworkInfo();
-      reply('Ã°ÂÂÂ± **Device Info:**\n' +
-        'Ã°ÂÂÂ¥Ã¯Â¸Â Screen: ' + dev.screen + ' (DPR: ' + dev.dpr + ')\n' +
-        'Ã¢ÂÂÃ¯Â¸Â CPU Cores: ' + dev.cores + '\n' +
-        'Ã°ÂÂÂ¾ RAM: ' + dev.memory + '\n' +
-        'Ã°ÂÂÂ Touch: ' + dev.touch + '\n' +
-        'Ã°ÂÂÂ Language: ' + dev.language + '\n' +
-        'Ã°ÂÂÂ² PWA: ' + dev.pwa + '\n' +
-        'Ã°ÂÂÂ¶ Network: ' + net.type.toUpperCase() + ' ÃÂ· ' + net.speed);
+      reply('ð± **Device Info:**\n' +
+        'ð¥ï¸ Screen: ' + dev.screen + ' (DPR: ' + dev.dpr + ')\n' +
+        'âï¸ CPU Cores: ' + dev.cores + '\n' +
+        'ð¾ RAM: ' + dev.memory + '\n' +
+        'ð Touch: ' + dev.touch + '\n' +
+        'ð Language: ' + dev.language + '\n' +
+        'ð² PWA: ' + dev.pwa + '\n' +
+        'ð¶ Network: ' + net.type.toUpperCase() + ' Â· ' + net.speed);
       return;
     }
 
@@ -793,8 +793,8 @@ export default function Home() {
       const shareText = text.replace(/^(?:share|share karo)\s+/i,'').trim();
       const { nativeShare } = await import('@/lib/browser/powers');
       const ok = await nativeShare('JARVIS', shareText);
-      if (!ok) { navigator.clipboard?.writeText(shareText); reply('Ã°ÂÂÂ¤ Copy kar liya Ã¢ÂÂ share manually karo.'); }
-      else reply('Ã°ÂÂÂ¤ Sharing...');
+      if (!ok) { navigator.clipboard?.writeText(shareText); reply('ð¤ Copy kar liya â share manually karo.'); }
+      else reply('ð¤ Sharing...');
       return;
     }
 
@@ -802,7 +802,7 @@ export default function Home() {
     if (/vibrate|buzz|haptic/i.test(t) && /pattern|custom|baar|times/i.test(t)) {
       const { vibrate } = await import('@/lib/browser/powers');
       vibrate([200,100,200,100,400]);
-      reply('Ã°ÂÂÂ³ Custom vibration pattern!'); return;
+      reply('ð³ Custom vibration pattern!'); return;
     }
 
     // 
@@ -818,7 +818,7 @@ export default function Home() {
     if (callMatch?.[1]) {
       const num = callMatch[1].replace(/\s/g,'');
       if (typeof window !== 'undefined') window.location.href = 'tel:' + num;
-      reply('Ã°ÂÂÂ Calling ' + num + '...'); return;
+      reply('ð Calling ' + num + '...'); return;
     }
     if (contactCallMatch?.[1] && !callMatch) {
       const name = contactCallMatch[1].trim().toLowerCase();
@@ -827,10 +827,10 @@ export default function Home() {
         const num = contacts[name];
         if (num) {
           window.location.href = 'tel:' + num;
-          reply('Ã°ÂÂÂ ' + contactCallMatch[1] + ' ko call kar raha hoon (' + num + ')...'); return;
+          reply('ð ' + contactCallMatch[1] + ' ko call kar raha hoon (' + num + ')...'); return;
         }
       }
-      reply('Ã°ÂÂÂ ' + contactCallMatch[1] + ' ka number nahi pata. Pehle batao: "' + contactCallMatch[1] + ' ka number hai XXXXXXXXXX"'); return;
+      reply('ð ' + contactCallMatch[1] + ' ka number nahi pata. Pehle batao: "' + contactCallMatch[1] + ' ka number hai XXXXXXXXXX"'); return;
     }
 
     //  WHATSAPP SEND 
@@ -841,7 +841,7 @@ export default function Home() {
     if (waNumMatch) {
       const { sendWhatsApp } = await import('@/lib/control/phoneControl');
       sendWhatsApp(waNumMatch[1], waNumMatch[2]);
-      reply('Ã°ÂÂÂ¬ WhatsApp bhej raha hoon: "' + waNumMatch[2].slice(0,50) + '"'); return;
+      reply('ð¬ WhatsApp bhej raha hoon: "' + waNumMatch[2].slice(0,50) + '"'); return;
     }
     if (waContactMatch) {
       const name = waContactMatch[1].trim().toLowerCase();
@@ -852,12 +852,12 @@ export default function Home() {
         if (num) {
           const { sendWhatsApp } = await import('@/lib/control/phoneControl');
           sendWhatsApp(num, msg);
-          reply('Ã°ÂÂÂ¬ ' + waContactMatch[1] + ' ko WhatsApp: "' + msg + '"'); return;
+          reply('ð¬ ' + waContactMatch[1] + ' ko WhatsApp: "' + msg + '"'); return;
         }
       }
       // No number  open WhatsApp with just message
       if (typeof window !== 'undefined') window.location.href = 'whatsapp://send?text=' + encodeURIComponent(msg);
-      reply('Ã°ÂÂÂ¬ WhatsApp khola Ã¢ÂÂ message ready: "' + msg + '"'); return;
+      reply('ð¬ WhatsApp khola â message ready: "' + msg + '"'); return;
     }
 
     //  SMS SEND 
@@ -865,7 +865,7 @@ export default function Home() {
     if (smsMatch) {
       const { sendSMS } = await import('@/lib/control/phoneControl');
       sendSMS(smsMatch[1], smsMatch[2]);
-      reply('Ã°ÂÂÂ± SMS bhej raha hoon...'); return;
+      reply('ð± SMS bhej raha hoon...'); return;
     }
 
     //  SET ALARM 
@@ -878,7 +878,7 @@ export default function Home() {
       if (/am/i.test(text) && hr === 12) hr = 0;
       const { setAlarm } = await import('@/lib/control/phoneControl');
       setAlarm(hr, mn, 'JARVIS Alarm');
-      reply('Ã¢ÂÂ° Alarm set: ' + String(hr).padStart(2,'0') + ':' + String(mn).padStart(2,'0') + ' baje!'); return;
+      reply('â° Alarm set: ' + String(hr).padStart(2,'0') + ':' + String(mn).padStart(2,'0') + ' baje!'); return;
     }
 
     //  NAVIGATE / DIRECTIONS 
@@ -888,7 +888,7 @@ export default function Home() {
       const dest = navMatch[1].trim();
       const { navigateTo } = await import('@/lib/control/phoneControl');
       navigateTo(dest);
-      reply('Ã°ÂÂÂºÃ¯Â¸Â "' + dest + '" navigate kar raha hoon boss!'); return;
+      reply('ðºï¸ "' + dest + '" navigate kar raha hoon boss!'); return;
     }
 
     //  YOUTUBE SEARCH 
@@ -898,7 +898,7 @@ export default function Home() {
     if (ytMatch2) {
       const q = ytMatch2[1].trim();
       if (typeof window !== 'undefined') window.open('https://www.youtube.com/results?search_query=' + encodeURIComponent(q), '_blank');
-      reply('Ã¢ÂÂ¶Ã¯Â¸Â YouTube pe "' + q + '" search kar raha hoon!'); return;
+      reply('â¶ï¸ YouTube pe "' + q + '" search kar raha hoon!'); return;
     }
 
     //  SPOTIFY SEARCH 
@@ -906,7 +906,7 @@ export default function Home() {
     if (spotifyMatch) {
       const q = spotifyMatch[1].trim();
       if (typeof window !== 'undefined') window.location.href = 'spotify:search:' + encodeURIComponent(q);
-      reply('Ã°ÂÂÂµ Spotify pe "' + q + '" chal raha hai!'); return;
+      reply('ðµ Spotify pe "' + q + '" chal raha hai!'); return;
     }
 
     //  APP OPEN (enhanced) 
@@ -917,7 +917,7 @@ export default function Home() {
         .replace(/\s+app$/,'').replace(/app/,'').trim();
       const { openApp } = await import('@/lib/control/phoneControl');
       const result = openApp(appName);
-      if (!result.includes('nahi pata')) { reply('Ã°ÂÂÂ± ' + result); return; }
+      if (!result.includes('nahi pata')) { reply('ð± ' + result); return; }
     }
 
     //  SHARE 
@@ -925,7 +925,7 @@ export default function Home() {
     if (shareMatch2) {
       const { shareContent } = await import('@/lib/control/phoneControl');
       await shareContent('JARVIS', shareMatch2[1].trim());
-      reply('Ã°ÂÂÂ¤ Share kar raha hoon...'); return;
+      reply('ð¤ Share kar raha hoon...'); return;
     }
 
     //  AI IMAGE EDIT 
@@ -936,7 +936,7 @@ export default function Home() {
       if (typeof window !== 'undefined') {
         (window as any).__jarvisEditPrompt = editPrompt;
         document.getElementById('imgEditInput')?.click();
-        reply('Ã°ÂÂÂ¸ Photo select karo Ã¢ÂÂ main edit karunga: "' + editPrompt + '"');
+        reply('ð¸ Photo select karo â main edit karunga: "' + editPrompt + '"');
         return;
       }
     }
@@ -951,7 +951,7 @@ export default function Home() {
           body: JSON.stringify({ model:'openai', messages:[{ role:'user', content:'Translate to ' + toLang + '. Only translation, no explanation: ' + toTranslate }] })
         });
         const d = await res.json();
-        reply('Ã°ÂÂÂ **' + toLang + ' mein:**\n' + (d.choices?.[0]?.message?.content || '')); return;
+        reply('ð **' + toLang + ' mein:**\n' + (d.choices?.[0]?.message?.content || '')); return;
       } catch { reply('Translation nahi hua.'); return; }
     }
 
@@ -960,7 +960,7 @@ export default function Home() {
       const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789@#$!';
       let pwd = '';
       for (let i = 0; i < 12; i++) pwd += chars[Math.floor(Math.random() * chars.length)];
-      reply('Ã°ÂÂÂ **Strong Password:**\n`' + pwd + '`\n\nYaad nahi rahega Ã¢ÂÂ password manager mein save karo.'); return;
+      reply('ð **Strong Password:**\n`' + pwd + '`\n\nYaad nahi rahega â password manager mein save karo.'); return;
     }
 
     //  QR CODE 
@@ -969,7 +969,7 @@ export default function Home() {
       const qrUrl = 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=' + encodeURIComponent(qrText) + '&bgcolor=060610&color=00d4ff';
       setMsgs(prev => [...prev,
         { id: 'u_' + Date.now(), role:'user', content: text.trim(), timestamp: Date.now() },
-        { id: 'a_' + Date.now(), role:'assistant', content:'Ã°ÂÂÂ± QR Code: "' + qrText + '"', timestamp: Date.now(), card:{ type:'image', imageUrl:qrUrl, title:'QR: '+qrText } },
+        { id: 'a_' + Date.now(), role:'assistant', content:'ð± QR Code: "' + qrText + '"', timestamp: Date.now(), card:{ type:'image', imageUrl:qrUrl, title:'QR: '+qrText } },
       ]);
       setInput(''); return;
     }
@@ -978,7 +978,7 @@ export default function Home() {
     if (/^(?:choose|pick|random|kya khaun|kaun sa)\s+(.+)/i.test(text)) {
       const opts = text.replace(/^(?:choose|pick|random|kya khaun|kaun sa)\s+/i,'').split(/,|\s+ya\s+|\s+or\s+/i).map(s=>s.trim()).filter(Boolean);
       if (opts.length >= 2) {
-        reply('Ã°ÂÂÂ² **' + opts[Math.floor(Math.random()*opts.length)] + '**\n\n_(Random choice from: ' + opts.join(', ') + ')_'); return;
+        reply('ð² **' + opts[Math.floor(Math.random()*opts.length)] + '**\n\n_(Random choice from: ' + opts.join(', ') + ')_'); return;
       }
     }
 
@@ -988,7 +988,7 @@ export default function Home() {
       const resId = 'a_res_' + Date.now();
       setMsgs(prev => [...prev,
         { id: 'u_' + Date.now(), role:'user', content: text.trim(), timestamp: Date.now() },
-        { id: resId, role:'assistant', content:'Ã°ÂÂÂ¬ Deep research shuru kar raha hoon: "' + topic + '"\n\nÃ¢ÂÂ³ 3-4 searches kar raha hoon...', timestamp: Date.now() },
+        { id: resId, role:'assistant', content:'ð¬ Deep research shuru kar raha hoon: "' + topic + '"\n\nâ³ 3-4 searches kar raha hoon...', timestamp: Date.now() },
       ]);
       setInput('');
       (async () => {
@@ -1009,7 +1009,7 @@ export default function Home() {
           });
           const d = await res.json();
           const result = d.choices?.[0]?.message?.content || 'Research complete.';
-          setMsgs(prev => prev.map(m => m.id===resId ? {...m, content:'Ã°ÂÂÂ¬ **Deep Research: ' + topic + '**\n\n' + result} : m));
+          setMsgs(prev => prev.map(m => m.id===resId ? {...m, content:'ð¬ **Deep Research: ' + topic + '**\n\n' + result} : m));
         } catch {
           setMsgs(prev => prev.map(m => m.id===resId ? {...m, content:'Research nahi ho saka. Retry karo.'} : m));
         }
@@ -1050,7 +1050,7 @@ export default function Home() {
           ]})
         });
         const d = await res.json();
-        reply('Ã°ÂÂÂ **Summary:**\n' + (d.choices?.[0]?.message?.content||'')); return;
+        reply('ð **Summary:**\n' + (d.choices?.[0]?.message?.content||'')); return;
       } catch {}
     }
 
@@ -1070,7 +1070,7 @@ export default function Home() {
         const written = d.choices?.[0]?.message?.content || '';
         setMsgs(prev => [...prev,
           { id:'u_'+Date.now(), role:'user', content:text.trim(), timestamp:Date.now() },
-          { id:'a_'+Date.now(), role:'assistant', content:'Ã¢ÂÂÃ¯Â¸Â ' + written, timestamp:Date.now() },
+          { id:'a_'+Date.now(), role:'assistant', content:'âï¸ ' + written, timestamp:Date.now() },
         ]);
         setInput(''); return;
       } catch {}
@@ -1088,7 +1088,7 @@ export default function Home() {
           ]})
         });
         const d = await res.json();
-        reply('Ã°ÂÂÂ¡ ' + (d.choices?.[0]?.message?.content||'')); return;
+        reply('ð¡ ' + (d.choices?.[0]?.message?.content||'')); return;
       } catch {}
     }
 
@@ -1100,9 +1100,9 @@ export default function Home() {
         const active = goals.filter((g: any) => !g.completed);
         const done = goals.filter((g: any) => g.completed);
         if (goals.length === 0) { reply('Koi goal nahi abhi. "Goal add karo: [kuch bhi]" bolo.'); return; }
-        const txt = 'Ã°ÂÂÂ¯ **Tere Goals:**\n\n**Active (' + active.length + '):**\n' +
-          active.map((g: any) => 'Ã¢ÂÂ¢ ' + g.title).join('\n') +
-          (done.length ? '\n\n**Done (' + done.length + '):**\n' + done.slice(0,3).map((g: any) => 'Ã¢ÂÂ ' + g.title).join('\n') : '');
+        const txt = 'ð¯ **Tere Goals:**\n\n**Active (' + active.length + '):**\n' +
+          active.map((g: any) => 'â¢ ' + g.title).join('\n') +
+          (done.length ? '\n\n**Done (' + done.length + '):**\n' + done.slice(0,3).map((g: any) => 'â ' + g.title).join('\n') : '');
         reply(txt); return;
       } catch { reply('Goals load nahi ho sake.'); return; }
     }
@@ -1112,7 +1112,7 @@ export default function Home() {
         try {
           const { addGoal } = await import('@/lib/db');
           await addGoal({ title: m[1].trim(), completed: false, priority: 'medium', progress: 0, timestamp: Date.now() });
-          reply('Ã¢ÂÂ Goal add ho gaya: **' + m[1].trim() + '**'); return;
+          reply('â Goal add ho gaya: **' + m[1].trim() + '**'); return;
         } catch { reply('Goal save nahi ho saka.'); return; }
       }
     }
@@ -1123,7 +1123,7 @@ export default function Home() {
         const { getReminders } = await import('@/lib/reminders');
         const rems = getReminders().filter((r: any) => !r.fired && r.fireAt > Date.now()).sort((a: any, b: any) => a.fireAt - b.fireAt);
         if (rems.length === 0) { reply('Koi upcoming reminder nahi. "Remind me: [kya] at [time]" bolo.'); return; }
-        const txt = 'Ã¢ÂÂ° **Upcoming Reminders:**\n' + rems.map((r: any) => 'Ã¢ÂÂ¢ ' + r.message + ' Ã¢ÂÂ ' + new Date(r.fireAt).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })).join('\n');
+        const txt = 'â° **Upcoming Reminders:**\n' + rems.map((r: any) => 'â¢ ' + r.message + ' â ' + new Date(r.fireAt).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })).join('\n');
         reply(txt); return;
       } catch { reply('Reminders load nahi hue.'); return; }
     }
@@ -1135,7 +1135,7 @@ export default function Home() {
         const d = new Date(); const parts = when.match(/(\d{1,2})(?::(\d{2}))?/);
         if (parts) { d.setHours(parseInt(parts[1]), parseInt(parts[2] || '0'), 0, 0); if (d < new Date()) d.setDate(d.getDate() + 1); }
         addReminder(what.trim(), d.getTime());
-        reply('Ã¢ÂÂ° Reminder set: **' + what.trim() + '** at **' + d.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' }) + '**'); return;
+        reply('â° Reminder set: **' + what.trim() + '** at **' + d.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' }) + '**'); return;
       } catch { reply('Reminder set nahi ho saka.'); return; }
     }
 
@@ -1145,19 +1145,19 @@ export default function Home() {
       if (fact) {
         const { addMemory } = await import('@/lib/memory/smartMemory')
         addMemory(fact, 'fact')
-        reply('Ã°ÂÂ§Â  Yaad kar liya: "' + fact + '"'); return
+        reply('ð§  Yaad kar liya: "' + fact + '"'); return
       }
     }
     if (/memory|yaadein|memories|tune kya yaad|tujhe kya pata/i.test(t) && /dikhao|show|list|kya hai|batao/i.test(t)) {
       const { getAllMemories } = await import('@/lib/memory/smartMemory')
       const mems = getAllMemories()
       if (!mems.length) { reply('Koi memory nahi abhi. "Yaad rakho: [kuch bhi]" bolo.'); return }
-      reply('Ã°ÂÂ§Â  **Meri Memories (' + mems.length + '):**\n\n' + mems.slice(0,10).map(m => 'Ã¢ÂÂ¢ ' + m.content).join('\n')); return
+      reply('ð§  **Meri Memories (' + mems.length + '):**\n\n' + mems.slice(0,10).map(m => 'â¢ ' + m.content).join('\n')); return
     }
     if (/memory.*clear|sab bhool|forget everything|memory.*delete/i.test(t)) {
       const { clearAllMemory } = await import('@/lib/memory/smartMemory')
       clearAllMemory()
-      reply('Ã°ÂÂ§Â  Sab memory clear kar di. Fresh start!'); return
+      reply('ð§  Sab memory clear kar di. Fresh start!'); return
     }
 
     //  NOTES 
@@ -1169,7 +1169,7 @@ export default function Home() {
           const notes = await getSetting('jarvis_quick_notes').catch(() => []) as any[];
           const updated = [{ id: Date.now(), text: m[1].trim(), ts: Date.now() }, ...(Array.isArray(notes) ? notes : [])].slice(0, 50);
           await setSetting('jarvis_quick_notes', updated);
-          reply('Ã°ÂÂÂ Note save ho gaya: **' + m[1].trim() + '**'); return;
+          reply('ð Note save ho gaya: **' + m[1].trim() + '**'); return;
         } catch { reply('Note save nahi ho saka.'); return; }
       }
     }
@@ -1178,7 +1178,7 @@ export default function Home() {
         const { getSetting } = await import('@/lib/db');
         const notes = await getSetting('jarvis_quick_notes').catch(() => []) as any[];
         if (!Array.isArray(notes) || notes.length === 0) { reply('Koi notes nahi. "Note: [kuch bhi]" bolo.'); return; }
-        reply('Ã°ÂÂÂ **Recent Notes:**\n' + notes.slice(0, 5).map((n: any) => 'Ã¢ÂÂ¢ ' + n.text).join('\n')); return;
+        reply('ð **Recent Notes:**\n' + notes.slice(0, 5).map((n: any) => 'â¢ ' + n.text).join('\n')); return;
       } catch { reply('Notes load nahi hue.'); return; }
     }
 
@@ -1188,8 +1188,8 @@ export default function Home() {
         const { getBatteryInfo } = await import('@/lib/automation/bridge');
         const bat = await getBatteryInfo();
         if (!bat) { reply('Battery info available nahi (browser support nahi).'); return; }
-        const emoji = bat.level > 60 ? 'Ã°ÂÂÂ¢' : bat.level > 30 ? 'Ã°ÂÂÂ¡' : 'Ã°ÂÂÂ´';
-        reply(emoji + ' Battery: **' + bat.level + '%**' + (bat.charging ? ' Ã¢ÂÂ¡ Charging' : ' (Not charging)') + (bat.level < 20 ? '\nÃ¢ÂÂ Ã¯Â¸Â Charge lagao jaldi boss!' : '')); return;
+        const emoji = bat.level > 60 ? 'ð¢' : bat.level > 30 ? 'ð¡' : 'ð´';
+        reply(emoji + ' Battery: **' + bat.level + '%**' + (bat.charging ? ' â¡ Charging' : ' (Not charging)') + (bat.level < 20 ? '\nâ ï¸ Charge lagao jaldi boss!' : '')); return;
       } catch { reply('Battery check nahi ho saka.'); return; }
     }
 
@@ -1216,12 +1216,12 @@ export default function Home() {
       const timeline = typeof window !== 'undefined' ? JSON.parse(localStorage.getItem('jarvis_timeline') || '[]') : [];
       const todayEvents = timeline.filter((e: any) => new Date(e.ts).toDateString() === today);
 
-      let summary = 'Ã°ÂÂÂ **Aaj ka din Ã¢ÂÂ ' + new Date().toLocaleDateString('en-IN', { weekday:'long', day:'numeric', month:'long' }) + '**\n\n';
-      if (todayHabits.length > 0) summary += 'Ã¢ÂÂ **Habits done:** ' + todayHabits.join(', ') + '\n';
-      if (totalSpend > 0) summary += 'Ã°ÂÂÂ¸ **Kharcha:** Ã¢ÂÂ¹' + totalSpend.toLocaleString('en-IN') + ' (' + todayExp.length + ' transactions)\n';
-      if (todayEvents.length > 0) summary += 'Ã°ÂÂÂ **Events:** ' + todayEvents.map((e: any) => e.text).join(', ') + '\n';
+      let summary = 'ð **Aaj ka din â ' + new Date().toLocaleDateString('en-IN', { weekday:'long', day:'numeric', month:'long' }) + '**\n\n';
+      if (todayHabits.length > 0) summary += 'â **Habits done:** ' + todayHabits.join(', ') + '\n';
+      if (totalSpend > 0) summary += 'ð¸ **Kharcha:** â¹' + totalSpend.toLocaleString('en-IN') + ' (' + todayExp.length + ' transactions)\n';
+      if (todayEvents.length > 0) summary += 'ð **Events:** ' + todayEvents.map((e: any) => e.text).join(', ') + '\n';
       const missedHabits = Object.keys(habits).filter(k => habits[k].lastDate !== today);
-      if (missedHabits.length > 0) summary += 'Ã¢ÂÂ Ã¯Â¸Â **Pending:** ' + missedHabits.join(', ') + '\n';
+      if (missedHabits.length > 0) summary += 'â ï¸ **Pending:** ' + missedHabits.join(', ') + '\n';
       if (summary.length < 150) summary += '\n\nAaj ka din abhi shuru hai boss. Kya karna hai?';
 
       reply(summary); return;
@@ -1234,7 +1234,7 @@ export default function Home() {
         const timeline = JSON.parse(localStorage.getItem('jarvis_timeline') || '[]');
         timeline.unshift({ text: event, ts: Date.now(), date: new Date().toLocaleDateString('en-IN') });
         localStorage.setItem('jarvis_timeline', JSON.stringify(timeline.slice(0,500)));
-        reply('Ã°ÂÂÂ Timeline mein save kiya: "' + event + '"'); return;
+        reply('ð Timeline mein save kiya: "' + event + '"'); return;
       }
     }
 
@@ -1254,44 +1254,44 @@ export default function Home() {
         const todaySpend = todayExpenses.reduce((s:number, e:any) => s + e.amount, 0);
         const expenseScore = todaySpend < 500 ? 20 : todaySpend < 1000 ? 15 : todaySpend < 2000 ? 10 : 5;
         const total = habitScore + streakBonus + goalScore + expenseScore + 10; // 10 base
-        const emoji = total >= 80 ? 'Ã°ÂÂÂ¥' : total >= 60 ? 'Ã°ÂÂÂª' : total >= 40 ? 'Ã°ÂÂÂ' : 'Ã°ÂÂÂ´';
+        const emoji = total >= 80 ? 'ð¥' : total >= 60 ? 'ðª' : total >= 40 ? 'ð' : 'ð´';
         reply(emoji + ' **Aaj ka Life Score: ' + total + '/100**\n\n' +
-          'Ã°ÂÂÂ Habits today: ' + habitScore + '/30\n' +
-          'Ã°ÂÂÂ¥ Streak bonus: ' + streakBonus + '/20\n' +
-          'Ã°ÂÂÂ¯ Goals clarity: ' + goalScore + '/20\n' +
-          'Ã°ÂÂÂ¸ Spending: ' + expenseScore + '/20\n' +
-          'Ã¢Â­Â Base: 10/10\n\n' +
-          (total >= 80 ? 'Aaj ka din solid hai boss! Ã°ÂÂÂª' : total >= 60 ? 'Achha chal raha hai, aur better ho sakta hai.' : 'Thoda aur focus karo boss!'));
+          'ð Habits today: ' + habitScore + '/30\n' +
+          'ð¥ Streak bonus: ' + streakBonus + '/20\n' +
+          'ð¯ Goals clarity: ' + goalScore + '/20\n' +
+          'ð¸ Spending: ' + expenseScore + '/20\n' +
+          'â­ Base: 10/10\n\n' +
+          (total >= 80 ? 'Aaj ka din solid hai boss! ðª' : total >= 60 ? 'Achha chal raha hai, aur better ho sakta hai.' : 'Thoda aur focus karo boss!'));
         return;
       }
     }
 
     //  SMART MATH (natural language) 
     const smartMathPatterns = [
-      { regex: /(\d+(?:\.\d+)?)\s*%\s*(?:discount|off|kam)\s+(?:on\s+|pe\s+|of\s+)?(?:rs\.?|)?\s*(\d+(?:\.\d+)?)/i, fn: (m: RegExpMatchArray) => { const disc = parseFloat(m[1]); const price = parseFloat(m[2]); const saved = price * disc / 100; return 'Original: Ã¢ÂÂ¹' + price + '\n' + disc + '% discount = Ã¢ÂÂ¹' + saved.toFixed(0) + ' saved\n**Final price: Ã¢ÂÂ¹' + (price - saved).toFixed(0) + '**'; }},
-      { regex: /(\d+(?:\.\d+)?)\s+(?:log|person|aadmi)\s+mein\s+(?:rs\.?|)?\s*(\d+(?:\.\d+)?)\s+(?:barabar|divide|split|baat|share)/i, fn: (m: RegExpMatchArray) => { const people = parseFloat(m[1]); const amount = parseFloat(m[2]); return 'Ã°ÂÂÂ° ' + people + ' logon mein Ã¢ÂÂ¹' + amount + '\n**Har koi: Ã¢ÂÂ¹' + (amount/people).toFixed(0) + '**'; }},
-      { regex: /(\d+(?:\.\d+)?)\s+(?:ghante|hour|hrs?)\s+mein\s+(\d+(?:\.\d+)?)\s+(?:km|kilometer)/i, fn: (m: RegExpMatchArray) => { const hrs = parseFloat(m[1]); const km = parseFloat(m[2]); return 'Ã°ÂÂÂ Speed: ' + (km/hrs).toFixed(1) + ' km/h\nAvg time for 100km: ' + (100/(km/hrs)*60).toFixed(0) + ' min'; }},
-      { regex: /(\d+(?:\.\d+)?)\s+(?:rs\.?|)?\s*(?:mein|per)\s+(\d+(?:\.\d+)?)\s+(?:din|day|mahina|month|saal|year)/i, fn: (m: RegExpMatchArray) => { const amount = parseFloat(m[1]); const time = parseFloat(m[2]); return 'Ã°ÂÂÂ Ã¢ÂÂ¹' + amount + ' per period:\nPer day: Ã¢ÂÂ¹' + (amount/time).toFixed(0); }},
+      { regex: /(\d+(?:\.\d+)?)\s*%\s*(?:discount|off|kam)\s+(?:on\s+|pe\s+|of\s+)?(?:rs\.?|)?\s*(\d+(?:\.\d+)?)/i, fn: (m: RegExpMatchArray) => { const disc = parseFloat(m[1]); const price = parseFloat(m[2]); const saved = price * disc / 100; return 'Original: â¹' + price + '\n' + disc + '% discount = â¹' + saved.toFixed(0) + ' saved\n**Final price: â¹' + (price - saved).toFixed(0) + '**'; }},
+      { regex: /(\d+(?:\.\d+)?)\s+(?:log|person|aadmi)\s+mein\s+(?:rs\.?|)?\s*(\d+(?:\.\d+)?)\s+(?:barabar|divide|split|baat|share)/i, fn: (m: RegExpMatchArray) => { const people = parseFloat(m[1]); const amount = parseFloat(m[2]); return 'ð° ' + people + ' logon mein â¹' + amount + '\n**Har koi: â¹' + (amount/people).toFixed(0) + '**'; }},
+      { regex: /(\d+(?:\.\d+)?)\s+(?:ghante|hour|hrs?)\s+mein\s+(\d+(?:\.\d+)?)\s+(?:km|kilometer)/i, fn: (m: RegExpMatchArray) => { const hrs = parseFloat(m[1]); const km = parseFloat(m[2]); return 'ð Speed: ' + (km/hrs).toFixed(1) + ' km/h\nAvg time for 100km: ' + (100/(km/hrs)*60).toFixed(0) + ' min'; }},
+      { regex: /(\d+(?:\.\d+)?)\s+(?:rs\.?|)?\s*(?:mein|per)\s+(\d+(?:\.\d+)?)\s+(?:din|day|mahina|month|saal|year)/i, fn: (m: RegExpMatchArray) => { const amount = parseFloat(m[1]); const time = parseFloat(m[2]); return 'ð â¹' + amount + ' per period:\nPer day: â¹' + (amount/time).toFixed(0); }},
     ];
     for (const { regex, fn } of smartMathPatterns) {
       const m = text.match(regex);
-      if (m) { reply('Ã°ÂÂ§Â® ' + fn(m)); return; }
+      if (m) { reply('ð§® ' + fn(m)); return; }
     }
 
     //  PERSONALITY MODE 
     if (/strict mode|focus mode|kaam.*mode|serious mode/i.test(t)) {
       if (typeof window !== 'undefined') localStorage.setItem('jarvis_mode', 'strict');
-      reply('Ã°ÂÂÂ¯ **Strict Mode ON**\nAb main sirf kaam ki baatein karunga. No jokes, no bakwaas. Focus karo boss!');
+      reply('ð¯ **Strict Mode ON**\nAb main sirf kaam ki baatein karunga. No jokes, no bakwaas. Focus karo boss!');
       return;
     }
     if (/chill mode|relax mode|fun mode|casual mode/i.test(t)) {
       if (typeof window !== 'undefined') localStorage.setItem('jarvis_mode', 'chill');
-      reply('Ã°ÂÂÂ **Chill Mode ON**\nRelax boss, ab baatein karte hain. Kya chal raha hai?');
+      reply('ð **Chill Mode ON**\nRelax boss, ab baatein karte hain. Kya chal raha hai?');
       return;
     }
     if (/normal mode|default mode|mode off|mode hatao/i.test(t)) {
       if (typeof window !== 'undefined') localStorage.removeItem('jarvis_mode');
-      reply('Ã¢ÂÂ Normal mode. Main hoon Ã¢ÂÂ JARVIS.');
+      reply('â Normal mode. Main hoon â JARVIS.');
       return;
     }
 
@@ -1304,7 +1304,7 @@ export default function Home() {
         const contacts = JSON.parse(localStorage.getItem('jarvis_contacts') || '{}');
         contacts[name.toLowerCase()] = number;
         localStorage.setItem('jarvis_contacts', JSON.stringify(contacts));
-        reply('Ã°ÂÂÂ± **' + name + '** ka number save ho gaya: ' + number);
+        reply('ð± **' + name + '** ka number save ho gaya: ' + number);
         return;
       }
     }
@@ -1316,10 +1316,10 @@ export default function Home() {
         const contacts = JSON.parse(localStorage.getItem('jarvis_contacts') || '{}');
         const num = contacts[name];
         if (num) {
-          reply('Ã°ÂÂÂ± **' + contactFind[1] + '**: ' + num + '\n\nCall karna hai? "' + contactFind[1] + ' ko call karo" bolo.');
+          reply('ð± **' + contactFind[1] + '**: ' + num + '\n\nCall karna hai? "' + contactFind[1] + ' ko call karo" bolo.');
           return;
         } else {
-          reply('Ã°ÂÂÂ± **' + contactFind[1] + '** ka number mujhe nahi pata. Batao: "' + contactFind[1] + ' ka number hai +91XXXXXXXXXX"');
+          reply('ð± **' + contactFind[1] + '** ka number mujhe nahi pata. Batao: "' + contactFind[1] + ' ka number hai +91XXXXXXXXXX"');
           return;
         }
       }
@@ -1335,19 +1335,19 @@ export default function Home() {
         const habits = JSON.parse(typeof window !== 'undefined' ? localStorage.getItem('jarvis_habits') || '{}' : '{}');
         const expenses = JSON.parse(typeof window !== 'undefined' ? localStorage.getItem('jarvis_expenses') || '[]' : '[]');
         const todaySpend = expenses.filter((e: any) => new Date(e.ts).toDateString() === new Date().toDateString()).reduce((s: number, e: any) => s + e.amount, 0);
-        const streaks = Object.entries(habits as Record<string,any>).map(([k,v]: any) => k + ': ' + v.streak + 'Ã°ÂÂÂ¥').join(' | ') || 'Koi habit nahi';
+        const streaks = Object.entries(habits as Record<string,any>).map(([k,v]: any) => k + ': ' + v.streak + 'ð¥').join(' | ') || 'Koi habit nahi';
         const { getAllGoals } = await import('@/lib/db');
         const goals = await getAllGoals().catch(() => []);
-        const activeGoals = (goals as any[]).filter((g: any) => !g.completed).slice(0, 3).map((g: any) => 'Ã¢ÂÂ¢ ' + g.title).join('\n') || 'Koi active goal nahi';
-        reply(greeting + ' boss! Ã°ÂÂÂ\n\n' +
-          'Ã°ÂÂÂ¤Ã¯Â¸Â **Weather:**\n' + weather.split('\n')[0] + '\n\n' +
-          'Ã°ÂÂÂ¯ **Active Goals:**\n' + activeGoals + '\n\n' +
-          'Ã°ÂÂÂ¥ **Habits:** ' + streaks + '\n\n' +
-          'Ã°ÂÂÂ¸ **Aaj ka kharcha:** Ã¢ÂÂ¹' + todaySpend.toLocaleString('en-IN') + '\n\n' +
-          '_"Ek kaam achhi tarah se karo  baaki khud ho jaayega."_ Ã°ÂÂÂª');
+        const activeGoals = (goals as any[]).filter((g: any) => !g.completed).slice(0, 3).map((g: any) => 'â¢ ' + g.title).join('\n') || 'Koi active goal nahi';
+        reply(greeting + ' boss! ð\n\n' +
+          'ð¤ï¸ **Weather:**\n' + weather.split('\n')[0] + '\n\n' +
+          'ð¯ **Active Goals:**\n' + activeGoals + '\n\n' +
+          'ð¥ **Habits:** ' + streaks + '\n\n' +
+          'ð¸ **Aaj ka kharcha:** â¹' + todaySpend.toLocaleString('en-IN') + '\n\n' +
+          '_"Ek kaam achhi tarah se karo  baaki khud ho jaayega."_ ðª');
         return;
       } catch {
-        reply(greeting + ' boss! Ã°ÂÂÂ\n\nAaj ka din ache se shuru karo. Kya karna hai?');
+        reply(greeting + ' boss! ð\n\nAaj ka din ache se shuru karo. Kya karna hai?');
         return;
       }
     }
@@ -1365,14 +1365,14 @@ export default function Home() {
         const thisMonth = expenses.filter((e: any) => new Date(e.ts).getMonth() === new Date().getMonth());
         const total = thisMonth.reduce((s: number, e: any) => s + e.amount, 0);
         // Spending alert thresholds
-        const alerts: Record<number,string> = { 500:'Ã¢ÂÂ Ã¯Â¸Â Aaj Ã¢ÂÂ¹500 ho gaya kharcha boss.', 1000:'Ã¢ÂÂ Ã¯Â¸Â Ã¢ÂÂ¹1,000 aaj Ã¢ÂÂ thoda ruko.', 2000:'Ã°ÂÂÂ¨ Ã¢ÂÂ¹2,000 aaj! Bahut zyada ho gaya.', 5000:'Ã°ÂÂÂ¨ Ã¢ÂÂ¹5,000 aaj Ã¢ÂÂ emergency?' };
+        const alerts: Record<number,string> = { 500:'â ï¸ Aaj â¹500 ho gaya kharcha boss.', 1000:'â ï¸ â¹1,000 aaj â thoda ruko.', 2000:'ð¨ â¹2,000 aaj! Bahut zyada ho gaya.', 5000:'ð¨ â¹5,000 aaj â emergency?' };
         const todaySpend = expenses.filter((e:any) => new Date(e.ts).toDateString() === new Date().toDateString()).reduce((s:number,e:any)=>s+e.amount,0);
         for (const [threshold, msg] of Object.entries(alerts)) {
           if (todaySpend >= parseInt(threshold) && todaySpend - amount < parseInt(threshold)) {
             setTimeout(() => toastErr(msg), 1500); break;
           }
         }
-        reply('Ã°ÂÂÂ¸ Expense saved!\nÃ¢ÂÂ¹' + amount + ' Ã¢ÂÂ ' + category + '\n\nÃ°ÂÂÂ This month total: Ã¢ÂÂ¹' + total.toLocaleString('en-IN'));
+        reply('ð¸ Expense saved!\nâ¹' + amount + ' â ' + category + '\n\nð This month total: â¹' + total.toLocaleString('en-IN'));
         return;
       }
     }
@@ -1382,8 +1382,8 @@ export default function Home() {
         if (!expenses.length) { reply('Koi expense nahi. "500 grocery kharcha" type karo.'); return; }
         const thisMonth = expenses.filter((e: any) => new Date(e.ts).getMonth() === new Date().getMonth());
         const total = thisMonth.reduce((s: number, e: any) => s + e.amount, 0);
-        const recent = thisMonth.slice(0, 5).map((e: any) => 'Ã¢ÂÂ¢ Ã¢ÂÂ¹' + e.amount + ' Ã¢ÂÂ ' + e.category + ' (' + e.date + ')').join('\n');
-        reply('Ã°ÂÂÂ¸ **This Month Expenses**\n\nTotal: **Ã¢ÂÂ¹' + total.toLocaleString('en-IN') + '**\n\n' + recent);
+        const recent = thisMonth.slice(0, 5).map((e: any) => 'â¢ â¹' + e.amount + ' â ' + e.category + ' (' + e.date + ')').join('\n');
+        reply('ð¸ **This Month Expenses**\n\nTotal: **â¹' + total.toLocaleString('en-IN') + '**\n\n' + recent);
         return;
       }
     }
@@ -1405,13 +1405,13 @@ export default function Home() {
         if (!h.dates.includes(today)) h.dates.push(today);
         localStorage.setItem('jarvis_habits', JSON.stringify(habits));
         const adviceMap: Record<string,string> = {
-          'gym': h.streak >= 7 ? 'Ã°ÂÂÂª 7 din! Ab rest day le aaj.' : h.streak >= 3 ? 'Keep pushing boss!' : 'Shuruat achhi hai!',
-          'padhai': h.streak >= 5 ? 'Ã°ÂÂÂ Padhne ki aadat ban gayi!' : 'Consistency hi success hai.',
-          'meditation': 'Ã°ÂÂ§Â ' + h.streak + ' din ka peace. Kal bhi karna.',
-          'running': h.streak >= 7 ? 'Ã°ÂÂÂ Ek hafta! Body thank kar rahi hogi.' : 'Chal raha hai boss!',
+          'gym': h.streak >= 7 ? 'ðª 7 din! Ab rest day le aaj.' : h.streak >= 3 ? 'Keep pushing boss!' : 'Shuruat achhi hai!',
+          'padhai': h.streak >= 5 ? 'ð Padhne ki aadat ban gayi!' : 'Consistency hi success hai.',
+          'meditation': 'ð§ ' + h.streak + ' din ka peace. Kal bhi karna.',
+          'running': h.streak >= 7 ? 'ð Ek hafta! Body thank kar rahi hogi.' : 'Chal raha hai boss!',
         };
-        const advice = adviceMap[habit.toLowerCase()] || (h.streak >= 7 ? 'Ã°ÂÂÂ Zabardast streak boss!' : h.streak >= 3 ? 'Ã°ÂÂÂª Consistent ho!' : 'Kal bhi karo!');
-        reply('Ã¢ÂÂ **' + habit + '** Ã¢ÂÂ Done!\nÃ°ÂÂÂ¥ Streak: **' + h.streak + ' days**\n' + advice);
+        const advice = adviceMap[habit.toLowerCase()] || (h.streak >= 7 ? 'ð Zabardast streak boss!' : h.streak >= 3 ? 'ðª Consistent ho!' : 'Kal bhi karo!');
+        reply('â **' + habit + '** â Done!\nð¥ Streak: **' + h.streak + ' days**\n' + advice);
         return;
       }
     }
@@ -1420,7 +1420,7 @@ export default function Home() {
         const habits = JSON.parse(localStorage.getItem('jarvis_habits') || '{}');
         const keys = Object.keys(habits);
         if (!keys.length) { reply('Koi habit nahi. "Aaj gym kiya" ya "aaj padhai kiya" bolo.'); return; }
-        reply('Ã°ÂÂÂ¥ **Habit Streaks:**\n\n' + keys.map(k => 'Ã¢ÂÂ¢ **' + k + '**: ' + habits[k].streak + ' days Ã°ÂÂÂ¥').join('\n'));
+        reply('ð¥ **Habit Streaks:**\n\n' + keys.map(k => 'â¢ **' + k + '**: ' + habits[k].streak + ' days ð¥').join('\n'));
         return;
       }
     }
@@ -1436,7 +1436,7 @@ export default function Home() {
         if (typeof window !== 'undefined') {
           window.location.href = 'whatsapp://send?text=' + encodeURIComponent(draft);
         }
-        reply('Ã°ÂÂÂ¬ WhatsApp draft ready:\n"' + draft + '"\n\nWhatsApp khul raha hai...');
+        reply('ð¬ WhatsApp draft ready:\n"' + draft + '"\n\nWhatsApp khul raha hai...');
         return;
       }
     }
@@ -1450,12 +1450,12 @@ export default function Home() {
         const prev = d?.chart?.result?.[0]?.meta?.previousClose;
         const change = price && prev ? ((price - prev) / prev * 100).toFixed(2) : null;
         if (price) {
-          reply('Ã°ÂÂÂ **Nifty 50**: ' + price?.toLocaleString('en-IN') + (change ? ('\n' + (parseFloat(change) > 0 ? 'Ã°ÂÂÂ' : 'Ã°ÂÂÂ') + ' ' + change + '% today') : ''));
+          reply('ð **Nifty 50**: ' + price?.toLocaleString('en-IN') + (change ? ('\n' + (parseFloat(change) > 0 ? 'ð' : 'ð') + ' ' + change + '% today') : ''));
           return;
         }
       } catch {}
       // Fallback
-      reply('Ã°ÂÂÂ Stock market data fetch nahi hua. NSE India: nseindia.com check karo.');
+      reply('ð Stock market data fetch nahi hua. NSE India: nseindia.com check karo.');
       return;
     }
 
@@ -1465,7 +1465,7 @@ export default function Home() {
     if (trainMatch?.[1] || /train.*kahan|train.*status|train.*running/i.test(t)) {
       const trainNo = trainMatch?.[1] || '12301';
       const url = 'https://www.railyatri.in/live-train-status/train-' + trainNo;
-      reply('Ã°ÂÂÂ **Train ' + trainNo + ' Status**\n\nSeedha check karo:\n' + url + '\n\nYa NTES app use karo Ã¢ÂÂ most accurate live data.');
+      reply('ð **Train ' + trainNo + ' Status**\n\nSeedha check karo:\n' + url + '\n\nYa NTES app use karo â most accurate live data.');
       return;
     }
 
@@ -1475,14 +1475,14 @@ export default function Home() {
         const res = await fetch('https://api.cricapi.com/v1/currentMatches?apikey=free&offset=0', { signal: AbortSignal.timeout(5000) });
         const d = await res.json();
         if (d?.data?.length) {
-          const matches = d.data.slice(0, 3).map((m: any) => 'Ã°ÂÂÂ ' + m.name + '\n' + (m.score?.map((s: any) => s.inning + ': ' + s.r + '/' + s.w).join(' | ') || 'Score loading...')).join('\n\n');
-          reply('Ã°ÂÂÂ **Live Cricket:**\n\n' + matches);
+          const matches = d.data.slice(0, 3).map((m: any) => 'ð ' + m.name + '\n' + (m.score?.map((s: any) => s.inning + ': ' + s.r + '/' + s.w).join(' | ') || 'Score loading...')).join('\n\n');
+          reply('ð **Live Cricket:**\n\n' + matches);
         } else {
-          reply('Ã°ÂÂÂ Abhi koi live match nahi. Cricbuzz check karo: cricbuzz.com');
+          reply('ð Abhi koi live match nahi. Cricbuzz check karo: cricbuzz.com');
         }
         return;
       } catch {
-        reply('Ã°ÂÂÂ Cricket score fetch nahi hua. Cricbuzz: cricbuzz.com ya Espncricinfo: espncricinfo.com');
+        reply('ð Cricket score fetch nahi hua. Cricbuzz: cricbuzz.com ya Espncricinfo: espncricinfo.com');
         return;
       }
     }
@@ -1494,13 +1494,13 @@ export default function Home() {
       const query = ytMatch[1].trim();
       const url = 'https://www.youtube.com/results?search_query=' + encodeURIComponent(query);
       if (typeof window !== 'undefined') window.open(url, '_blank');
-      reply('Ã¢ÂÂ¶Ã¯Â¸Â YouTube search: "' + query + '"\nKhul raha hai...');
+      reply('â¶ï¸ YouTube search: "' + query + '"\nKhul raha hai...');
       return;
     }
 
     //  PETROL PRICE 
     if (/petrol|diesel|fuel.*price|price.*fuel/i.test(t)) {
-      reply('Ã¢ÂÂ½ **Petrol/Diesel Price (Approx)**\n\nMaihar, MP (today):\nÃ¢ÂÂ¢ Petrol: ~Ã¢ÂÂ¹107/litre\nÃ¢ÂÂ¢ Diesel: ~Ã¢ÂÂ¹92/litre\n\n_Exact rate ke liye: fuel.goodreturns.in_\n_Ya type karo: "petrol rate Maihar"_');
+      reply('â½ **Petrol/Diesel Price (Approx)**\n\nMaihar, MP (today):\nâ¢ Petrol: ~â¹107/litre\nâ¢ Diesel: ~â¹92/litre\n\n_Exact rate ke liye: fuel.goodreturns.in_\n_Ya type karo: "petrol rate Maihar"_');
       return;
     }
 
@@ -1518,14 +1518,14 @@ export default function Home() {
         const g = ((metals?.gold || 2300) / 31.1035) * usdInr;
         const s = ((metals?.silver || 28) / 31.1035) * usdInr;
         reply(
-          'Ã°ÂÂ¥Â **Gold & Silver (Live)**\n\n' +
-          'Ã°ÂÂ¥Â Gold 24K: **Ã¢ÂÂ¹' + Math.round(g).toLocaleString('en-IN') + '/g** | 10g = Ã¢ÂÂ¹' + Math.round(g*10).toLocaleString('en-IN') + '\n' +
-          'Ã°ÂÂ¥Â Gold 22K: **Ã¢ÂÂ¹' + Math.round(g*0.916).toLocaleString('en-IN') + '/g** | 10g = Ã¢ÂÂ¹' + Math.round(g*9.16).toLocaleString('en-IN') + '\n' +
-          'Ã°ÂÂ¥Â Silver: **Ã¢ÂÂ¹' + Math.round(s).toLocaleString('en-IN') + '/g** | 100g = Ã¢ÂÂ¹' + Math.round(s*100).toLocaleString('en-IN')
+          'ð¥ **Gold & Silver (Live)**\n\n' +
+          'ð¥ Gold 24K: **â¹' + Math.round(g).toLocaleString('en-IN') + '/g** | 10g = â¹' + Math.round(g*10).toLocaleString('en-IN') + '\n' +
+          'ð¥ Gold 22K: **â¹' + Math.round(g*0.916).toLocaleString('en-IN') + '/g** | 10g = â¹' + Math.round(g*9.16).toLocaleString('en-IN') + '\n' +
+          'ð¥ Silver: **â¹' + Math.round(s).toLocaleString('en-IN') + '/g** | 100g = â¹' + Math.round(s*100).toLocaleString('en-IN')
         );
         return;
       } catch {
-        reply('Ã°ÂÂ¥Â Gold 24K: ~Ã¢ÂÂ¹9,000/g | Gold 22K: ~Ã¢ÂÂ¹8,250/g\nÃ°ÂÂ¥Â Silver: ~Ã¢ÂÂ¹105/g\n_(Approximate Ã¢ÂÂ live data nahi mila)_');
+        reply('ð¥ Gold 24K: ~â¹9,000/g | Gold 22K: ~â¹8,250/g\nð¥ Silver: ~â¹105/g\n_(Approximate â live data nahi mila)_');
         return;
       }
     }
@@ -1540,7 +1540,7 @@ export default function Home() {
         const data = d[coin];
         if (data) {
           const ch = data.usd_24h_change?.toFixed(2);
-          reply('Ã¢ÂÂ¿ **' + coin.charAt(0).toUpperCase() + coin.slice(1) + '**\nÃ¢ÂÂ¹' + data.inr?.toLocaleString('en-IN') + ' | $' + data.usd?.toLocaleString() + '\n' + (parseFloat(ch) > 0 ? 'Ã°ÂÂÂ' : 'Ã°ÂÂÂ') + ' 24h: ' + ch + '%');
+          reply('â¿ **' + coin.charAt(0).toUpperCase() + coin.slice(1) + '**\nâ¹' + data.inr?.toLocaleString('en-IN') + ' | $' + data.usd?.toLocaleString() + '\n' + (parseFloat(ch) > 0 ? 'ð' : 'ð') + ' 24h: ' + ch + '%');
         } else reply('Coin nahi mila: ' + coin);
         return;
       } catch { reply('Crypto price nahi mila.'); return; }
