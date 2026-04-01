@@ -154,18 +154,17 @@ export async function checkProactive(): Promise<ProactiveEvent | null> {
     }
   }
 
-  // 4. Smart study suggestion — based on past topics
-  if (profile.studySubjects.length > 0 && (h >= 18 && h <= 22)) {
-    const lastStudySug = Number(await getSetting('last_study_sug', 0))
-    if (now - lastStudySug > 86_400_000) { // Once per day
+  // 4. Evening productivity nudge
+  if (h >= 18 && h <= 22 && profile.topTopics.length > 0) {
+    const lastSug = Number(await getSetting('last_study_sug', 0))
+    if (now - lastSug > 86_400_000) {
       await setSetting('last_study_sug', now)
-      const sub = profile.studySubjects[0]
       return {
-        type: 'learning',
-        message: `${sub} padha hai pehle — aaj bhi practice karo? 📚`,
-        priority: 'medium',
-        action: `${sub} practice questions do`,
-        actionLabel: '📚 Practice karo',
+        type: 'suggestion',
+        message: 'Shaam ho gayi — aaj ka kuch important kaam bacha hai? Main help kar sakta hoon! 💼',
+        priority: 'low',
+        action: 'aaj ka task list dikha',
+        actionLabel: '📋 Tasks dekho',
       }
     }
   }
