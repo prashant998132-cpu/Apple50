@@ -330,7 +330,8 @@ export function autoRouteMode(input: string): RouterMode {
   }
 
   // Think: academic, math, reasoning, code
-  if (/neet|jee|upsc|physics|chemistry|biology|math|derive|prove|solve|algorithm|debug|code.*explain|explain.*code|step.?by.?step|formula|theorem|numerica|kaise kaam/i.test(l)) {
+  // Think: reasoning, math, code, deep questions
+  if (/upsc|math|derive|prove|solve|algorithm|debug|code.*explain|explain.*code|step.?by.?step|formula|theorem|numerica|kaise kaam|kyu|kyun|kaisa|difference|compare|explain/i.test(l)) {
     return 'think'
   }
 
@@ -352,8 +353,8 @@ export function getProactiveSuggestion(userMsg: string): string | null {
   // If studying late night
   const h = new Date().getHours()
   if (h >= 23 || h <= 4) {
-    if (/padh|study|notes|chapter|neet|jee/i.test(l)) {
-      return '😴 Bhai, neend bhi padhai ka hissa hai. 7-8 ghante zaroor so — memory consolidation hoti hai. Kal fresh mind se padh.'
+    if (/kaam|work|code|project/i.test(l)) {
+      return '😴 Itni raat tak kaam kar rahe ho — 7-8 ghante neend zaroor lo. Kal fresh mind se better kaam hoga!'
     }
   }
 
@@ -383,8 +384,8 @@ function keywordFallback(input: string): string {
     return `🕐 **${new Date().toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })}**`
   if (/date|aaj|today/i.test(input))
     return `📅 **${new Date().toLocaleDateString('en-IN', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}**`
-  if (/neet|jee|exam/i.test(input))
-    return 'NEET ki taiyari? 💪 /study pe jao — MCQs aur notes wahan hain!'
+  if (/exam|test|interview/i.test(input))
+    return '💪 Preparation ke liye main hoon! Kya practice karna hai batao.'
   if (/weather|mausam/i.test(input))
     return '🌤️ "weather Delhi" ya koi bhi city — live data laata hun!'
   if (/joke|funny/i.test(input))
