@@ -1,7 +1,7 @@
 {
   "name": "JARVIS AI",
   "short_name": "JARVIS",
-  "description": "Tony Stark ka AI \u2014 Hinglish mein, full power. Chat, Voice, Agent Mode, Image Gen.",
+  "description": "Tony Stark ka AI — Hinglish mein, full power. Chat, Voice, Agent Mode, Image Gen.",
   "start_url": "/",
   "id": "com.jarvis.ai.pranshu",
   "display": "standalone",
@@ -144,6 +144,19 @@
       "short_name": "Brief",
       "url": "/briefing",
       "description": "Daily briefing",
+      "icons": [
+        {
+          "src": "/icons/icon-96.png",
+          "sizes": "96x96",
+          "type": "image/png"
+        }
+      ]
+    },
+    {
+      "name": "Voice Mode",
+      "short_name": "Voice",
+      "url": "/voice",
+      "description": "JARVIS se bolo",
       "icons": [
         {
           "src": "/icons/icon-96.png",
