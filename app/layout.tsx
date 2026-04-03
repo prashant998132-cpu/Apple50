@@ -41,12 +41,6 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         />
         <script src="https://js.puter.com/v2/" defer />
         <script dangerouslySetInnerHTML={{ __html: "if('serviceWorker' in navigator){ window.addEventListener('load',()=>navigator.serviceWorker.register('/sw.js').catch(()=>{})); }" }} />
-        <style dangerouslySetInnerHTML={{ __html: `
-          /* Global BottomNav clearance — prevents content hiding behind nav */
-          main, [data-page], .page-scroll {
-            padding-bottom: 68px !important;
-          }
-        `}} />
       </head>
       <body suppressHydrationWarning>
         {children}
