@@ -241,20 +241,20 @@ body {
 .toast-ok { border-color: #22c55e; color: #22c55e; }
 .toast-err { border-color: #ef4444; color: #ef4444; }
 
-/* ── BottomNav clearance ────────────────────────────────── */
-/* Every page content must clear the 60px fixed BottomNav  */
+/* ── BottomNav clearance (auto applied globally) ────────── */
 .page-container {
   padding-bottom: 68px !important;
 }
 
-/* Fallback for pages not using .page-container */
-body > div,
-#__next > div {
-  padding-bottom: env(safe-area-inset-bottom, 0px);
+/* For pages using minHeight 100dvh with overflowY auto */
+body {
+  padding-bottom: 0;
 }
 
-/* Utility class for pages with scroll content */
+/* Utility spacer div */
 .nav-spacer {
   height: 68px;
+  min-height: 68px;
   flex-shrink: 0;
+  display: block;
 }
