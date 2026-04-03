@@ -1,11 +1,11 @@
 // JARVIS Service Worker v7 — PWA Complete
 // Features: Offline, Image cache, Push notifications, Background sync
 
-const CACHE_V    = 'jarvis-v7'
-const STATIC     = 'jarvis-static-v7'
-const IMG_CACHE  = 'jarvis-img-v7'
-const API_CACHE  = 'jarvis-api-v7'
-const SDK_CACHE  = 'jarvis-sdk-v7'
+const CACHE_V    = 'jarvis-v8'
+const STATIC     = 'jarvis-static-v8'
+const IMG_CACHE  = 'jarvis-img-v8'
+const API_CACHE  = 'jarvis-api-v8'
+const SDK_CACHE  = 'jarvis-sdk-v8'
 
 const STATIC_ASSETS = ['/', '/manifest.json', '/offline.html']
 
