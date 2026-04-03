@@ -24,7 +24,7 @@ export default function NotesPage() {
   const [cardFlipped, setCardFlipped] = useState<Record<string, boolean>>({})
   const [newFront, setNewFront] = useState('')
   const [newBack, setNewBack] = useState('')
-  const [cardSubject, setCardSubject] = useState('Biology')
+  const [cardSubject, setCardSubject] = useState('General')
 
   useEffect(() => { loadAll() }, [])
 
@@ -63,7 +63,7 @@ export default function NotesPage() {
       const res = await fetch('/api/stream', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          messages: [{ role: 'user', content: `Generate 5 flashcards for: "${aiGen}"\nReturn ONLY JSON array: [{"front":"question","back":"answer","subject":"${cardSubject}"}]\nShort, clear questions and answers. Good for NEET.` }],
+          messages: [{ role: 'user', content: `Generate 5 flashcards for: "${aiGen}"\nReturn ONLY JSON array: [{"front":"question","back":"answer","subject":"${cardSubject}"}]\nShort, clear questions and answers. Short, clear, memorable.` }],
           mode: 'flash', noStream: true,
         }),
       })
@@ -159,7 +159,7 @@ export default function NotesPage() {
             <div style={{ background: '#0a0a14', border: '1px solid rgba(0,212,255,0.15)', borderRadius: 12, padding: 12, marginBottom: 14 }}>
               <div style={{ color: '#00d4ff', fontSize: 12, marginBottom: 8 }}>🤖 AI se Flashcards banwao</div>
               <select value={cardSubject} onChange={e => setCardSubject(e.target.value)} style={{ width: '100%', background: '#111118', border: '1px solid #2a2a4a', borderRadius: 8, padding: '8px 10px', color: '#e0e0ff', fontSize: 12, outline: 'none', marginBottom: 8 }}>
-                {['Biology', 'Chemistry', 'Physics', 'Math', 'History', 'English'].map(s => <option key={s} value={s}>{s}</option>)}
+                {['General', 'Tech', 'Code', 'Business', 'Language', 'Science', 'History', 'Custom'].map(s => <option key={s} value={s}>{s}</option>)}
               </select>
               <div style={{ display: 'flex', gap: 6 }}>
                 <input value={aiGen} onChange={e => setAiGen(e.target.value)} onKeyDown={e => e.key === 'Enter' && generateFlashcards()}
