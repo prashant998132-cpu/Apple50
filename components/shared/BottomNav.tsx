@@ -13,7 +13,6 @@ const TABS = [
 export default function BottomNav() {
   const router = useRouter()
   const pathname = usePathname()
-
   return (
     <nav style={{
       position: 'fixed', bottom: 0, left: 0, right: 0,
@@ -28,19 +27,13 @@ export default function BottomNav() {
       {TABS.map(tab => {
         const active = pathname === tab.route
         return (
-          <button
-            key={tab.route}
-            onClick={() => router.push(tab.route)}
-            style={{
-              display: 'flex', flexDirection: 'column', alignItems: 'center',
-              gap: 2, background: 'none', border: 'none', cursor: 'pointer',
-              padding: '4px 12px', borderRadius: 10, minWidth: 54,
-              color: active ? '#00d4ff' : '#444',
-            }}
-          >
-            <span style={{ fontSize: 22, lineHeight: 1 }}>{tab.icon}</span>
-            <span style={{ fontSize: 10, fontWeight: active ? 700 : 400 }}>{tab.label}</span>
-            {active && <div style={{ width: 4, height: 4, borderRadius: '50%', background: '#00d4ff', marginTop: 1 }} />}
+          <button key={tab.route} onClick={() => router.push(tab.route)}
+            style={{ display:'flex', flexDirection:'column', alignItems:'center', gap:2,
+              background:'none', border:'none', cursor:'pointer', padding:'4px 12px',
+              borderRadius:10, minWidth:54, color: active ? '#00d4ff' : '#444' }}>
+            <span style={{ fontSize:22, lineHeight:1 }}>{tab.icon}</span>
+            <span style={{ fontSize:10, fontWeight: active ? 700 : 400 }}>{tab.label}</span>
+            {active && <div style={{ width:4, height:4, borderRadius:'50%', background:'#00d4ff', marginTop:1 }} />}
           </button>
         )
       })}
