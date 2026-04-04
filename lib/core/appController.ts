@@ -46,8 +46,8 @@ export function detectAppIntent(msg: string): string | null {
 
   // Navigation
   if (/settings|setting|seting/i.test(m))         return 'navigate:/settings';
-  if (/study|padhai|mcq|neet.*page/i.test(m) && /jao|open|page|kholo/i.test(m))
-    return 'navigate:/study';
+  if (/notes|notes.*page/i.test(m) && /jao|open|kholo/i.test(m))
+    return 'navigate:/notes';
   if (/voice|bol.*mode|speak.*mode/i.test(m))      return 'navigate:/voice';
   if (/tools?|calculator|calc/i.test(m) && /jao|open|kholo/i.test(m))
     return 'navigate:/tools';
