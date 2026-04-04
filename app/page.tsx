@@ -391,8 +391,8 @@ export default function Home() {
     // Puter preload
     loadPuter().catch(() => {});
 
-    // New session
-    createSession('New Chat').then(id => setSessionId(id));
+    // Session created lazily on first message send (prevents empty sessions)
+    // createSession is called in handleSend when sessionId is empty
 
     // Location â onboarding se pehle, phir GPS
     const savedCity = typeof window !== 'undefined' ? localStorage.getItem('jarvis_city') || localStorage.getItem('jarvis_user_city') : '';
@@ -615,7 +615,7 @@ export default function Home() {
       setMode:      (m) => setMode(m as Mode),
       setInput:     (t) => setInput(t),
       stopSpeaking: () => stopSpeaking(),
-      newChat:      () => { setMsgs([]); createSession('New Chat').then(id => setSessionId(id)); },
+      newChat:      () => { setMsgs([]); setSessionId(''); },
       scrollTop:    () => { document.querySelector('[data-chat]')?.scrollTo(0, 0); },
       scrollBottom: () => { bottomRef.current?.scrollIntoView({ behavior: 'smooth' }); },
     });
@@ -1972,9 +1972,14 @@ export default function Home() {
     import('@/lib/memory/smartMemory').then(m => m.learnFromMessage(text.trim())).catch(() => {});
     trackHabit(text.trim()).catch(() => {});
 
-    if (sessionId) {
-      saveMessage({ sessionId, role: 'user', content: text.trim(), timestamp: Date.now() });
-      if (isFirstMsg) generateTitle(text.trim(), sessionId);
+    let activeSessionId = sessionId;
+    if (!activeSessionId) {
+      activeSessionId = await createSession('New Chat');
+      setSessionId(activeSessionId);
+    }
+    if (activeSessionId) {
+      saveMessage({ sessionId: activeSessionId, role: 'user', content: text.trim(), timestamp: Date.now() });
+      if (isFirstMsg) generateTitle(text.trim(), activeSessionId);
     }
 
     // \u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080 Smart API Router \u00C3\u00A2\u00C2\u0080\u00C2\u0094 auto-detect and call free APIs \u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080
@@ -2130,7 +2135,7 @@ export default function Home() {
     }
 
     setLoading(false);
-    if (sessionId && fullText) saveMessage({ sessionId, role: 'assistant', content: fullText, timestamp: Date.now(), provider, card });
+    if (activeSessionId && fullText) saveMessage({ sessionId: activeSessionId, role: 'assistant', content: fullText, timestamp: Date.now(), provider, card });
 
     // Post-response: [LEARN:] tags + cache for offline + processAndSave + RESULT SAVE
     if (fullText && fullText.length > 10) {
