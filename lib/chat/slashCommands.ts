@@ -261,8 +261,8 @@ export async function cmdApp(appId: string, query?: string): Promise<SlashResult
     train:       { name:'IRCTC Trains',     url:()=>'https://www.irctc.co.in/nget/train-search' },
     pnr:         { name:'PNR Status',       url:()=>'https://www.irctc.co.in/nget/pnr-status' },
     digilocker:  { name:'DigiLocker',       url:()=>'https://www.digilocker.gov.in' },
-    nta:         { name:'NTA Padhai',         url:()=>'https://padhai.nta.nic.in' },
-    padhai:        { name:'Padhai Portal',      url:()=>'https://padhai.nta.nic.in' },
+    github:      { name:'GitHub',              url:()=>'https://github.com' },
+    stackoverflow: { name:'Stack Overflow',      url:()=>'https://stackoverflow.com' },
     // Communication
     whatsapp:    { name:'WhatsApp Web',     url:()=>'https://web.whatsapp.com' },
     wa:          { name:'WhatsApp Web',     url:(q)=>q?`https://wa.me/${q.replace(/\D/g,'')}`:'https://web.whatsapp.com' },
@@ -335,7 +335,7 @@ export function parseSlashCommand(input: string): ParsedCommand | null {
     'youtube','spotify',        // Media
     'calendar','gcal',          // Calendar
     'irctc','train','pnr',      // India travel
-    'digilocker','nta','padhai',  // India govt
+    'digilocker','github','stackoverflow',  // Dev
     'whatsapp','wa','telegram', // Communication
     'open',                     // Generic open
     'apps',                     // Hub
