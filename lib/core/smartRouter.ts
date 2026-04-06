@@ -145,7 +145,7 @@ const P = {
   groq70b:   { url: 'https://api.groq.com/openai/v1/chat/completions',    model: 'llama-3.3-70b-versatile',      name: 'groq' },
   groqR1:    { url: 'https://api.groq.com/openai/v1/chat/completions',    model: 'deepseek-r1-distill-llama-70b', name: 'groq' },
   gemFlash:  { url: 'https://generativelanguage.googleapis.com/v1beta/openai/chat/completions', model: 'gemini-2.0-flash', name: 'gemini' },
-  gemThink:  { url: 'https://generativelanguage.googleapis.com/v1beta/openai/chat/completions', model: 'gemini-2.5-flash-preview-04-17', name: 'gemini' },
+  gemThink:  { url: 'https://generativelanguage.googleapis.com/v1beta/openai/chat/completions', model: 'gemini-2.5-flash', name: 'gemini' },
   cerebras:  { url: 'https://api.cerebras.ai/v1/chat/completions',        model: 'llama-3.3-70b',                name: 'cerebras' },
   together:  { url: 'https://api.together.xyz/v1/chat/completions',       model: 'meta-llama/Llama-3.3-70B-Instruct-Turbo', name: 'together' },
   mistral:   { url: 'https://api.mistral.ai/v1/chat/completions',         model: 'mistral-small-latest',         name: 'mistral' },
