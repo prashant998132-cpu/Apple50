@@ -41,5 +41,19 @@ export async function GET(req: NextRequest) {
     })
   } catch {}
 
+  // 4. GNews (if API key passed via header)
+  const gnewsKey = req.headers.get('x-gnews-key') || ''
+  if (gnewsKey) {
+    try {
+      const r = await fetch(`https://gnews.io/api/v4/search?q=${encodeURIComponent(q)}&lang=en&country=in&max=4&apikey=${gnewsKey}`, { signal: AbortSignal.timeout(6000) })
+      if (r.ok) {
+        const d = await r.json()
+        d.articles?.slice(0, 4).forEach((a: any) => {
+          results.unshift({ type: 'news', title: a.title, text: a.description || '', url: a.url, source: 'GNews · ' + a.source.name })
+        })
+      }
+    } catch {}
+  }
+
   return NextResponse.json({ query: q, results, count: results.length })
 }
