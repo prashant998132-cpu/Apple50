@@ -71,7 +71,7 @@ export default function NavDrawer({ open, onClose }: Props) {
         <div style={{ padding: '16px 14px 12px', borderBottom: '1px solid #1e1e2e', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <div>
             <div style={{ color: '#00d4ff', fontWeight: 900, fontSize: 18, letterSpacing: 2 }}>JARVIS</div>
-            <div style={{ color: '#333', fontSize: 10, marginTop: 1 }}>v23 · apple50.vercel.app</div>
+            <div style={{ color: '#333', fontSize: 10, marginTop: 1 }}>v24 · apple50.vercel.app</div>
           </div>
           <button onClick={onClose} style={{ background: 'none', border: 'none', color: '#555', fontSize: 22, cursor: 'pointer', lineHeight: 1 }}>✕</button>
         </div>
