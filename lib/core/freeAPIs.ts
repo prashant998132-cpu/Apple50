@@ -74,13 +74,7 @@ export async function getGNews(query: string = 'india'): Promise<string> {
         const url = `https://gnews.io/api/v4/search?q=${encodeURIComponent(query)}&lang=en&country=in&max=5&apikey=${key}`
         const d = await get(url, 8000)
         if (d.articles?.length) {
-          return '📰 **GNews — ' + query + ':**
-' + d.articles.map((a: any, i: number) =>
-            `${i+1}. **${a.title}**
-   ${a.source.name} · ${new Date(a.publishedAt).toLocaleDateString('en-IN')}`
-          ).join('
-
-')
+          return '📰 **GNews — ' + query + ':**\n\n' + d.articles.map((a: any, i: number) => `${i+1}. **${a.title}**\n   ${a.source.name} · ${new Date(a.publishedAt).toLocaleDateString('en-IN')}`).join('\n\n')
         }
       }
     }
