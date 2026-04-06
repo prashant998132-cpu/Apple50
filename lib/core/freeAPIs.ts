@@ -64,6 +64,30 @@ export async function getCrypto(coin: string): Promise<string> {
 }
 
 // ── NEWS ─────────────────────────────────────────────────────────────
+// ── GNEWS (with API key) ─────────────────────────────────────────────
+export async function getGNews(query: string = 'india'): Promise<string> {
+  try {
+    if (typeof window !== 'undefined') {
+      const key = localStorage.getItem('jarvis_key_GNEWS_API_KEY')
+      if (key) {
+        const lang = 'hi,en'
+        const url = `https://gnews.io/api/v4/search?q=${encodeURIComponent(query)}&lang=en&country=in&max=5&apikey=${key}`
+        const d = await get(url, 8000)
+        if (d.articles?.length) {
+          return '📰 **GNews — ' + query + ':**
+' + d.articles.map((a: any, i: number) =>
+            `${i+1}. **${a.title}**
+   ${a.source.name} · ${new Date(a.publishedAt).toLocaleDateString('en-IN')}`
+          ).join('
+
+')
+        }
+      }
+    }
+  } catch {}
+  return ''
+}
+
 export async function getNews(query?: string): Promise<string> {
   try {
     let url = 'https://hacker-news.firebaseio.com/v0/topstories.json'
