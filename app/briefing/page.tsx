@@ -19,7 +19,8 @@ interface BriefSection {
 async function fetchWeather(): Promise<string> {
   try {
     // Try Open-Meteo first (no key, more reliable)
-    const geoRes = await fetch('https://geocoding-api.open-meteo.com/v1/search?name=Maihar&count=1', { signal: AbortSignal.timeout(4000) })
+    const city = (typeof window !== 'undefined' ? localStorage.getItem('jarvis_city') || localStorage.getItem('jarvis_user_city') : null) || 'Maihar'
+    const geoRes = await fetch('https://geocoding-api.open-meteo.com/v1/search?name=' + encodeURIComponent(city) + '&count=1', { signal: AbortSignal.timeout(4000) })
     const geo = await geoRes.json()
     const loc = geo.results?.[0]
     if (loc) {
@@ -34,7 +35,8 @@ async function fetchWeather(): Promise<string> {
   } catch {
     // Fallback to wttr.in
     try {
-      const res = await fetch('https://wttr.in/Maihar?format=j1', { signal: AbortSignal.timeout(5000) })
+      const city2 = (typeof window !== 'undefined' ? localStorage.getItem('jarvis_city') || localStorage.getItem('jarvis_user_city') : null) || 'Maihar'
+    const res = await fetch('https://wttr.in/' + encodeURIComponent(city2) + '?format=j1', { signal: AbortSignal.timeout(5000) })
       const d = await res.json()
       const c = d.current_condition?.[0]
       return (c?.temp_C ?? '?') + '°C · ' + (c?.weatherDesc?.[0]?.value ?? '') + ' · Humidity: ' + (c?.humidity ?? '?') + '%'
