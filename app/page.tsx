@@ -2051,7 +2051,11 @@ export default function Home() {
     let searchContext = ''
     if (searchTrigger && text.length > 8 && !(/weather|mausam|battery|reminder|goal|note|timer|whatsapp|open app/i.test(text))) {
       try {
-        const sr = await fetch('/api/search?q=' + encodeURIComponent(text.slice(0, 120)), { signal: AbortSignal.timeout(5000) })
+        const gnewsKey = typeof window !== 'undefined' ? localStorage.getItem('jarvis_key_GNEWS_API_KEY') || '' : ''
+        const sr = await fetch('/api/search?q=' + encodeURIComponent(text.slice(0, 120)), {
+          signal: AbortSignal.timeout(5000),
+          headers: gnewsKey ? { 'x-gnews-key': gnewsKey } : {}
+        })
         const sd = await sr.json()
         if (sd.results?.length) {
           const top = sd.results.slice(0, 3).map((r: any) => '[' + r.source + '] ' + r.title + ': ' + (r.text || '').slice(0, 250)).join('\n')
@@ -2320,6 +2324,7 @@ export default function Home() {
                   { icon: '', label: 'Agent Mode', action: () => { router.push('/agent'); setHeaderMenuOpen(false); }, active: false },
                   { icon: '', label: 'Sakhi', action: () => { router.push('/sakhi'); setHeaderMenuOpen(false); }, active: false },
                   { icon: '', label: 'Settings', action: () => { router.push('/settings'); setHeaderMenuOpen(false); }, active: false },
+                  { icon: '🧠', label: 'Memory', action: () => { router.push('/settings'); setHeaderMenuOpen(false); }, active: false },
                 ].map(item => (
                   <button key={item.label} onClick={item.action}
                     style={{ width: '100%', background: item.active ? 'rgba(0,212,255,0.1)' : 'transparent', border: 'none', borderBottom: '1px solid #111', color: item.active ? '#00d4ff' : '#ccc', padding: '12px 16px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 10, fontSize: 13, textAlign: 'left' }}>
@@ -2330,6 +2335,27 @@ export default function Home() {
             </>
           )}
         </div>
+      </div>
+
+      {/* Quick Command Bar — swipeable chips */}
+      <div style={{ overflowX:'auto', whiteSpace:'nowrap', padding:'6px 12px', borderBottom:'1px solid #111', scrollbarWidth:'none', WebkitOverflowScrolling:'touch' }}>
+        {[
+          { label:'🌤️ Mausam', cmd:'Maihar ka mausam batao' },
+          { label:'📰 News', cmd:'Top India news today' },
+          { label:'₿ BTC', cmd:'Bitcoin price INR' },
+          { label:'🖼️ Image', cmd:'Image bana: beautiful landscape' },
+          { label:'😂 Joke', cmd:'/joke' },
+          { label:'📖 Wiki', cmd:'/wiki India' },
+          { label:'💱 Rate', cmd:'1 USD to INR' },
+          { label:'🔋 Battery', cmd:'/battery' },
+          { label:'🎯 Goals', cmd:'/goals' },
+          { label:'📅 Date', cmd:'Aaj ki date kya hai?' },
+        ].map(c => (
+          <button key={c.label} onClick={() => send(c.cmd)}
+            style={{ display:'inline-block', background:'rgba(255,255,255,0.03)', border:'1px solid #1e1e2e', borderRadius:16, color:'#555', padding:'4px 12px', fontSize:11, cursor:'pointer', marginRight:6, whiteSpace:'nowrap', transition:'all 0.15s', flexShrink:0 }}>
+            {c.label}
+          </button>
+        ))}
       </div>
 
       {/* PWA Install Banner */}
@@ -2444,6 +2470,9 @@ export default function Home() {
         </span>
 
         {/* Compress dropdown \u00C3\u00A2\u00C2\u0080\u00C2\u0094 input mein likhi hua shorten karo */}
+        {input.trim().length > 0 && (
+          <span style={{ color:'#2a2a4a', fontSize:10 }}>{input.length}c</span>
+        )}
         {input.trim().length > 20 && (
           <div style={{ display: 'flex', gap: 4 }}>
             <span style={{ color: '#444', fontSize: 10, alignSelf: 'center' }}>\u00C3\u00B0\u00C2\u009F\u00C2\u0097\u00C2\u009C\u00C3\u00AF\u00C2\u00B8\u00C2\u008F</span>
