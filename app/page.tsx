@@ -108,7 +108,7 @@ function RichCard({ card }: { card: any }) {
   );
 }
 
-function MsgItem({ msg, onDelete, onRegenerate }: { msg: Msg; onDelete?: (id: string) => void; onRegenerate?: () => void }) {
+function MsgItem({ msg, onDelete, onRegenerate, fontSize = 15 }: { msg: Msg; onDelete?: (id: string) => void; onRegenerate?: () => void; fontSize?: number }) {
   const isUser = msg.role === 'user';
   const [menuOpen, setMenuOpen] = React.useState(false);
   const longPressTimer = React.useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -136,7 +136,7 @@ function MsgItem({ msg, onDelete, onRegenerate }: { msg: Msg; onDelete?: (id: st
       {isUser ? (
         <div onPointerDown={startLongPress} onPointerUp={cancelLongPress} onPointerLeave={cancelLongPress}
           style={{ position: 'relative' }}>
-          <div className="user-bubble">{msg.content}</div>
+          <div className="user-bubble" style={{ fontSize: fontSize }}>{msg.content}</div>
           {menuOpen && (
             <div style={{ position: 'absolute', bottom: '110%', right: 0, background: '#0d0d18', border: '1px solid #1e1e2e', borderRadius: 12, padding: 6, zIndex: 1000, display: 'flex', gap: 4, boxShadow: '0 4px 20px rgba(0,0,0,0.6)', whiteSpace: 'nowrap' }}>
               {[['', 'Copy', copy], ['', 'Share', share], ['', 'Pin', () => { const pins = JSON.parse(localStorage.getItem('jarvis_pins')||'[]'); if(!pins.find((p:any)=>p.id===msg.id)){pins.unshift({id:msg.id,content:msg.content,ts:Date.now()});localStorage.setItem('jarvis_pins',JSON.stringify(pins.slice(0,10)));} setMenuOpen(false); alert(' Pinned!'); }], ['', 'Delete', () => { onDelete?.(msg.id); setMenuOpen(false); }]].map(([icon, label, fn]: any) => (
@@ -152,7 +152,7 @@ function MsgItem({ msg, onDelete, onRegenerate }: { msg: Msg; onDelete?: (id: st
           <div style={{ color: '#00d4ff', fontSize: 11, marginBottom: 2, fontWeight: 600 }}>
             JARVIS {msg.provider ? ' ' + msg.provider : ''}
           </div>
-          <div className="jarvis-message" style={{ position: 'relative' }}>
+          <div className="jarvis-message" style={{ position: 'relative', fontSize: fontSize }}>
             <ReactMarkdown remarkPlugins={[remarkGfm]}>{msg.content}</ReactMarkdown>
           </div>
           {msg.card && <RichCard card={msg.card} />}
@@ -308,6 +308,7 @@ export default function Home() {
   const mediaRecRef = React.useRef<MediaRecorder | null>(null);
   const photoInputRef = React.useRef<HTMLInputElement>(null);
   const fileInputRef = React.useRef<HTMLInputElement>(null);
+  const [attachedImage, setAttachedImage] = React.useState<{base64:string,preview:string,name:string}|null>(null);
   const [chatBg, setChatBg] = React.useState<string>('none');
   React.useEffect(() => {
     if (typeof window === 'undefined') return;
@@ -343,6 +344,12 @@ export default function Home() {
   const { online, reconnected } = useOnlineStatus();
 
   const effectiveMode = mode === 'auto' ? autoRouteMode(input) : mode;
+  const [fontSize, setFontSize] = React.useState<number>(15);
+  React.useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const saved = parseInt(localStorage.getItem('jarvis_font_size') || '15');
+    if (!isNaN(saved)) setFontSize(saved);
+  }, []);
 
   // ââ Global keyboard shortcuts âââââââââââââââââââââââââââââââââââââââââââ
   React.useEffect(() => {
@@ -377,6 +384,13 @@ export default function Home() {
     };
     vv.addEventListener('resize', onResize);
     return () => vv.removeEventListener('resize', onResize);
+  }, []);
+
+  // ── BottomNav FAB: new chat event
+  React.useEffect(() => {
+    const handler = () => { setMsgs([]); setSessionId(''); setAttachedImage(null); setInput(''); };
+    window.addEventListener('jarvis:newchat', handler as EventListener);
+    return () => window.removeEventListener('jarvis:newchat', handler as EventListener);
   }, []);
 
   // ââ Init âââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
@@ -615,7 +629,7 @@ export default function Home() {
       setMode:      (m) => setMode(m as Mode),
       setInput:     (t) => setInput(t),
       stopSpeaking: () => stopSpeaking(),
-      newChat:      () => { setMsgs([]); setSessionId(''); },
+      newChat:      () => { setMsgs([]); setSessionId(''); setAttachedImage(null); },
       scrollTop:    () => { document.querySelector('[data-chat]')?.scrollTo(0, 0); },
       scrollBottom: () => { bottomRef.current?.scrollIntoView({ behavior: 'smooth' }); },
     });
@@ -2046,6 +2060,17 @@ export default function Home() {
       } catch {}
     }
 
+    // If image attached, run vision first then include result as context
+    if (attachedImage) {
+      const imgSnap = attachedImage; setAttachedImage(null);
+      const ck2: Record<string,string> = {};
+      if (typeof window !== 'undefined') ['GROQ_API_KEY','GEMINI_API_KEY','CEREBRAS_API_KEY','TOGETHER_API_KEY','MISTRAL_API_KEY','COHERE_API_KEY','FIREWORKS_API_KEY','OPENROUTER_API_KEY','DEEPINFRA_API_KEY','HUGGINGFACE_API_KEY'].forEach(k => { const v=localStorage.getItem('jarvis_key_'+k); if(v) ck2[k]=v; });
+      try {
+        const vr = await fetch('/api/vision',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({image:imgSnap.base64,question:text.trim(),clientKeys:ck2})});
+        const vd = await vr.json();
+        if (vd.result) searchContext += '\n\n[IMAGE ANALYSIS: ' + vd.result + ']';
+      } catch {}
+    }
     history.push({ role: 'user', content: text.trim() + searchContext });
 
     const eMode = mode === 'auto' ? autoRouteMode(text) : mode;
@@ -2357,7 +2382,7 @@ export default function Home() {
         {msgs.map((msg: Msg) => {
           const msgDel = (id: string) => setMsgs(prev => prev.filter(m => m.id !== id));
           const msgRegen = () => { const u = [...msgs].reverse().find(m => m.role === 'user'); if (u) send(u.content); };
-          const MsgEl = MsgItem as any; return <MsgEl key={msg.id} msg={msg} onDelete={msgDel} onRegenerate={msgRegen} />;
+          const MsgEl = MsgItem as any; return <MsgEl key={msg.id} msg={msg} onDelete={msgDel} onRegenerate={msgRegen} fontSize={fontSize} />;
         })}
         {loading && <div style={{ padding: '0 12px' }}><TypingDots /></div>}
 
@@ -2445,7 +2470,34 @@ export default function Home() {
       </div>
 
       {/* \u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080 Input Bar v3 \u00C3\u00A2\u00C2\u0080\u00C2\u0094 ChatGPT style \u00C3\u00A2\u00C2\u0094\u00C2\u0080\u00C3\u00A2\u00C2\u0094\u00C2\u0080 */}
-      <div style={{ padding: '8px 12px 12px', borderTop: '1px solid #1e1e2e', background: 'var(--bg)' }}>
+      {attachedImage && (
+        <div style={{ padding:'6px 12px 0', display:'flex', alignItems:'center', gap:8, background:'var(--bg)', borderTop:'1px solid #1a1a2e' }}>
+          <div style={{ position:'relative', flexShrink:0 }}>
+            <img src={attachedImage.preview} alt="attached" style={{ width:52,height:52,objectFit:'cover',borderRadius:10,border:'1px solid rgba(0,212,255,0.3)' }} />
+            <button onClick={() => setAttachedImage(null)} style={{ position:'absolute',top:-6,right:-6,width:18,height:18,borderRadius:'50%',background:'#ef4444',border:'none',color:'#fff',fontSize:10,cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',fontWeight:900 }}>×</button>
+          </div>
+          <div style={{ fontSize:11, color:'#00d4ff' }}>
+            📷 <span style={{ color:'#555' }}>{attachedImage.name}</span><br/>
+            <span style={{ color:'#333',fontSize:10 }}>Question type karo → Send karo</span>
+          </div>
+          <button onClick={async () => {
+            const imgCopy = attachedImage; setAttachedImage(null);
+            const ck: Record<string,string> = {};
+            if (typeof window !== 'undefined') ['GROQ_API_KEY','GEMINI_API_KEY','CEREBRAS_API_KEY','TOGETHER_API_KEY','MISTRAL_API_KEY','COHERE_API_KEY','FIREWORKS_API_KEY','OPENROUTER_API_KEY','DEEPINFRA_API_KEY','HUGGINGFACE_API_KEY'].forEach(k => { const v = localStorage.getItem('jarvis_key_'+k); if(v) ck[k]=v; });
+            setMsgs(prev => [...prev, { id:'u_'+Date.now(),role:'user',content:'📷 '+imgCopy.name,timestamp:Date.now(),card:{type:'image',imageUrl:imgCopy.preview,title:imgCopy.name} }]);
+            setLoading(true);
+            try {
+              const res = await fetch('/api/vision',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({image:imgCopy.base64,question:'Is image mein kya hai? Detail mein batao Hinglish mein.',clientKeys:ck})});
+              const d = await res.json();
+              setMsgs(prev => [...prev, { id:'a_'+Date.now(),role:'assistant',content:'🔍 '+(d.result||d.error||'Vision failed'),timestamp:Date.now() }]);
+            } catch { setMsgs(prev => [...prev, { id:'a_'+Date.now(),role:'assistant',content:'🔍 Vision error. Settings mein Gemini key daalo.',timestamp:Date.now() }]); }
+            setLoading(false);
+          }} style={{ marginLeft:'auto',background:'rgba(0,212,255,0.1)',border:'1px solid rgba(0,212,255,0.3)',borderRadius:8,color:'#00d4ff',fontSize:11,padding:'4px 10px',cursor:'pointer',whiteSpace:'nowrap',flexShrink:0 }}>
+            🔍 Analyze
+          </button>
+        </div>
+      )}
+      <div style={{ padding: '8px 12px 12px', borderTop: attachedImage ? 'none' : '1px solid #1e1e2e', background: 'var(--bg)' }}>
         <div style={{
           display: 'flex', alignItems: 'flex-end',
           background: '#111118',
@@ -2550,14 +2602,9 @@ export default function Home() {
           const reader = new FileReader();
           reader.onload = async ev => {
             const dataUrl = ev.target?.result as string;
-            setMsgs(prev => [...prev, { id:'u_'+Date.now(), role:'user', content:' '+f.name, timestamp:Date.now(), card:{ type:'image', imageUrl:dataUrl, title:f.name } }]);
-            setLoading(true);
-            try {
-              const res = await fetch('/api/vision', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ image: dataUrl.split(',')[1], prompt:'Is image mein kya hai? Hinglish mein detail mein batao.' }) });
-              const d = await res.json();
-              setMsgs(prev => [...prev, { id:'a_'+Date.now(), role:'assistant', content:' '+(d.result||d.text||'Photo dekh li! Kuch poochho.'), timestamp:Date.now() }]);
-            } catch { setMsgs(prev => [...prev, { id:'a_'+Date.now(), role:'assistant', content:' Photo receive ki! Kya jaanna hai?', timestamp:Date.now() }]); }
-            setLoading(false);
+            setAttachedImage({ base64: dataUrl.split(',')[1], preview: dataUrl, name: f.name });
+            toastOk('📷 Photo attach ho gayi! Ab question type karo aur send karo.');
+            textareaRef.current?.focus();
           };
           reader.readAsDataURL(f);
         }} />
