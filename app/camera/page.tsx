@@ -62,7 +62,7 @@ export default function CameraPage() {
       const q = prompt || question || 'Yeh image mein kya hai? Describe karo.'
       const res = await fetch('/api/vision', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ image: base64, question: q, systemPrompt: sysPrompt }),
+        body: JSON.stringify({ image: base64, question: q, systemPrompt: sysPrompt, clientKeys: (() => { const ck: Record<string,string> = {}; if (typeof window !== 'undefined') ['GROQ_API_KEY','GEMINI_API_KEY'].forEach(k => { const v = localStorage.getItem('jarvis_key_'+k); if(v) ck[k]=v }); return ck; })() }),
       })
       const d = await res.json()
       if (d.result) setResult(d.result)
