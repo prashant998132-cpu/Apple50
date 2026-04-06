@@ -258,3 +258,83 @@ body {
   flex-shrink: 0;
   display: block;
 }
+
+/* ── v24 Additions ─────────────────────────────────────────── */
+
+/* Image preview strip */
+.img-preview-strip {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 12px;
+  background: rgba(0,212,255,0.03);
+  border-top: 1px solid #1a1a2e;
+  animation: slideUp 0.2s ease;
+}
+
+/* Orb page canvas glow */
+.orb-canvas-wrap {
+  filter: drop-shadow(0 0 30px rgba(0,212,255,0.3));
+  transition: filter 0.3s;
+}
+.orb-canvas-wrap.listening {
+  filter: drop-shadow(0 0 40px rgba(0,255,180,0.5));
+}
+.orb-canvas-wrap.speaking {
+  filter: drop-shadow(0 0 40px rgba(255,160,0,0.5));
+}
+
+/* Slide up animation */
+@keyframes slideUp {
+  from { transform: translateY(8px); opacity: 0; }
+  to   { transform: translateY(0);   opacity: 1; }
+}
+
+/* BottomNav FAB glow */
+.fab-glow {
+  box-shadow: 0 0 20px rgba(0,212,255,0.4), 0 4px 15px rgba(0,212,255,0.2);
+  animation: fabPulse 2.5s infinite;
+}
+@keyframes fabPulse {
+  0%, 100% { box-shadow: 0 0 20px rgba(0,212,255,0.4), 0 4px 15px rgba(0,212,255,0.2); }
+  50%       { box-shadow: 0 0 30px rgba(0,212,255,0.7), 0 6px 20px rgba(0,212,255,0.3); }
+}
+
+/* Typing indicator v2 */
+.typing-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #00d4ff;
+  animation: typingBounce 1.2s infinite ease-in-out;
+}
+@keyframes typingBounce {
+  0%, 60%, 100% { transform: translateY(0); opacity: 0.4; }
+  30%            { transform: translateY(-6px); opacity: 1; }
+}
+
+/* Message bubble hover */
+.jarvis-message:hover { opacity: 0.95; }
+
+/* Code block v2 */
+.jarvis-message pre {
+  scrollbar-width: thin;
+  scrollbar-color: #1e1e2e transparent;
+}
+
+/* Suggestion chip hover */
+button.chip:hover {
+  background: rgba(0,212,255,0.1) !important;
+  border-color: #00d4ff !important;
+  color: #00d4ff !important;
+}
+
+/* Connected apps grid card */
+.app-card {
+  background: #111118;
+  border-radius: 12px;
+  padding: 12px 8px;
+  text-align: center;
+  transition: transform 0.15s, border-color 0.15s;
+}
+.app-card:hover { transform: translateY(-2px); }
