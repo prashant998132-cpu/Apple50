@@ -17,9 +17,10 @@ const API_KEYS = [
   { key:'DEEPINFRA_API_KEY',  label:'DeepInfra',  icon:'🌊', priority:'LOW',  url:'https://deepinfra.com',              desc:'Budget option.' },
   { key:'HUGGINGFACE_API_KEY',label:'HuggingFace',icon:'🤗', priority:'LOW',  url:'https://huggingface.co/settings/tokens', desc:'Mistral 7B fallback.' },
   { key:'ELEVENLABS_API_KEY', label:'ElevenLabs', icon:'🎙️', priority:'MED',  url:'https://elevenlabs.io',                 desc:'Best TTS voice — 10K chars/month FREE. Realistic human voice.' },
+  { key:'GNEWS_API_KEY',      label:'GNews',      icon:'📰', priority:'MED',  url:'https://gnews.io',                      desc:'100 free news requests/day. India + World news.' },
 ]
 
-type Tab = 'keys' | 'automation' | 'theme' | 'about' | 'memory'
+type Tab = 'keys' | 'automation' | 'theme' | 'about' | 'memory' | 'display'
 
 function MemoryManager() {
   const [mems, setMems] = React.useState<any[]>([])
@@ -109,10 +110,11 @@ export default function SettingsPage() {
 
   const TABS: { key: Tab; icon: string; label: string }[] = [
     { key:'keys', icon:'🔑', label:'Keys' },
-    { key:'automation', icon:'⚡', label:'Automation' },
+    { key:'display', icon:'📱', label:'Display' },
+    { key:'automation', icon:'⚡', label:'Auto' },
+    { key:'memory', icon:'🧠', label:'Memory' },
     { key:'theme', icon:'🎨', label:'Theme' },
     { key:'about', icon:'ℹ️', label:'About' },
-  { key:'memory', icon:'🧠', label:'Memory' },
   ]
 
   return (
@@ -245,6 +247,85 @@ export default function SettingsPage() {
                 placeholder="MacroDroid Device ID..."
                 style={{ width:'100%', background:'#111118', border:'1px solid #2a2a4a', borderRadius:8, padding:'9px 12px', color:'#e0e0ff', fontSize:13, outline:'none', boxSizing:'border-box' }}
               />
+            </div>
+          </div>
+        )}
+
+        {/* DISPLAY TAB */}
+        {tab === 'display' && (
+          <div>
+            {/* Font Size */}
+            <div style={{ marginBottom:20 }}>
+              <div style={{ color:'#00d4ff', fontWeight:700, fontSize:13, marginBottom:8 }}>📝 Chat Font Size</div>
+              <div style={{ display:'flex', alignItems:'center', gap:12 }}>
+                <span style={{ color:'#555', fontSize:12 }}>A</span>
+                <input type="range" min={12} max={20} step={1}
+                  defaultValue={typeof window!=='undefined' ? parseInt(localStorage.getItem('jarvis_font_size')||'15') : 15}
+                  onChange={e => {
+                    const v = parseInt(e.target.value);
+                    localStorage.setItem('jarvis_font_size', String(v));
+                  }}
+                  style={{ flex:1, accentColor:'#00d4ff' }} />
+                <span style={{ color:'#00d4ff', fontSize:16 }}>A</span>
+              </div>
+              <div style={{ color:'#444', fontSize:10, marginTop:4 }}>Slider drag karo → Reload pe apply hoga</div>
+            </div>
+
+            {/* Chat Background */}
+            <div style={{ marginBottom:20 }}>
+              <div style={{ color:'#00d4ff', fontWeight:700, fontSize:13, marginBottom:8 }}>🖼️ Chat Background</div>
+              {[
+                {id:'none',label:'Dark (Default)',preview:'#08080f'},
+                {id:'gradient1',label:'Cyber',preview:'linear-gradient(135deg,#0a0a1a,#0d1f2d)'},
+                {id:'gradient2',label:'Deep Space',preview:'linear-gradient(180deg,#060610,#0f0520)'},
+                {id:'gradient3',label:'Matrix',preview:'linear-gradient(180deg,#050e05,#0a1a0a)'},
+              ].map(bg => {
+                const saved = typeof window!=='undefined' ? localStorage.getItem('jarvis_chat_bg')||'none' : 'none';
+                return (
+                  <button key={bg.id} onClick={() => {
+                    localStorage.setItem('jarvis_chat_bg', bg.id);
+                    window.dispatchEvent(new Event('storage'));
+                  }}
+                    style={{ display:'flex', alignItems:'center', gap:10, width:'100%', background: saved===bg.id?'rgba(0,212,255,0.1)':'#111118', border:'1px solid '+(saved===bg.id?'#00d4ff':'#1e1e2e'), borderRadius:10, padding:'10px 12px', marginBottom:6, cursor:'pointer' }}>
+                    <div style={{ width:28, height:28, borderRadius:6, background:bg.preview, border:'1px solid #333', flexShrink:0 }} />
+                    <span style={{ color: saved===bg.id?'#00d4ff':'#888', fontSize:13 }}>{bg.label}</span>
+                    {saved===bg.id && <span style={{ marginLeft:'auto', color:'#22c55e', fontSize:11 }}>✓ Active</span>}
+                  </button>
+                );
+              })}
+            </div>
+
+            {/* Data Export */}
+            <div style={{ marginBottom:20 }}>
+              <div style={{ color:'#00d4ff', fontWeight:700, fontSize:13, marginBottom:8 }}>💾 Data Export</div>
+              <button onClick={async () => {
+                try {
+                  const { getSessions, getMessages } = await import('@/lib/storage');
+                  const sessions = await getSessions();
+                  const allData: any = { exportedAt: new Date().toISOString(), version: '24.0.0', sessions: [] };
+                  for (const s of sessions.slice(0,50)) {
+                    const msgs = await getMessages(s.sessionId);
+                    allData.sessions.push({ ...s, messages: msgs });
+                  }
+                  // Include memories
+                  const memMod = await import('@/lib/memory/smartMemory');
+                  allData.memories = memMod.getAllMemories();
+                  const blob = new Blob([JSON.stringify(allData, null, 2)], { type:'application/json' });
+                  const url = URL.createObjectURL(blob);
+                  const a = document.createElement('a'); a.href=url; a.download='jarvis-backup-'+Date.now()+'.json'; a.click();
+                  URL.revokeObjectURL(url);
+                } catch(e) { alert('Export failed: '+e); }
+              }} style={{ width:'100%', background:'rgba(0,212,255,0.08)', border:'1px solid rgba(0,212,255,0.3)', borderRadius:10, padding:'12px', color:'#00d4ff', fontSize:13, cursor:'pointer', marginBottom:8 }}>
+                📤 Export All Chats + Memory (JSON)
+              </button>
+              <button onClick={() => {
+                const data: any = {};
+                for(let i=0;i<localStorage.length;i++){const k=localStorage.key(i)!;data[k]=localStorage.getItem(k);}
+                const blob = new Blob([JSON.stringify(data,null,2)],{type:'application/json'});
+                const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download='jarvis-settings-'+Date.now()+'.json';a.click();URL.revokeObjectURL(url);
+              }} style={{ width:'100%', background:'rgba(34,197,94,0.08)', border:'1px solid rgba(34,197,94,0.3)', borderRadius:10, padding:'12px', color:'#22c55e', fontSize:13, cursor:'pointer' }}>
+                📋 Export Settings Only
+              </button>
             </div>
           </div>
         )}
