@@ -63,11 +63,13 @@ const CONNECTED_APPS = [
 // ── Helper Components ─────────────────────────────────────────────────────
 function TypingDots() {
   return (
-    <div style={{ display: 'flex', gap: 4, padding: '8px 0', alignItems: 'center' }}>
-      <span style={{ color: '#00d4ff', marginRight: 6, fontSize: 13 }}>JARVIS</span>
-      {[0, 1, 2].map(i => (
-        <div key={i} className="typing-dot" style={{ animationDelay: `${i * 0.2}s` }} />
-      ))}
+    <div className="typing-wrap">
+      <div className="typing-avatar">J</div>
+      <div className="typing-bubble">
+        <div className="typing-dot" />
+        <div className="typing-dot" />
+        <div className="typing-dot" />
+      </div>
     </div>
   );
 }
@@ -113,68 +115,60 @@ function MsgItem({ msg, onDelete, onRegenerate, fontSize = 15 }: { msg: Msg; onD
   const [menuOpen, setMenuOpen] = React.useState(false);
   const longPressTimer = React.useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  const startLongPress = () => {
-    longPressTimer.current = setTimeout(() => {
-      setMenuOpen(true);
-      if (typeof navigator !== 'undefined') navigator.vibrate?.(50);
-    }, 500);
-  };
+  const startLongPress = () => { longPressTimer.current = setTimeout(() => { setMenuOpen(true); navigator.vibrate?.(50); }, 500); };
   const cancelLongPress = () => { if (longPressTimer.current) clearTimeout(longPressTimer.current); };
-
   const copy = () => { navigator.clipboard?.writeText(msg.content); setMenuOpen(false); };
-  const share = () => {
-    if (navigator.share) navigator.share({ text: msg.content });
-    else { navigator.clipboard?.writeText(msg.content); }
-    setMenuOpen(false);
-  };
+  const share = () => { if (navigator.share) navigator.share({ text: msg.content }); else navigator.clipboard?.writeText(msg.content); setMenuOpen(false); };
+  const pin = () => { const pins = JSON.parse(localStorage.getItem('jarvis_pins')||'[]'); if(!pins.find((p:any)=>p.id===msg.id)){pins.unshift({id:msg.id,content:msg.content,ts:Date.now()});localStorage.setItem('jarvis_pins',JSON.stringify(pins.slice(0,10)));} setMenuOpen(false); };
+
+  const ContextMenu = () => (
+    <div style={{ position:'absolute', background:'#16162a', border:'1px solid #252545', borderRadius:14, padding:6, zIndex:1000, display:'flex', gap:2, boxShadow:'0 8px 32px rgba(0,0,0,0.7)', whiteSpace:'nowrap', top: isUser ? 'auto' : -4, bottom: isUser ? '110%' : 'auto', right: isUser ? 0 : 'auto', left: isUser ? 'auto' : 0 }}>
+      {[['📋','Copy',copy],['📤','Share',share],['📌','Pin',pin],isUser ? null : ['🔄','Retry',()=>{onRegenerate?.();setMenuOpen(false);}],['🗑️','Del',()=>{onDelete?.(msg.id);setMenuOpen(false);}]].filter(Boolean).map((item:any)=>(
+        <button key={item[1]} onClick={item[2]} style={{ background:'none',border:'none',color:'#9090b0',cursor:'pointer',padding:'7px 10px',borderRadius:9,display:'flex',flexDirection:'column',alignItems:'center',gap:2,fontSize:10,transition:'all 0.1s' }}>
+          <span style={{ fontSize:16 }}>{item[0]}</span>{item[1]}
+        </button>
+      ))}
+    </div>
+  );
+
+  if (isUser) return (
+    <div className="msg-user" onPointerDown={startLongPress} onPointerUp={cancelLongPress} onPointerLeave={cancelLongPress}>
+      {menuOpen && <div onClick={()=>setMenuOpen(false)} style={{position:'fixed',inset:0,zIndex:999}}/>}
+      <div style={{ position:'relative' }}>
+        {menuOpen && <ContextMenu />}
+        <div className="msg-user-bubble" style={{ fontSize }}>{msg.content}</div>
+      </div>
+    </div>
+  );
 
   return (
-    <div className="fade-in" style={{ display: 'flex', justifyContent: isUser ? 'flex-end' : 'flex-start', marginBottom: 12, padding: '0 12px', position: 'relative' }}>
-      {menuOpen && (
-        <div onClick={() => setMenuOpen(false)} style={{ position: 'fixed', inset: 0, zIndex: 999 }} />
-      )}
-      {isUser ? (
-        <div onPointerDown={startLongPress} onPointerUp={cancelLongPress} onPointerLeave={cancelLongPress}
-          style={{ position: 'relative' }}>
-          <div className="user-bubble" style={{ fontSize: fontSize }}>{msg.content}</div>
-          {menuOpen && (
-            <div style={{ position: 'absolute', bottom: '110%', right: 0, background: '#0d0d18', border: '1px solid #1e1e2e', borderRadius: 12, padding: 6, zIndex: 1000, display: 'flex', gap: 4, boxShadow: '0 4px 20px rgba(0,0,0,0.6)', whiteSpace: 'nowrap' }}>
-              {[['', 'Copy', copy], ['', 'Share', share], ['', 'Pin', () => { const pins = JSON.parse(localStorage.getItem('jarvis_pins')||'[]'); if(!pins.find((p:any)=>p.id===msg.id)){pins.unshift({id:msg.id,content:msg.content,ts:Date.now()});localStorage.setItem('jarvis_pins',JSON.stringify(pins.slice(0,10)));} setMenuOpen(false); alert(' Pinned!'); }], ['', 'Delete', () => { onDelete?.(msg.id); setMenuOpen(false); }]].map(([icon, label, fn]: any) => (
-                <button key={label as string} onClick={fn} style={{ background: 'none', border: 'none', color: '#888', cursor: 'pointer', padding: '6px 10px', borderRadius: 8, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2, fontSize: 10 }}>
-                  <span style={{ fontSize: 16 }}>{icon as string}</span>{label as string}
-                </button>
-              ))}
-            </div>
-          )}
+    <div className="msg-jarvis" onPointerDown={startLongPress} onPointerUp={cancelLongPress} onPointerLeave={cancelLongPress}>
+      {menuOpen && <div onClick={()=>setMenuOpen(false)} style={{position:'fixed',inset:0,zIndex:999}}/>}
+      <div className="msg-jarvis-avatar">J</div>
+      <div className="msg-jarvis-body" style={{ position:'relative' }}>
+        {menuOpen && <ContextMenu />}
+        <div className="msg-jarvis-name">
+          JARVIS
+          {msg.provider && <span className="provider-badge">{msg.provider}</span>}
         </div>
-      ) : (
-        <div style={{ maxWidth: '90%' }} onPointerDown={startLongPress} onPointerUp={cancelLongPress} onPointerLeave={cancelLongPress}>
-          <div style={{ color: '#00d4ff', fontSize: 11, marginBottom: 2, fontWeight: 600 }}>
-            JARVIS {msg.provider ? ' ' + msg.provider : ''}
-          </div>
-          <div className="jarvis-message" style={{ position: 'relative', fontSize: fontSize }}>
-            <ReactMarkdown remarkPlugins={[remarkGfm]}>{msg.content}</ReactMarkdown>
-          </div>
-          {msg.card && <RichCard card={msg.card} />}
-          {msg.widget && <CommandWidgetRenderer userText={msg.widget} aiText={msg.content} />}
-          <div style={{ display: 'flex', gap: 6, marginTop: 4 }}>
-            <button onClick={() => speakText(msg.content)}
-              style={{ background: 'none', border: 'none', color: '#333', fontSize: 12, cursor: 'pointer', padding: '2px 0' }}>🔊</button>
-          </div>
-          {menuOpen && (
-            <div style={{ position: 'absolute', left: 0, background: '#0d0d18', border: '1px solid #1e1e2e', borderRadius: 12, padding: 6, zIndex: 1000, display: 'flex', gap: 4, boxShadow: '0 4px 20px rgba(0,0,0,0.6)', whiteSpace: 'nowrap' }}>
-              {[['', 'Copy', copy], ['', 'Share', share], ['', 'Pin', () => { const pins = JSON.parse(localStorage.getItem('jarvis_pins')||'[]'); if(!pins.find((p:any)=>p.id===msg.id)){pins.unshift({id:msg.id,content:msg.content,ts:Date.now()});localStorage.setItem('jarvis_pins',JSON.stringify(pins.slice(0,10)));} setMenuOpen(false); alert(' Pinned!'); }], ['', 'Again', () => { onRegenerate?.(); setMenuOpen(false); }], ['', 'Delete', () => { onDelete?.(msg.id); setMenuOpen(false); }]].map(([icon, label, fn]: any) => (
-                <button key={label as string} onClick={fn} style={{ background: 'none', border: 'none', color: '#888', cursor: 'pointer', padding: '6px 10px', borderRadius: 8, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2, fontSize: 10 }}>
-                  <span style={{ fontSize: 16 }}>{icon as string}</span>{label as string}
-                </button>
-              ))}
-            </div>
-          )}
+        <div className="jarvis-message" style={{ fontSize }}>
+          <ReactMarkdown remarkPlugins={[remarkGfm]}>{msg.content}</ReactMarkdown>
         </div>
-      )}
+        {msg.card && <RichCard card={msg.card} />}
+        {msg.widget && <CommandWidgetRenderer userText={msg.widget} aiText={msg.content} />}
+        <div className="msg-actions">
+          <button className="msg-action-btn" onClick={()=>speakText(msg.content)} title="Read">🔊</button>
+          <button className="msg-action-btn" onClick={copy} title="Copy">📋</button>
+          {onRegenerate && <button className="msg-action-btn" onClick={()=>{onRegenerate?.();}} title="Retry">🔄</button>}
+          {['👍','🔥','🤔','😮'].map(e=>(
+            <button key={e} className="msg-action-btn" onClick={()=>navigator.vibrate?.(15)} style={{ opacity:0.5 }}>{e}</button>
+          ))}
+        </div>
+      </div>
     </div>
   );
 }
+
 
 function CommandWidgetRenderer({ userText, aiText }: { userText: string; aiText: string }) {
   const [widget, setWidget] = React.useState<React.ReactNode>(null);
@@ -2283,34 +2277,25 @@ export default function Home() {
       {/* Connected Apps Panel */}
       <ConnectedAppsPanel open={appsOpen} onClose={() => setAppsOpen(false)} />
 
-      {/* Header */}
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 14px', borderBottom: '1px solid #1e1e2e', background: 'var(--bg)' }}>
-        {/* J Logo */}
-        <button onClick={() => setNavOpen(true)}
-          style={{ width: 36, height: 36, borderRadius: '50%', background: 'linear-gradient(135deg,#00d4ff,#0066aa)', border: 'none', color: '#000', fontWeight: 900, fontSize: 16, cursor: 'pointer', flexShrink: 0 }}>
-          J
-        </button>
+      {/* Header — Premium */}
+      <div className="jarvis-header">
+        <button className="header-logo" onClick={() => setNavOpen(true)}>J</button>
 
-        <div style={{ textAlign: 'center', flex: 1 }}>
-          <div style={{ color: '#00d4ff', fontWeight: 800, fontSize: 17, letterSpacing: 1 }}>
+        <div className="header-title">
+          <div className="name">
             JARVIS
-            {!online && <span style={{ fontSize: 9, color: '#ef4444', marginLeft: 6 }}>● Offline</span>}
-            {reconnected && <span style={{ fontSize: 9, color: '#22c55e', marginLeft: 6 }}>● Online</span>}
+            {!online && <span style={{ fontSize:9, color:'#ef4444', marginLeft:6, WebkitTextFillColor:'#ef4444' }}>● Offline</span>}
+            {reconnected && <span style={{ fontSize:9, color:'#22c55e', marginLeft:6, WebkitTextFillColor:'#22c55e' }}>● Online</span>}
           </div>
-          <div style={{ color: '#444', fontSize: 9, marginTop: 1 }}>
-            {location ? ' ' + location : online ? 'Online' : 'Offline'}
-          </div>
+          <div className="sub">{location ? '📍 ' + location : online ? '● Connected' : '○ Offline'}</div>
         </div>
 
         <div style={{ position: 'relative' }}>
-          <button onClick={() => setHeaderMenuOpen(p => !p)}
-            style={{ background: 'none', border: 'none', color: '#888', fontSize: 22, cursor: 'pointer', padding: '0 4px', letterSpacing: 1 }}>
-            ⋮
-          </button>
+          <button className="header-menu-btn" onClick={() => setHeaderMenuOpen(p => !p)}>⋮</button>
           {headerMenuOpen && (
             <>
               <div onClick={() => setHeaderMenuOpen(false)} style={{ position: 'fixed', inset: 0, zIndex: 9998 }} />
-              <div style={{ position: 'absolute', right: 0, top: 36, background: '#0d0d18', border: '1px solid #1e1e2e', borderRadius: 14, zIndex: 9999, minWidth: 180, boxShadow: '0 4px 24px rgba(0,0,0,0.7)', overflow: 'hidden' }}>
+              <div className="header-dropdown">
                 {[
                   { icon: wakeActive ? '' : '', label: wakeActive ? 'Wake Word OFF' : 'Wake Word ON', action: () => {
                     if (wakeActive) { stopWakeWord(); setWakeActive(false); toastInfo('Wake word off'); }
@@ -2327,7 +2312,7 @@ export default function Home() {
                   { icon: '🧠', label: 'Memory', action: () => { router.push('/settings'); setHeaderMenuOpen(false); }, active: false },
                 ].map(item => (
                   <button key={item.label} onClick={item.action}
-                    style={{ width: '100%', background: item.active ? 'rgba(0,212,255,0.1)' : 'transparent', border: 'none', borderBottom: '1px solid #111', color: item.active ? '#00d4ff' : '#ccc', padding: '12px 16px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 10, fontSize: 13, textAlign: 'left' }}>
+                    className={item.active ? 'active' : ''}>
                     <span style={{ fontSize: 16 }}>{item.icon}</span>{item.label}
                   </button>
                 ))}
@@ -2338,7 +2323,7 @@ export default function Home() {
       </div>
 
       {/* Quick Command Bar — swipeable chips */}
-      <div style={{ overflowX:'auto', whiteSpace:'nowrap', padding:'6px 12px', borderBottom:'1px solid #111', scrollbarWidth:'none', WebkitOverflowScrolling:'touch' }}>
+      <div className="quick-chips">
         {[
           { label:'🌤️ Mausam', cmd:'Maihar ka mausam batao' },
           { label:'📰 News', cmd:'Top India news today' },
@@ -2352,7 +2337,7 @@ export default function Home() {
           { label:'📅 Date', cmd:'Aaj ki date kya hai?' },
         ].map(c => (
           <button key={c.label} onClick={() => send(c.cmd)}
-            style={{ display:'inline-block', background:'rgba(255,255,255,0.03)', border:'1px solid #1e1e2e', borderRadius:16, color:'#555', padding:'4px 12px', fontSize:11, cursor:'pointer', marginRight:6, whiteSpace:'nowrap', transition:'all 0.15s', flexShrink:0 }}>
+            className="chip">
             {c.label}
           </button>
         ))}
@@ -2378,9 +2363,8 @@ export default function Home() {
         </div>
       )}
 
-      {/* Messages — fills all remaining space */}
-      <div style={{ flex: '1 1 0', overflowY: 'auto', overflowX: 'hidden', padding: '8px 0', minHeight: 0, WebkitOverflowScrolling: 'touch',
-        background: chatBg !== 'none' ? chatBg : undefined }}
+      {/* Messages */}
+      <div className="messages-area" style={{ background: chatBg !== 'none' ? chatBg : undefined }}
         onTouchStart={(e) => {
           (window as any).__pullY = e.touches[0].clientY;
           (window as any).__pullX = e.touches[0].clientX;
@@ -2410,7 +2394,7 @@ export default function Home() {
           const msgRegen = () => { const u = [...msgs].reverse().find(m => m.role === 'user'); if (u) send(u.content); };
           const MsgEl = MsgItem as any; return <MsgEl key={msg.id} msg={msg} onDelete={msgDel} onRegenerate={msgRegen} fontSize={fontSize} />;
         })}
-        {loading && <div style={{ padding: '0 12px' }}><TypingDots /></div>}
+        {loading && <TypingDots />}
 
         {/* Smart suggested replies */}
         {!loading && msgs.length > 0 && msgs[msgs.length-1]?.role === 'assistant' && (() => {
@@ -2430,10 +2414,9 @@ export default function Home() {
           else chips.push('Aur batao', 'Example do');
           if (!chips.length) return null;
           return (
-            <div style={{ display: 'flex', gap: 6, padding: '2px 12px 8px', flexWrap: 'wrap' }}>
+            <div className="suggest-chips">
               {chips.slice(0,3).map(c => (
-                <button key={c} onClick={() => send(c)}
-                  style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid #2a2a4a', borderRadius: 16, color: '#555', padding: '4px 12px', fontSize: 12, cursor: 'pointer', whiteSpace: 'nowrap', transition: 'all 0.15s' }}>
+                <button key={c} onClick={() => send(c)} className="suggest-chip">
                   {c}
                 </button>
               ))}
@@ -2445,12 +2428,12 @@ export default function Home() {
 
       {/* Slash Command Autocomplete */}
       {slashOpen && (
-        <div style={{ position: 'absolute', bottom: 120, left: 12, right: 12, background: '#0d0d18', border: '1px solid #1e1e2e', borderRadius: 12, zIndex: 9000, maxHeight: 220, overflowY: 'auto', boxShadow: '0 -4px 20px rgba(0,0,0,0.5)' }}>
-          <div style={{ padding: '6px 12px', color: '#444', fontSize: 10, borderBottom: '1px solid #1a1a2a' }}>⚡ Slash Commands — Tab se select karo</div>
+        <div className="slash-menu">
+          <div style={{ padding:'6px 12px 4px', color:'var(--muted)', fontSize:10, borderBottom:'1px solid rgba(255,255,255,0.04)', letterSpacing:0.5 }}>⚡ SLASH COMMANDS</div>
           {SLASH_COMMANDS.filter(c => c.cmd.startsWith(slashFilter) || c.desc.toLowerCase().includes(slashFilter.slice(1))).slice(0, 8).map(c => (
             <button key={c.cmd}
               onClick={() => { setInput(c.cmd + ' '); setSlashOpen(false); textareaRef.current?.focus(); }}
-              style={{ width: '100%', background: 'none', border: 'none', padding: '8px 12px', display: 'flex', alignItems: 'center', gap: 10, cursor: 'pointer', borderBottom: '1px solid #0f0f18', textAlign: 'left' }}>
+              className="slash-item">
               <span style={{ fontSize: 16 }}>{c.icon}</span>
               <div>
                 <div style={{ color: '#00d4ff', fontSize: 12, fontFamily: 'monospace' }}>{c.cmd}</div>
@@ -2461,247 +2444,140 @@ export default function Home() {
         </div>
       )}
 
-      {/* Bottom strip — Compress = USER ka typed message compress karo */}
+      {/* Bottom strip — mode + char count */}
       <div className="bottom-strip">
-        <span style={{ fontSize: 11, color: '#555' }}>
-          {mode === 'auto'
-            ? `🤖 Auto → ${effectiveMode.charAt(0).toUpperCase() + effectiveMode.slice(1)}`
-            : `${mode === 'flash' ? '' : mode === 'think' ? '' : ''} ${mode.charAt(0).toUpperCase() + mode.slice(1)}`}
+        <span className={"mode-pill " + (mode === 'auto' ? 'auto' : mode)} onClick={() => setPlusOpen(p=>!p)} style={{ cursor:'pointer' }}>
+          {mode==='flash'?'⚡':mode==='think'?'🧠':mode==='deep'?'🔬':'🤖'} {mode==='auto'?`Auto → ${effectiveMode}`:mode.charAt(0).toUpperCase()+mode.slice(1)}
         </span>
-
-        {/* Compress dropdown — input mein likhi hua shorten karo */}
-        {input.trim().length > 0 && (
-          <span style={{ color:'#2a2a4a', fontSize:10 }}>{input.length}c</span>
-        )}
-        {input.trim().length > 20 && (
-          <div style={{ display: 'flex', gap: 4 }}>
-            <span style={{ color: '#444', fontSize: 10, alignSelf: 'center' }}>🗜️</span>
-            {(['tiny', 'short', 'medium'] as CompressLevel[]).map(level => (
-              <button
-                key={level}
-                onClick={() => {
-                  const compressed = compressUserMessage(input, level);
-                  setInput(compressed);
-                  toastInfo(`✂️ ${level}: ${compressed.split(' ').length} words`);
-                }}
-                style={{
-                  background: 'none', border: '1px solid #2a2a4a',
-                  borderRadius: 6, color: '#555', fontSize: 10,
-                  padding: '2px 7px', cursor: 'pointer',
-                  transition: 'all 0.15s',
-                }}
-              >
-                {level}
-              </button>
-            ))}
-          </div>
-        )}
+        <div style={{ display:'flex', alignItems:'center', gap:6 }}>
+          {input.trim().length > 0 && <span style={{ color:'var(--muted)', fontSize:10 }}>{input.length}</span>}
+          {input.trim().length > 20 && (
+            <div style={{ display:'flex', gap:3 }}>
+              {(['tiny','short','medium'] as CompressLevel[]).map(level => (
+                <button key={level} onClick={() => { const c=compressUserMessage(input,level); setInput(c); toastInfo(`✂️ ${level}: ${c.split(' ').length}w`); }}
+                  style={{ background:'rgba(255,255,255,0.04)', border:'1px solid var(--border)', borderRadius:6, color:'var(--muted)', fontSize:9, padding:'2px 7px', cursor:'pointer' }}>
+                  {level}
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
       </div>
 
-      {/* ── Input Bar v3 — ChatGPT style ── */}
+      {/* Image Preview Strip */}
       {attachedImage && (
-        <div style={{ padding:'6px 12px 0', display:'flex', alignItems:'center', gap:8, background:'var(--bg)', borderTop:'1px solid #1a1a2e' }}>
+        <div className="img-preview-strip">
           <div style={{ position:'relative', flexShrink:0 }}>
-            <img src={attachedImage.preview} alt="attached" style={{ width:52,height:52,objectFit:'cover',borderRadius:10,border:'1px solid rgba(0,212,255,0.3)' }} />
+            <img src={attachedImage.preview} alt="attached" style={{ width:50,height:50,objectFit:'cover',borderRadius:10,border:'1px solid rgba(0,212,255,0.3)' }} />
             <button onClick={() => setAttachedImage(null)} style={{ position:'absolute',top:-6,right:-6,width:18,height:18,borderRadius:'50%',background:'#ef4444',border:'none',color:'#fff',fontSize:10,cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',fontWeight:900 }}>×</button>
           </div>
-          <div style={{ fontSize:11, color:'#00d4ff' }}>
-            📷 <span style={{ color:'#555' }}>{attachedImage.name}</span><br/>
-            <span style={{ color:'#333',fontSize:10 }}>Question type karo → Send karo</span>
+          <div style={{ fontSize:11 }}>
+            <div style={{ color:'var(--accent)' }}>📷 {attachedImage.name}</div>
+            <div style={{ color:'var(--muted)', fontSize:10 }}>Question type karo → Send</div>
           </div>
           <button onClick={async () => {
-            const imgCopy = attachedImage; setAttachedImage(null);
-            const ck: Record<string,string> = {};
-            if (typeof window !== 'undefined') ['GROQ_API_KEY','GEMINI_API_KEY','CEREBRAS_API_KEY','TOGETHER_API_KEY','MISTRAL_API_KEY','COHERE_API_KEY','FIREWORKS_API_KEY','OPENROUTER_API_KEY','DEEPINFRA_API_KEY','HUGGINGFACE_API_KEY'].forEach(k => { const v = localStorage.getItem('jarvis_key_'+k); if(v) ck[k]=v; });
-            setMsgs(prev => [...prev, { id:'u_'+Date.now(),role:'user',content:'📷 '+imgCopy.name,timestamp:Date.now(),card:{type:'image',imageUrl:imgCopy.preview,title:imgCopy.name} }]);
+            const imgCopy=attachedImage; setAttachedImage(null);
+            const ck: Record<string,string>={};
+            if(typeof window!=='undefined') ['GROQ_API_KEY','GEMINI_API_KEY','CEREBRAS_API_KEY','TOGETHER_API_KEY','MISTRAL_API_KEY','COHERE_API_KEY','FIREWORKS_API_KEY','OPENROUTER_API_KEY','DEEPINFRA_API_KEY','HUGGINGFACE_API_KEY'].forEach(k=>{const v=localStorage.getItem('jarvis_key_'+k);if(v)ck[k]=v;});
+            setMsgs(prev=>[...prev,{id:'u_'+Date.now(),role:'user',content:'📷 '+imgCopy.name,timestamp:Date.now(),card:{type:'image',imageUrl:imgCopy.preview,title:imgCopy.name}}]);
             setLoading(true);
-            try {
-              const res = await fetch('/api/vision',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({image:imgCopy.base64,question:'Is image mein kya hai? Detail mein batao Hinglish mein.',clientKeys:ck})});
-              const d = await res.json();
-              setMsgs(prev => [...prev, { id:'a_'+Date.now(),role:'assistant',content:'🔍 '+(d.result||d.error||'Vision failed'),timestamp:Date.now() }]);
-            } catch { setMsgs(prev => [...prev, { id:'a_'+Date.now(),role:'assistant',content:'🔍 Vision error. Settings mein Gemini key daalo.',timestamp:Date.now() }]); }
+            try{const res=await fetch('/api/vision',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({image:imgCopy.base64,question:'Is image mein kya hai? Detail mein Hinglish mein batao.',clientKeys:ck})});const d=await res.json();setMsgs(prev=>[...prev,{id:'a_'+Date.now(),role:'assistant',content:'🔍 '+(d.result||d.error||'Vision failed'),timestamp:Date.now()}]);}
+            catch{setMsgs(prev=>[...prev,{id:'a_'+Date.now(),role:'assistant',content:'🔍 Vision error. Settings mein Gemini key daalo.',timestamp:Date.now()}]);}
             setLoading(false);
-          }} style={{ marginLeft:'auto',background:'rgba(0,212,255,0.1)',border:'1px solid rgba(0,212,255,0.3)',borderRadius:8,color:'#00d4ff',fontSize:11,padding:'4px 10px',cursor:'pointer',whiteSpace:'nowrap',flexShrink:0 }}>
+          }} style={{ marginLeft:'auto',background:'rgba(0,212,255,0.1)',border:'1px solid rgba(0,212,255,0.3)',borderRadius:10,color:'var(--accent)',fontSize:11,padding:'6px 12px',cursor:'pointer',whiteSpace:'nowrap',flexShrink:0,fontWeight:600 }}>
             🔍 Analyze
           </button>
         </div>
       )}
-      <div style={{ padding: '8px 12px 12px', borderTop: attachedImage ? 'none' : '1px solid #1e1e2e', background: 'var(--bg)' }}>
-        <div style={{
-          display: 'flex', alignItems: 'flex-end',
-          background: '#111118',
-          border: input.trim() ? '1px solid rgba(0,212,255,0.4)' : '1px solid #2a2a4a',
-          borderRadius: 26, padding: '4px 4px 4px 6px',
-          transition: 'border-color 0.2s',
-          boxShadow: input.trim() ? '0 0 12px rgba(0,212,255,0.08)' : 'none',
-        }}>
-          {/* Plus — mode selector inside */}
-          <div style={{ position: 'relative' }}>
-            <button onClick={() => setPlusOpen(p => !p)} data-plus
-              title="Mode & options"
-              style={{ width: 36, height: 36, borderRadius: '50%', background: plusOpen ? 'rgba(0,212,255,0.15)' : 'transparent', border: 'none', color: plusOpen ? '#00d4ff' : '#666', fontSize: plusOpen ? 16 : 18, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, transition: 'all 0.15s' }}>
-              {plusOpen ? '' : (mode === 'flash' ? '' : mode === 'think' ? '' : mode === 'deep' ? '' : '+')}
-            </button>
-          </div>
 
-          {/* Textarea */}
+      {/* ── Premium Input Bar ── */}
+      <div className="input-area">
+        <div className="input-box">
+          {/* Plus button */}
+          <button onClick={() => setPlusOpen(p=>!p)} data-plus
+            className="input-icon-btn" style={{ color: plusOpen ? 'var(--accent)' : undefined, background: plusOpen ? 'rgba(0,212,255,0.1)' : undefined }}>
+            {plusOpen ? '✕' : '+'}
+          </button>
+
           <textarea ref={textareaRef} value={input} onChange={handleTextChange} onKeyDown={handleKeyDown}
-            placeholder={loading ? ' Soch raha hoon...' : 'Kuch bhi likho ya bolo...'}
+            placeholder={loading ? 'JARVIS soch raha hai...' : 'Kuch bhi poocho boss...'}
             disabled={loading} rows={1}
-            style={{ flex: 1, background: 'transparent', border: 'none', color: '#e0e0ff', fontSize: 15, outline: 'none', resize: 'none', minHeight: 34, maxHeight: 120, lineHeight: 1.5, fontFamily: 'inherit', overflowY: 'auto', padding: '7px 6px', opacity: loading ? 0.5 : 1 }}
           />
 
-          {/* Mic — onClick with permission request (APK compatible) */}
-          <button
+          {/* Mic */}
+          <button className={"input-icon-btn" + (micActive ? " active" : "")}
             onClick={async () => {
-              // Request mic permission first (important for APK)
-              try {
-                await navigator.mediaDevices?.getUserMedia({ audio: true });
-              } catch {
-                toastErr('Mic permission do  Settings > Permissions > Microphone');
-                return;
-              }
-              const SR = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
-              if (!SR) {
-                // APK fallback — Puter Whisper
-                toastErr('Voice browser mein nahi chala. Voice page try karo.');
-                return;
-              }
-              const rec = new SR();
-              rec.lang = 'hi-IN';
-              rec.continuous = false;
-              rec.interimResults = true;
-              let final = '';
-              setMicActive(true);
-              toastOk(' Bol boss...');
-              rec.onresult = (e: any) => {
-                final = Array.from(e.results).map((r: any) => r[0].transcript).join('');
-                setInput(final);
-              };
-              rec.onerror = (e: any) => {
-                setMicActive(false);
-                if (e.error === 'not-allowed') toastErr('Mic permission nahi  Settings mein allow karo');
-                else if (e.error === 'no-speech') toastErr('Kuch suna nahi. Dobara try karo.');
-                else toastErr('Mic error: ' + e.error);
-              };
-              rec.onend = () => {
-                setMicActive(false);
-                if (final.trim()) setTimeout(() => send(final), 300);
-              };
-              try { rec.start(); } catch { toastErr('Mic start nahi hua'); setMicActive(false); }
-            }}
-            style={{ width: 36, height: 36, borderRadius: '50%', background: micActive ? 'rgba(239,68,68,0.2)' : 'transparent', border: micActive ? '1px solid #ef4444' : 'none', color: micActive ? '#ef4444' : '#555', fontSize: 18, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, transition: 'all 0.2s', animation: micActive ? 'pulse 1s infinite' : 'none' }}
-            title="Tap to speak">
-            {micActive ? '' : ''}
+              try { await navigator.mediaDevices?.getUserMedia({ audio: true }); } catch { toastErr('Mic permission do'); return; }
+              const SR=(window as any).SpeechRecognition||(window as any).webkitSpeechRecognition;
+              if(!SR){toastErr('Voice Voice page try karo.');return;}
+              const rec=new SR(); rec.lang='hi-IN'; rec.continuous=false; rec.interimResults=true;
+              let final=''; setMicActive(true); toastOk('🎙️ Bol boss...');
+              rec.onresult=(e:any)=>{final=Array.from(e.results).map((r:any)=>r[0].transcript).join('');setInput(final);};
+              rec.onerror=(e:any)=>{setMicActive(false);if(e.error==='not-allowed')toastErr('Mic permission nahi');else toastErr('Mic error: '+e.error);};
+              rec.onend=()=>{setMicActive(false);if(final.trim())setTimeout(()=>send(final),300);};
+              try{rec.start();}catch{toastErr('Mic start nahi hua');setMicActive(false);}
+            }}>
+            {micActive ? '🔴' : '🎙️'}
           </button>
 
           {/* Send */}
-          <button onClick={() => { 
-            if (typeof navigator !== 'undefined') navigator.vibrate?.(30);
-            send(input);
-          }} disabled={!input.trim() || loading}
-            style={{ width: 38, height: 38, borderRadius: '50%', background: input.trim() && !loading ? 'linear-gradient(135deg,#00d4ff,#0077bb)' : '#1a1a2e', border: 'none', color: input.trim() && !loading ? '#000' : '#333', fontSize: 17, cursor: input.trim() && !loading ? 'pointer' : 'not-allowed', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, transition: 'all 0.2s', fontWeight: 900, boxShadow: input.trim() && !loading ? '0 2px 10px rgba(0,212,255,0.35)' : 'none' }}>
-            {loading ? '' : ''}
+          <button className="send-btn" onClick={() => { navigator.vibrate?.(30); send(input); }} disabled={!input.trim() || loading}>
+            {loading ? '⏳' : '↑'}
           </button>
         </div>
 
-        {/* Plus popup — mode select */}
         {/* Hidden file inputs */}
-        {/* AI Image Edit hidden input */}
         <input id="imgEditInput" type="file" accept="image/*" style={{ display:'none' }} onChange={async e => {
-          const f = e.target.files?.[0]; if (!f) return; e.currentTarget.value = '';
-          const editPrompt = (window as any).__jarvisEditPrompt || 'Remove background, make it clean';
-          const reader = new FileReader();
-          reader.onload = async ev => {
-            const dataUrl = ev.target?.result as string;
-            setMsgs(prev => [...prev, { id:'u_'+Date.now(), role:'user', content:' Image edit: '+editPrompt, timestamp:Date.now(), card:{ type:'image', imageUrl:dataUrl, title:'Original' } }]);
-            setLoading(true);
-            try {
-              // Use Pollinations image-to-image via prompt
-              const editUrl = 'https://image.pollinations.ai/prompt/' + encodeURIComponent(editPrompt + ', professional edit, high quality') + '?width=1024&height=1024&model=flux&seed=' + Date.now();
-              setMsgs(prev => [...prev, { id:'a_'+Date.now(), role:'assistant', content:' Edited version (AI generated based on prompt):', timestamp:Date.now(), card:{ type:'image', imageUrl:editUrl, title:'Edited: '+editPrompt } }]);
-            } catch { setMsgs(prev => [...prev, { id:'e_'+Date.now(), role:'assistant', content:'Image edit nahi hua.', timestamp:Date.now() }]); }
-            setLoading(false);
-          };
-          reader.readAsDataURL(f);
+          const f=e.target.files?.[0]; if(!f)return; e.currentTarget.value='';
+          const editPrompt=(window as any).__jarvisEditPrompt||'Remove background, make it clean';
+          const reader=new FileReader(); reader.onload=async ev=>{const dataUrl=ev.target?.result as string; const ck:Record<string,string>={}; if(typeof window!=='undefined')['GROQ_API_KEY','GEMINI_API_KEY'].forEach(k=>{const v=localStorage.getItem('jarvis_key_'+k);if(v)ck[k]=v;}); setMsgs(prev=>[...prev,{id:'u_'+Date.now(),role:'user',content:'🖼️ '+f.name,timestamp:Date.now(),card:{type:'image',imageUrl:dataUrl,title:f.name}}]); setLoading(true); try{const res=await fetch('/api/vision',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({image:dataUrl.split(',')[1],question:editPrompt,clientKeys:ck})});const d=await res.json();setMsgs(prev=>[...prev,{id:'a_'+Date.now(),role:'assistant',content:'✨ '+(d.result||d.error||'Done'),timestamp:Date.now()}]);}catch{}; setLoading(false);}; reader.readAsDataURL(f);
         }} />
-
         <input ref={photoInputRef} type="file" accept="image/*" style={{ display:'none' }} onChange={async e => {
-          const f = e.target.files?.[0]; if (!f) return; e.target.value = '';
-          const reader = new FileReader();
-          reader.onload = async ev => {
-            const dataUrl = ev.target?.result as string;
-            setAttachedImage({ base64: dataUrl.split(',')[1], preview: dataUrl, name: f.name });
-            toastOk('📷 Photo attach ho gayi! Ab question type karo aur send karo.');
-            textareaRef.current?.focus();
-          };
-          reader.readAsDataURL(f);
+          const f=e.target.files?.[0]; if(!f)return; e.target.value='';
+          const reader=new FileReader(); reader.onload=async ev=>{const dataUrl=ev.target?.result as string; setAttachedImage({base64:dataUrl.split(',')[1],preview:dataUrl,name:f.name}); toastOk('📷 Photo attach ho gayi! Ab question type karo.'); textareaRef.current?.focus();}; reader.readAsDataURL(f);
         }} />
         <input ref={fileInputRef} type="file" accept="*/*" style={{ display:'none' }} onChange={async e => {
-          const f = e.target.files?.[0]; if (!f) return; e.target.value = '';
-          const mb = (f.size/1024/1024).toFixed(1);
-          if (f.type.startsWith('image/')) { photoInputRef.current?.click(); return; }
-          setMsgs(prev => [...prev, { id:'u_'+Date.now(), role:'user', content:' '+f.name+' ('+mb+' MB)', timestamp:Date.now() }]);
-          if (f.type === 'text/plain' || f.name.endsWith('.txt') || f.name.endsWith('.md')) {
-            const txt = await f.text();
-            setMsgs(prev => [...prev, { id:'a_'+Date.now(), role:'assistant', content:' File padh li: '+f.name+'. Summarize karoon?', timestamp:Date.now() }]);
-            setInput('Summarize karo: ' + txt.slice(0,2000));
-          } else {
-            setMsgs(prev => [...prev, { id:'a_'+Date.now(), role:'assistant', content:' File receive ki: '+f.name+' ('+mb+' MB).', timestamp:Date.now() }]);
-          }
+          const f=e.target.files?.[0]; if(!f)return; e.target.value='';
+          const mb=(f.size/1024/1024).toFixed(1);
+          if(f.type.startsWith('image/')){photoInputRef.current?.click();return;}
+          setMsgs(prev=>[...prev,{id:'u_'+Date.now(),role:'user',content:'📄 '+f.name+' ('+mb+' MB)',timestamp:Date.now()}]);
+          if(f.type==='text/plain'||f.name.endsWith('.txt')||f.name.endsWith('.md')){const txt=await f.text();setMsgs(prev=>[...prev,{id:'a_'+Date.now(),role:'assistant',content:'📄 File padh li: '+f.name+'. Summarize karoon?',timestamp:Date.now()}]);setInput('Summarize karo: '+txt.slice(0,2000));}
+          else{setMsgs(prev=>[...prev,{id:'a_'+Date.now(),role:'assistant',content:'📄 File receive ki: '+f.name+' ('+mb+' MB).',timestamp:Date.now()}]);}
         }} />
 
+        {/* Plus popup — mode select */}
         {plusOpen && (
-          <div data-plus onClick={e => e.stopPropagation()} style={{ position: 'absolute', bottom: 72, left: 8, right: 8, background: '#0d0d18', border: '1px solid #1e1e2e', borderRadius: 18, padding: 14, zIndex: 9999, boxShadow: '0 -8px 30px rgba(0,0,0,0.8)' }}>
-
-            {/* Row 1 — Media Actions */}
-            <div style={{ display: 'flex', gap: 8, marginBottom: 12 }}>
+          <div className="plus-popup" data-plus onClick={e=>e.stopPropagation()}>
+            <div style={{ color:'var(--muted)', fontSize:10, marginBottom:10, letterSpacing:0.5 }}>ATTACH</div>
+            <div style={{ display:'flex', gap:8, marginBottom:14 }}>
               {[
-                { icon: '', label: 'Photo', color: '#22c55e', action: () => { photoInputRef.current?.click(); setPlusOpen(false); } },
-                { icon: '', label: 'File', color: '#f59e0b', action: () => { fileInputRef.current?.click(); setPlusOpen(false); } },
-                { icon: recording ? '' : '', label: recording ? 'Stop' : 'Audio', color: recording ? '#ef4444' : '#8b5cf6', action: async () => {
-                  setPlusOpen(false);
-                  if (recording) { mediaRecRef.current?.stop(); setRecording(false); return; }
-                  try {
-                    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-                    const rec = new MediaRecorder(stream);
-                    const chunks: BlobPart[] = [];
-                    rec.ondataavailable = e => chunks.push(e.data);
-                    rec.onstop = () => {
-                      stream.getTracks().forEach(t => t.stop());
-                      const blob = new Blob(chunks, { type: 'audio/webm' });
-                      const url = URL.createObjectURL(blob);
-                      setMsgs(prev => [...prev, { id:'u_'+Date.now(), role:'user', content:' Voice message', timestamp:Date.now(), card:{ type:'audio', audioUrl:url, title:'Voice message' } }]);
-                      setRecording(false);
-                      toastOk('Voice message saved!');
-                    };
-                    rec.start(); mediaRecRef.current = rec; setRecording(true);
-                    toastOk(' Recording... Stop ke liye phir tap karo');
-                  } catch { toastErr('Mic permission do'); }
+                {icon:'📷',label:'Photo',color:'var(--success)',action:()=>{photoInputRef.current?.click();setPlusOpen(false);}},
+                {icon:'📄',label:'File',color:'var(--warn)',action:()=>{fileInputRef.current?.click();setPlusOpen(false);}},
+                {icon:recording?'⏹️':'🎤',label:recording?'Stop':'Audio',color:recording?'var(--danger)':'var(--purple)',action:async()=>{
+                  setPlusOpen(false);if(recording){mediaRecRef.current?.stop();setRecording(false);return;}
+                  try{const stream=await navigator.mediaDevices.getUserMedia({audio:true});const rec=new MediaRecorder(stream);const chunks:BlobPart[]=[];rec.ondataavailable=e=>chunks.push(e.data);rec.onstop=()=>{stream.getTracks().forEach(t=>t.stop());const blob=new Blob(chunks,{type:'audio/webm'});const url=URL.createObjectURL(blob);setMsgs(prev=>[...prev,{id:'u_'+Date.now(),role:'user',content:'🎤 Voice message',timestamp:Date.now(),card:{type:'audio',audioUrl:url,title:'Voice message'}}]);setRecording(false);toastOk('Voice saved!');};rec.start();mediaRecRef.current=rec;setRecording(true);toastOk('🎤 Recording... Phir tap karo stop ke liye');}catch{toastErr('Mic permission do');}
                 }},
-                { icon: '', label: 'Camera', color: '#00d4ff', action: () => { router.push('/camera'); setPlusOpen(false); } },
-              ].map(item => (
+                {icon:'📷',label:'Camera',color:'var(--accent)',action:()=>{router.push('/camera');setPlusOpen(false);}},
+              ].map(item=>(
                 <button key={item.label} onClick={item.action}
-                  style={{ flex:1, background:'#111118', border:'1px solid #1e1e2e', borderRadius:12, padding:'10px 4px', cursor:'pointer', display:'flex', flexDirection:'column', alignItems:'center', gap:4, transition:'all 0.15s' }}>
-                  <span style={{ fontSize:22 }}>{item.icon}</span>
-                  <span style={{ color: item.color, fontSize:10, fontWeight:600 }}>{item.label}</span>
+                  style={{ flex:1, background:'var(--card2)', border:'1px solid var(--border2)', borderRadius:14, padding:'12px 6px', cursor:'pointer', display:'flex', flexDirection:'column', alignItems:'center', gap:5 }}>
+                  <span style={{ fontSize:24 }}>{item.icon}</span>
+                  <span style={{ color:item.color, fontSize:10, fontWeight:600 }}>{item.label}</span>
                 </button>
               ))}
             </div>
 
-            {/* Divider */}
-            <div style={{ borderTop:'1px solid #1a1a2e', marginBottom:10 }} />
-
-            {/* Row 2 — AI Modes */}
-            <div style={{ color:'#444', fontSize:10, marginBottom:6, paddingLeft:2 }}>AI MODE</div>
-            <div style={{ display: 'flex', gap: 6 }}>
-              {([['auto','','Auto','#00d4ff'],['flash','','Flash','#f59e0b'],['think','','Think','#8b5cf6'],['deep','','Deep','#22c55e']] as [Mode,string,string,string][]).map(([m,icon,label,col]) => (
-                <button key={m} onClick={() => { setMode(m); setPlusOpen(false); }}
-                  style={{ flex:1, background: mode===m?'rgba(0,212,255,0.1)':'#111118', border:'1px solid '+(mode===m?col:'#1e1e2e'), borderRadius:10, padding:'8px 4px', cursor:'pointer', display:'flex', flexDirection:'column', alignItems:'center', gap:3 }}>
-                  <span style={{ fontSize:18 }}>{icon}</span>
-                  <span style={{ color: mode===m?col:'#555', fontSize:10 }}>{label}</span>
-                </button>
-              ))}
+            <div style={{ borderTop:'1px solid var(--border)', paddingTop:12, marginBottom:8 }}>
+              <div style={{ color:'var(--muted)', fontSize:10, marginBottom:8, letterSpacing:0.5 }}>AI MODE</div>
+              <div style={{ display:'flex', gap:6 }}>
+                {([['auto','🤖','Auto','var(--accent)'],['flash','⚡','Flash','var(--warn)'],['think','🧠','Think','var(--purple)'],['deep','🔬','Deep','var(--success)']] as [Mode,string,string,string][]).map(([m,icon,label,col])=>(
+                  <button key={m} onClick={()=>{setMode(m);setPlusOpen(false);}}
+                    style={{ flex:1, background:mode===m?'rgba(0,212,255,0.08)':'var(--card2)', border:'1px solid '+(mode===m?'rgba(0,212,255,0.3)':'var(--border)'), borderRadius:12, padding:'10px 4px', cursor:'pointer', display:'flex', flexDirection:'column', alignItems:'center', gap:3 }}>
+                    <span style={{ fontSize:20 }}>{icon}</span>
+                    <span style={{ color:mode===m?col:'var(--muted)', fontSize:10, fontWeight:mode===m?700:400 }}>{label}</span>
+                  </button>
+                ))}
+              </div>
             </div>
           </div>
         )}
