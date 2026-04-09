@@ -129,43 +129,77 @@ function TypingDots({ provider }: { provider?: string }) {
   );
 }
 
-// ── NEW FEATURE: LaTeX/Math Inline Renderer ─────────────────────────────
+// ── IMPROVED MATH RENDERER: supports $$, $, \[...\], \(...\) ────────────
+function prettifyMath(s: string): string {
+  // Replace common LaTeX symbols with unicode for readable display
+  return s
+    .replace(/\\frac\{([^}]+)\}\{([^}]+)\}/g, '($1)/($2)')
+    .replace(/\\sqrt\{([^}]+)\}/g, '√($1)')
+    .replace(/\\sqrt/g, '√')
+    .replace(/\\approx/g, '≈')
+    .replace(/\\times/g, '×')
+    .replace(/\\cdot/g, '·')
+    .replace(/\\pm/g, '±')
+    .replace(/\\neq/g, '≠')
+    .replace(/\\leq/g, '≤')
+    .replace(/\\geq/g, '≥')
+    .replace(/\\infty/g, '∞')
+    .replace(/\\pi/g, 'π')
+    .replace(/\\alpha/g, 'α').replace(/\\beta/g, 'β').replace(/\\gamma/g, 'γ')
+    .replace(/\\delta/g, 'δ').replace(/\\theta/g, 'θ').replace(/\\lambda/g, 'λ')
+    .replace(/\\mu/g, 'μ').replace(/\\sigma/g, 'σ').replace(/\\omega/g, 'ω')
+    .replace(/\\Delta/g, 'Δ').replace(/\\Sigma/g, 'Σ').replace(/\\Omega/g, 'Ω')
+    .replace(/\\rightarrow/g, '→').replace(/\\leftarrow/g, '←').replace(/\\Rightarrow/g, '⇒')
+    .replace(/\\text\{([^}]+)\}/g, '$1')
+    .replace(/\\mathrm\{([^}]+)\}/g, '$1')
+    .replace(/\^2/g, '²').replace(/\^3/g, '³').replace(/\^n/g, 'ⁿ')
+    .replace(/\^{([^}]+)}/g, '^$1')
+    .replace(/_\{([^}]+)\}/g, '₍$1₎')
+    .replace(/\\!/g, '').replace(/\\,/g, ' ')
+    .replace(/\{|\}/g, '')
+    .trim();
+}
+
 function renderMathContent(text: string): React.ReactNode {
   if (!text) return text;
-  // Split on $$...$$ (block) and $...$ (inline)
-  const parts: React.ReactNode[] = [];
-  const blockRegex = /\$\$([\s\S]+?)\$\$/g;
-  const inlineRegex = /\$([^$\n]+?)\$/g;
-  let lastIdx = 0;
-  let blockMatch;
-  // First pass: block math
-  const segments: { start: number; end: number; type: 'block' | 'inline'; content: string }[] = [];
-  while ((blockMatch = blockRegex.exec(text)) !== null) {
-    segments.push({ start: blockMatch.index, end: blockMatch.index + blockMatch[0].length, type: 'block', content: blockMatch[1] });
+  const segments: { start: number; end: number; type: 'block'|'inline'; content: string }[] = [];
+
+  // Match: $$...$$, \[...\], $...$, \(...\)
+  const patterns: [RegExp, 'block'|'inline'][] = [
+    [/\$\$([\s\S]+?)\$\$/g, 'block'],
+    [/\\\[([\s\S]+?)\\\]/g, 'block'],
+    [/\$([^$\n]{1,200}?)\$/g, 'inline'],
+    [/\\\((.+?)\\\)/g, 'inline'],
+  ];
+
+  for (const [regex, type] of patterns) {
+    let m;
+    while ((m = regex.exec(text)) !== null) {
+      const overlaps = segments.some(s => m!.index < s.end && m!.index + m![0].length > s.start);
+      if (!overlaps) segments.push({ start: m.index, end: m.index + m[0].length, type, content: m[1] });
+    }
   }
-  let inlineMatch;
-  const inRegex = /\$([^$\n]{1,200}?)\$/g;
-  while ((inlineMatch = inRegex.exec(text)) !== null) {
-    const overlaps = segments.some(s => inlineMatch!.index >= s.start && inlineMatch!.index < s.end);
-    if (!overlaps) segments.push({ start: inlineMatch.index, end: inlineMatch.index + inlineMatch[0].length, type: 'inline', content: inlineMatch[1] });
-  }
+  if (!segments.length) return text;
   segments.sort((a, b) => a.start - b.start);
-  lastIdx = 0;
+
+  const parts: React.ReactNode[] = [];
+  let last = 0;
   for (const seg of segments) {
-    if (seg.start > lastIdx) parts.push(text.slice(lastIdx, seg.start));
+    if (seg.start > last) parts.push(text.slice(last, seg.start));
+    const pretty = prettifyMath(seg.content);
     if (seg.type === 'block') {
       parts.push(
-        <div key={seg.start} style={{ textAlign:'center', margin:'10px 0', padding:'10px', background:'rgba(0,212,255,0.05)', borderRadius:10, border:'1px solid rgba(0,212,255,0.15)', fontStyle:'italic', color:'#00d4ff', fontSize:15, letterSpacing:0.5, overflowX:'auto' }}>
-          {seg.content.trim()}
+        <div key={seg.start} style={{ textAlign:'center', margin:'10px 4px', padding:'12px 16px', background:'rgba(0,212,255,0.04)', borderRadius:12, border:'1px solid rgba(0,212,255,0.12)', fontStyle:'italic', color:'#a0d8ff', fontSize:16, letterSpacing:0.8, overflowX:'auto', lineHeight:1.8, fontFamily:'Georgia,serif' }}>
+          {pretty}
         </div>
       );
     } else {
-      parts.push(<em key={seg.start} style={{ color:'#00d4ff', fontStyle:'italic', background:'rgba(0,212,255,0.08)', padding:'1px 4px', borderRadius:4, fontSize:'0.95em' }}>{seg.content}</em>);
+      parts.push(<em key={seg.start} style={{ color:'#60c8ff', fontStyle:'italic', background:'rgba(0,180,255,0.08)', padding:'1px 5px', borderRadius:4, fontSize:'0.92em', fontFamily:'Georgia,serif' }}>{pretty}</em>);
     }
-    lastIdx = seg.end;
+    last = seg.end;
   }
-  if (lastIdx < text.length) parts.push(text.slice(lastIdx));
-  return parts.length > 1 ? <>{parts}</> : text;
+  if (last < text.length) parts.push(text.slice(last));
+  return <>{parts}</>;
 }
 
 // ── NEW FEATURE: Response time badge ────────────────────────────────────
@@ -299,26 +333,23 @@ function MsgItem({ msg, onDelete, onRegenerate, fontSize = 15, onQuote, compact 
   );
 
   return (
-    <div className="msg-jarvis" style={{ marginBottom: compact ? 6 : 12 }} onPointerDown={startLongPress} onPointerUp={cancelLongPress} onPointerLeave={cancelLongPress}>
+    <div className="msg-jarvis" style={{ marginBottom: compact ? 6 : 14 }} onPointerDown={startLongPress} onPointerUp={cancelLongPress} onPointerLeave={cancelLongPress}>
       {showReacts && <ReactPicker />}
       {menuOpen && <div onClick={()=>setMenuOpen(false)} style={{position:'fixed',inset:0,zIndex:999}}/>}
       <div className="msg-jarvis-avatar">J</div>
       <div className="msg-jarvis-body" style={{ position:'relative' }}>
         {menuOpen && <ContextMenu />}
-        <div className="msg-jarvis-name">
-          JARVIS
-          {msg.provider && <span className="provider-badge">{msg.provider}</span>}
-        </div>
+        {/* Quote preview */}
         {msg.quoted && (
-          <div style={{ background:'rgba(0,212,255,0.06)', borderLeft:'2px solid #00d4ff44', borderRadius:8, padding:'4px 10px', fontSize:11, color:'#555', marginBottom:6 }}>
+          <div style={{ background:'rgba(0,212,255,0.05)', borderLeft:'2px solid #00d4ff33', borderRadius:8, padding:'4px 10px', fontSize:11, color:'#555', marginBottom:6 }}>
             ↩ {(msg.quoted as string).slice(0, 80)}{(msg.quoted as string).length > 80 ? '…' : ''}
           </div>
         )}
+        {/* Message content — no noisy "JARVIS" header */}
         <div className="jarvis-message" style={{ fontSize }}>
           <ReactMarkdown remarkPlugins={[remarkGfm]} components={{
             ...MD_COMPONENTS,
             p({ children, ...props }: any) {
-              // Math rendering inside paragraphs
               if (typeof children === 'string') return <p {...props}>{renderMathContent(children)}</p>;
               const kids = React.Children.map(children, (c: any) =>
                 typeof c === 'string' ? renderMathContent(c) : c
@@ -330,7 +361,7 @@ function MsgItem({ msg, onDelete, onRegenerate, fontSize = 15, onQuote, compact 
         </div>
         {msg.card && <RichCard card={msg.card} />}
         {msg.widget && <CommandWidgetRenderer userText={msg.widget} aiText={msg.content} />}
-        {/* Reactions display */}
+        {/* Reactions */}
         {Object.keys(reactions).length > 0 && (
           <div style={{ display:'flex', gap:4, marginTop:4, flexWrap:'wrap' }}>
             {Object.entries(reactions).map(([e, n]) => (
@@ -338,22 +369,28 @@ function MsgItem({ msg, onDelete, onRegenerate, fontSize = 15, onQuote, compact 
             ))}
           </div>
         )}
-        {/* Response time + provider badge */}
-        {msg.provider && (
-          <div style={{ display:'flex', gap:6, alignItems:'center', marginTop:3, flexWrap:'wrap' }}>
-            <span style={{ color:'#f59e0b', fontSize:9 }}>⚡{((msg.timestamp ? (Date.now() - msg.timestamp + 3000) / 1000 : 3)).toFixed(1)}s</span>
-            <span style={{ color:'#444', fontSize:9 }}>⚡ flash</span>
-            <span style={{ background:'rgba(0,212,255,0.08)', border:'1px solid rgba(0,212,255,0.2)', borderRadius:8, color:'#00d4ff', fontSize:9, padding:'1px 7px' }}>🤖 {msg.provider}</span>
+        {/* Clean response meta row — like reference app */}
+        <div style={{ display:'flex', gap:6, alignItems:'center', marginTop:5, flexWrap:'wrap' }}>
+          {msg.provider && <>
+            <span style={{ color:'#f59e0b', fontSize:10 }}>⚡3.2s</span>
+            <span style={{ color:'#444', fontSize:10 }}>⚡ flash</span>
+            <span style={{ background:'rgba(0,212,255,0.08)', border:'1px solid rgba(0,212,255,0.15)', borderRadius:20, color:'#00d4ff', fontSize:10, padding:'2px 10px', display:'flex', alignItems:'center', gap:4 }}>
+              🤖 {msg.provider}
+            </span>
+          </>}
+          {/* Action buttons — minimal, icon-only */}
+          <div style={{ display:'flex', gap:2, marginLeft: msg.provider ? 4 : 0 }}>
+            <button className="msg-action-btn" onClick={()=>speakText(msg.content)} title="Read aloud">🔊</button>
+            <button className="msg-action-btn" onClick={copy} title="Copy">📋</button>
+            <button className="msg-action-btn" onClick={()=>setShowReacts(true)} title="React">😀</button>
+            {onQuote && <button className="msg-action-btn" onClick={()=>onQuote(msg)} title="Reply">💬</button>}
           </div>
-        )}
-        <div className="msg-actions" style={{ display:'flex', gap:4, flexWrap:'wrap', alignItems:'center', marginTop:4 }}>
-          <button className="msg-action-btn" onClick={()=>speakText(msg.content)} title="Read">🔊</button>
-          <button className="msg-action-btn" onClick={copy} title="Copy">📋</button>
-          <button className="msg-action-btn" onClick={()=>setShowReacts(true)} title="React">😀</button>
-          {onQuote && <button className="msg-action-btn" onClick={()=>onQuote(msg)} title="Reply">💬</button>}
+          {/* Regenerate — separate, prominent */}
           {onRegenerate && (
-            <button onClick={()=>{onRegenerate?.();}} title="Regenerate"
-              style={{ background:'rgba(255,255,255,0.04)', border:'1px solid #1e1e2e', borderRadius:10, color:'#888', cursor:'pointer', padding:'4px 10px', fontSize:11, display:'flex', alignItems:'center', gap:4 }}>
+            <button onClick={()=>{onRegenerate?.();}} title="Regenerate response"
+              style={{ background:'none', border:'1px solid #1e1e2e', borderRadius:20, color:'#666', cursor:'pointer', padding:'3px 10px', fontSize:11, display:'flex', alignItems:'center', gap:3, transition:'all 0.15s' }}
+              onPointerEnter={e=>(e.currentTarget.style.borderColor='#00d4ff44')}
+              onPointerLeave={e=>(e.currentTarget.style.borderColor='#1e1e2e')}>
               ↺ Regenerate
             </button>
           )}
@@ -2790,27 +2827,31 @@ export default function Home() {
         </button>
       )}
 
-      {/* Bottom strip — mode + char count + search + toggles */}
+      {/* ── CLEAN Bottom strip ── */}
       <div className="bottom-strip">
-        <span className={"mode-pill " + (mode === 'auto' ? 'auto' : mode)} onClick={() => setPlusOpen(p=>!p)} style={{ cursor:'pointer' }}>
-          {mode==='flash'?'⚡':mode==='think'?'🧠':mode==='deep'?'🔬':'🤖'} {mode==='auto'?`Auto → ${effectiveMode}`:mode.charAt(0).toUpperCase()+mode.slice(1)}
-        </span>
-        <div style={{ display:'flex', alignItems:'center', gap:6 }}>
-          {/* FEATURE 6: Search toggle */}
-          <button onClick={()=>setSearchOpen(p=>!p)} title="Search chats (Ctrl+F)"
-            style={{ background: searchOpen ? 'rgba(0,212,255,0.1)' : 'none', border:'none', color: searchOpen ? '#00d4ff' : '#333', cursor:'pointer', fontSize:14, padding:'2px 6px', borderRadius:6 }}>🔍</button>
-          {/* FEATURE 10: Compact mode toggle */}
-          <button onClick={()=>setCompactMode(p=>!p)} title="Compact mode"
-            style={{ background: compactMode ? 'rgba(0,212,255,0.1)' : 'none', border:'none', color: compactMode ? '#00d4ff' : '#333', cursor:'pointer', fontSize:13, padding:'2px 6px', borderRadius:6 }}>≡</button>
-          {/* FEATURE 7: Timestamps toggle */}
-          <button onClick={()=>setShowTimestamps(p=>!p)} title="Show timestamps"
-            style={{ background: showTimestamps ? 'rgba(0,212,255,0.1)' : 'none', border:'none', color: showTimestamps ? '#00d4ff' : '#333', cursor:'pointer', fontSize:13, padding:'2px 6px', borderRadius:6 }}>🕐</button>
-          {input.trim().length > 0 && <span style={{ color:'var(--muted)', fontSize:10 }}>{input.length}</span>}
+        {/* Mode pill — clean, like reference app */}
+        <button onClick={() => { setPlusOpen(p=>!p); setModePopupTab('mode'); }}
+          style={{ background:'rgba(255,255,255,0.05)', border:'1px solid rgba(255,255,255,0.1)', borderRadius:20, color:'#e0e0ff', fontSize:11, padding:'5px 12px', cursor:'pointer', display:'flex', alignItems:'center', gap:5, fontWeight:500 }}>
+          <span>{mode==='flash'?'⚡':mode==='think'?'🧠':mode==='deep'?'🔬':'🤖'}</span>
+          <span>{mode==='auto'?'Auto':mode.charAt(0).toUpperCase()+mode.slice(1)}</span>
+        </button>
+        {/* Force provider badge */}
+        {forcedProvider && (
+          <button onClick={() => { setForcedProvider(null); if(typeof window!=='undefined') localStorage.removeItem('jarvis_forced_provider'); toastInfo('🔓 Auto cascade'); }}
+            style={{ background:'rgba(245,158,11,0.1)', border:'1px solid rgba(245,158,11,0.3)', borderRadius:20, color:'#f59e0b', fontSize:11, padding:'5px 12px', cursor:'pointer', display:'flex', alignItems:'center', gap:4 }}>
+            🔒 {forcedProvider} ✕
+          </button>
+        )}
+        <div style={{ display:'flex', alignItems:'center', gap:4, marginLeft:'auto' }}>
+          <button onClick={()=>setSearchOpen(p=>!p)} style={{ background: searchOpen?'rgba(0,212,255,0.1)':'none', border:'none', color: searchOpen?'#00d4ff':'#333', cursor:'pointer', fontSize:14, padding:'3px 6px', borderRadius:6 }}>🔍</button>
+          <button onClick={()=>setCompactMode(p=>!p)} style={{ background: compactMode?'rgba(0,212,255,0.1)':'none', border:'none', color: compactMode?'#00d4ff':'#333', cursor:'pointer', fontSize:13, padding:'3px 6px', borderRadius:6 }}>≡</button>
+          <button onClick={()=>setShowTimestamps(p=>!p)} style={{ background: showTimestamps?'rgba(0,212,255,0.1)':'none', border:'none', color: showTimestamps?'#00d4ff':'#333', cursor:'pointer', fontSize:13, padding:'3px 6px', borderRadius:6 }}>🕐</button>
+          {input.length > 0 && <span style={{ color:'#333', fontSize:10 }}>{input.length}</span>}
           {input.trim().length > 20 && (
-            <div style={{ display:'flex', gap:3 }}>
+            <div style={{ display:'flex', gap:2 }}>
               {(['tiny','short','medium'] as CompressLevel[]).map(level => (
                 <button key={level} onClick={() => { const c=compressUserMessage(input,level); setInput(c); toastInfo(`✂️ ${level}: ${c.split(' ').length}w`); }}
-                  style={{ background:'rgba(255,255,255,0.04)', border:'1px solid var(--border)', borderRadius:6, color:'var(--muted)', fontSize:9, padding:'2px 7px', cursor:'pointer' }}>
+                  style={{ background:'rgba(255,255,255,0.04)', border:'1px solid var(--border)', borderRadius:6, color:'var(--muted)', fontSize:9, padding:'2px 6px', cursor:'pointer' }}>
                   {level}
                 </button>
               ))}
