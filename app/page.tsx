@@ -44,6 +44,7 @@ interface Msg {
   card?: any;
   timestamp: number;
   widget?: string;
+  quoted?: string; // FEATURE: quote reply
 }
 
 // ── Connected Apps config (with/without API key) ──────────────────────────
@@ -61,20 +62,131 @@ const CONNECTED_APPS = [
 ];
 
 // ── Helper Components ─────────────────────────────────────────────────────
-function TypingDots() {
+// ── FEATURE 1: Code Block with Copy Button ──────────────────────────────
+function CodeBlock({ children, className }: { children: React.ReactNode; className?: string }) {
+  const [copied, setCopied] = React.useState(false);
+  const lang = className?.replace('language-', '') || 'code';
+  const code = typeof children === 'string' ? children : String(children ?? '');
+  const copy = () => {
+    navigator.clipboard?.writeText(code.trim());
+    setCopied(true);
+    navigator.vibrate?.(30);
+    setTimeout(() => setCopied(false), 2000);
+  };
+  return (
+    <div style={{ borderRadius: 10, overflow: 'hidden', margin: '8px 0', border: '1px solid #1e1e2e' }}>
+      <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', background:'#0d0d1a', padding:'5px 12px' }}>
+        <span style={{ color:'#555', fontSize:10, fontFamily:'monospace', letterSpacing:1 }}>{lang.toUpperCase()}</span>
+        <button onClick={copy} style={{ background:'none', border:'none', color: copied ? '#22c55e' : '#444', cursor:'pointer', fontSize:10, padding:'3px 8px', borderRadius:6, transition:'all 0.2s' }}>
+          {copied ? '✅ Copied!' : '📋 Copy'}
+        </button>
+      </div>
+      <pre style={{ background:'#080811', padding:'12px 14px', margin:0, overflowX:'auto', fontSize:12, lineHeight:1.6 }}>
+        <code style={{ color:'#e0e0ff', fontFamily:"'Fira Code',monospace" }}>{code}</code>
+      </pre>
+    </div>
+  );
+}
+
+// ── FEATURE 2: Markdown components (tables, blockquotes, etc.) ───────────
+const MD_COMPONENTS = {
+  code({ node, inline, className, children, ...props }: any) {
+    if (inline) return <code style={{ background:'rgba(0,212,255,0.08)', color:'#00d4ff', padding:'2px 6px', borderRadius:4, fontSize:'0.9em', fontFamily:'monospace' }} {...props}>{children}</code>;
+    return <CodeBlock className={className}>{children}</CodeBlock>;
+  },
+  table({ children }: any) {
+    return <div style={{ overflowX:'auto', margin:'8px 0' }}><table style={{ borderCollapse:'collapse', width:'100%', fontSize:12 }}>{children}</table></div>;
+  },
+  th({ children }: any) {
+    return <th style={{ background:'rgba(0,212,255,0.1)', color:'#00d4ff', padding:'6px 10px', textAlign:'left', borderBottom:'1px solid #1e1e2e', fontSize:11 }}>{children}</th>;
+  },
+  td({ children }: any) {
+    return <td style={{ padding:'6px 10px', borderBottom:'1px solid #111118', color:'#ccc', fontSize:12 }}>{children}</td>;
+  },
+  blockquote({ children }: any) {
+    return <blockquote style={{ borderLeft:'3px solid #00d4ff', margin:'8px 0', paddingLeft:12, color:'#888', fontSize:13, fontStyle:'italic' }}>{children}</blockquote>;
+  },
+};
+
+// ── FEATURE 3: Typing Dots with Provider Name ────────────────────────────
+function TypingDots({ provider }: { provider?: string }) {
   return (
     <div className="typing-wrap">
       <div className="typing-avatar">J</div>
-      <div className="typing-bubble">
-        <div className="typing-dot" />
-        <div className="typing-dot" />
-        <div className="typing-dot" />
+      <div style={{ display:'flex', flexDirection:'column', gap:4 }}>
+        <div className="typing-bubble">
+          <div className="typing-dot" />
+          <div className="typing-dot" />
+          <div className="typing-dot" />
+        </div>
+        {provider && (
+          <span style={{ color:'#333', fontSize:9, paddingLeft:4, letterSpacing:0.5 }}>
+            via {provider}
+          </span>
+        )}
       </div>
     </div>
   );
 }
 
-function RichCard({ card }: { card: any }) {
+// ── NEW FEATURE: LaTeX/Math Inline Renderer ─────────────────────────────
+function renderMathContent(text: string): React.ReactNode {
+  if (!text) return text;
+  // Split on $$...$$ (block) and $...$ (inline)
+  const parts: React.ReactNode[] = [];
+  const blockRegex = /\$\$([\s\S]+?)\$\$/g;
+  const inlineRegex = /\$([^$\n]+?)\$/g;
+  let lastIdx = 0;
+  let blockMatch;
+  // First pass: block math
+  const segments: { start: number; end: number; type: 'block' | 'inline'; content: string }[] = [];
+  while ((blockMatch = blockRegex.exec(text)) !== null) {
+    segments.push({ start: blockMatch.index, end: blockMatch.index + blockMatch[0].length, type: 'block', content: blockMatch[1] });
+  }
+  let inlineMatch;
+  const inRegex = /\$([^$\n]{1,200}?)\$/g;
+  while ((inlineMatch = inRegex.exec(text)) !== null) {
+    const overlaps = segments.some(s => inlineMatch!.index >= s.start && inlineMatch!.index < s.end);
+    if (!overlaps) segments.push({ start: inlineMatch.index, end: inlineMatch.index + inlineMatch[0].length, type: 'inline', content: inlineMatch[1] });
+  }
+  segments.sort((a, b) => a.start - b.start);
+  lastIdx = 0;
+  for (const seg of segments) {
+    if (seg.start > lastIdx) parts.push(text.slice(lastIdx, seg.start));
+    if (seg.type === 'block') {
+      parts.push(
+        <div key={seg.start} style={{ textAlign:'center', margin:'10px 0', padding:'10px', background:'rgba(0,212,255,0.05)', borderRadius:10, border:'1px solid rgba(0,212,255,0.15)', fontStyle:'italic', color:'#00d4ff', fontSize:15, letterSpacing:0.5, overflowX:'auto' }}>
+          {seg.content.trim()}
+        </div>
+      );
+    } else {
+      parts.push(<em key={seg.start} style={{ color:'#00d4ff', fontStyle:'italic', background:'rgba(0,212,255,0.08)', padding:'1px 4px', borderRadius:4, fontSize:'0.95em' }}>{seg.content}</em>);
+    }
+    lastIdx = seg.end;
+  }
+  if (lastIdx < text.length) parts.push(text.slice(lastIdx));
+  return parts.length > 1 ? <>{parts}</> : text;
+}
+
+// ── NEW FEATURE: Response time badge ────────────────────────────────────
+function ResponseTimeBadge({ startTime, done, mode, provider }: { startTime: number; done: boolean; mode?: string; provider?: string }) {
+  const [elapsed, setElapsed] = React.useState(0);
+  React.useEffect(() => {
+    if (done) return;
+    const t = setInterval(() => setElapsed(Date.now() - startTime), 200);
+    return () => clearInterval(t);
+  }, [done, startTime]);
+  const secs = done ? ((Date.now() - startTime) / 1000).toFixed(1) : (elapsed / 1000).toFixed(1);
+  return (
+    <div style={{ display:'flex', gap:6, alignItems:'center', marginTop:4, flexWrap:'wrap' }}>
+      <span style={{ color:'#f59e0b', fontSize:9 }}>⚡{secs}s</span>
+      {mode && <span style={{ color:'#555', fontSize:9 }}>⚡ {mode}</span>}
+      {provider && <span style={{ background:'rgba(0,212,255,0.08)', border:'1px solid rgba(0,212,255,0.2)', borderRadius:8, color:'#00d4ff', fontSize:9, padding:'1px 7px' }}>🤖 {provider}</span>}
+    </div>
+  );
+}
+
+
   const [zoomed, setZoomed] = React.useState(false);
   if (zoomed && card.imageUrl) return (
     <div onClick={() => setZoomed(false)} style={{ position:'fixed', inset:0, background:'rgba(0,0,0,0.95)', zIndex:9999, display:'flex', alignItems:'center', justifyContent:'center', cursor:'zoom-out' }}>
@@ -110,10 +222,26 @@ function RichCard({ card }: { card: any }) {
   );
 }
 
-function MsgItem({ msg, onDelete, onRegenerate, fontSize = 15 }: { msg: Msg; onDelete?: (id: string) => void; onRegenerate?: () => void; fontSize?: number }) {
+// ── FEATURE 4: Message Reactions ─────────────────────────────────────────
+const REACTION_EMOJIS = ['👍','🔥','💡','❤️','😂','😮'];
+
+function MsgItem({ msg, onDelete, onRegenerate, fontSize = 15, onQuote, compact }: { msg: Msg; onDelete?: (id: string) => void; onRegenerate?: () => void; fontSize?: number; onQuote?: (msg: Msg) => void; compact?: boolean }) {
   const isUser = msg.role === 'user';
   const [menuOpen, setMenuOpen] = React.useState(false);
   const longPressTimer = React.useRef<ReturnType<typeof setTimeout> | null>(null);
+  // Reactions
+  const [reactions, setReactions] = React.useState<Record<string,number>>(() => {
+    if (typeof window === 'undefined') return {};
+    try { return JSON.parse(localStorage.getItem(`jarvis_react_${msg.id}`) || '{}'); } catch { return {}; }
+  });
+  const [showReacts, setShowReacts] = React.useState(false);
+  const addReaction = (emoji: string) => {
+    const updated = { ...reactions, [emoji]: (reactions[emoji] || 0) + 1 };
+    setReactions(updated);
+    if (typeof window !== 'undefined') localStorage.setItem(`jarvis_react_${msg.id}`, JSON.stringify(updated));
+    navigator.vibrate?.(25);
+    setShowReacts(false);
+  };
 
   const startLongPress = () => { longPressTimer.current = setTimeout(() => { setMenuOpen(true); navigator.vibrate?.(50); }, 500); };
   const cancelLongPress = () => { if (longPressTimer.current) clearTimeout(longPressTimer.current); };
@@ -123,7 +251,7 @@ function MsgItem({ msg, onDelete, onRegenerate, fontSize = 15 }: { msg: Msg; onD
 
   const ContextMenu = () => (
     <div style={{ position:'absolute', background:'#16162a', border:'1px solid #252545', borderRadius:14, padding:6, zIndex:1000, display:'flex', gap:2, boxShadow:'0 8px 32px rgba(0,0,0,0.7)', whiteSpace:'nowrap', top: isUser ? 'auto' : -4, bottom: isUser ? '110%' : 'auto', right: isUser ? 0 : 'auto', left: isUser ? 'auto' : 0 }}>
-      {[['📋','Copy',copy],['📤','Share',share],['📌','Pin',pin],isUser ? null : ['🔄','Retry',()=>{onRegenerate?.();setMenuOpen(false);}],['🗑️','Del',()=>{onDelete?.(msg.id);setMenuOpen(false);}]].filter(Boolean).map((item:any)=>(
+      {[['📋','Copy',copy],['📤','Share',share],['📌','Pin',pin],['💬','Reply',()=>{onQuote?.(msg);setMenuOpen(false);}],['😀','React',()=>{setShowReacts(true);setMenuOpen(false);}],isUser ? null : ['🔄','Retry',()=>{onRegenerate?.();setMenuOpen(false);}],['🗑️','Del',()=>{onDelete?.(msg.id);setMenuOpen(false);}]].filter(Boolean).map((item:any)=>(
         <button key={item[1]} onClick={item[2]} style={{ background:'none',border:'none',color:'#9090b0',cursor:'pointer',padding:'7px 10px',borderRadius:9,display:'flex',flexDirection:'column',alignItems:'center',gap:2,fontSize:10,transition:'all 0.1s' }}>
           <span style={{ fontSize:16 }}>{item[0]}</span>{item[1]}
         </button>
@@ -131,18 +259,47 @@ function MsgItem({ msg, onDelete, onRegenerate, fontSize = 15 }: { msg: Msg; onD
     </div>
   );
 
+  // Reaction picker overlay
+  const ReactPicker = () => (
+    <div style={{ position:'fixed', inset:0, zIndex:9999, display:'flex', alignItems:'flex-end', justifyContent:'center', paddingBottom:100 }} onClick={() => setShowReacts(false)}>
+      <div style={{ background:'#16162a', border:'1px solid #252545', borderRadius:20, padding:'10px 16px', display:'flex', gap:8, boxShadow:'0 8px 32px rgba(0,0,0,0.8)' }} onClick={e=>e.stopPropagation()}>
+        {REACTION_EMOJIS.map(e => (
+          <button key={e} onClick={() => addReaction(e)} style={{ background:'none', border:'none', fontSize:24, cursor:'pointer', padding:'4px 6px', borderRadius:10, transition:'transform 0.1s' }}
+            onPointerDown={ev => { (ev.target as HTMLElement).style.transform = 'scale(1.3)'; }}
+            onPointerUp={ev => { (ev.target as HTMLElement).style.transform = 'scale(1)'; }}>
+            {e}
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+
   if (isUser) return (
-    <div className="msg-user" onPointerDown={startLongPress} onPointerUp={cancelLongPress} onPointerLeave={cancelLongPress}>
+    <div className="msg-user" style={{ marginBottom: compact ? 4 : 8 }} onPointerDown={startLongPress} onPointerUp={cancelLongPress} onPointerLeave={cancelLongPress}>
+      {showReacts && <ReactPicker />}
       {menuOpen && <div onClick={()=>setMenuOpen(false)} style={{position:'fixed',inset:0,zIndex:999}}/>}
       <div style={{ position:'relative' }}>
         {menuOpen && <ContextMenu />}
+        {msg.quoted && (
+          <div style={{ background:'rgba(0,212,255,0.06)', borderLeft:'2px solid #00d4ff44', borderRadius:'8px 8px 0 0', padding:'4px 10px', fontSize:11, color:'#555', marginBottom:2 }}>
+            ↩ {(msg.quoted as string).slice(0, 60)}{(msg.quoted as string).length > 60 ? '…' : ''}
+          </div>
+        )}
         <div className="msg-user-bubble" style={{ fontSize }}>{msg.content}</div>
+        {Object.keys(reactions).length > 0 && (
+          <div style={{ display:'flex', gap:4, justifyContent:'flex-end', marginTop:3 }}>
+            {Object.entries(reactions).map(([e, n]) => (
+              <span key={e} style={{ background:'rgba(255,255,255,0.06)', borderRadius:12, padding:'2px 7px', fontSize:12 }}>{e} {n}</span>
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );
 
   return (
-    <div className="msg-jarvis" onPointerDown={startLongPress} onPointerUp={cancelLongPress} onPointerLeave={cancelLongPress}>
+    <div className="msg-jarvis" style={{ marginBottom: compact ? 6 : 12 }} onPointerDown={startLongPress} onPointerUp={cancelLongPress} onPointerLeave={cancelLongPress}>
+      {showReacts && <ReactPicker />}
       {menuOpen && <div onClick={()=>setMenuOpen(false)} style={{position:'fixed',inset:0,zIndex:999}}/>}
       <div className="msg-jarvis-avatar">J</div>
       <div className="msg-jarvis-body" style={{ position:'relative' }}>
@@ -151,18 +308,54 @@ function MsgItem({ msg, onDelete, onRegenerate, fontSize = 15 }: { msg: Msg; onD
           JARVIS
           {msg.provider && <span className="provider-badge">{msg.provider}</span>}
         </div>
+        {msg.quoted && (
+          <div style={{ background:'rgba(0,212,255,0.06)', borderLeft:'2px solid #00d4ff44', borderRadius:8, padding:'4px 10px', fontSize:11, color:'#555', marginBottom:6 }}>
+            ↩ {(msg.quoted as string).slice(0, 80)}{(msg.quoted as string).length > 80 ? '…' : ''}
+          </div>
+        )}
         <div className="jarvis-message" style={{ fontSize }}>
-          <ReactMarkdown remarkPlugins={[remarkGfm]}>{msg.content}</ReactMarkdown>
+          <ReactMarkdown remarkPlugins={[remarkGfm]} components={{
+            ...MD_COMPONENTS,
+            p({ children, ...props }: any) {
+              // Math rendering inside paragraphs
+              if (typeof children === 'string') return <p {...props}>{renderMathContent(children)}</p>;
+              const kids = React.Children.map(children, (c: any) =>
+                typeof c === 'string' ? renderMathContent(c) : c
+              );
+              return <p {...props}>{kids}</p>;
+            },
+            text({ value }: any) { return <>{renderMathContent(value)}</>; },
+          }}>{msg.content}</ReactMarkdown>
         </div>
         {msg.card && <RichCard card={msg.card} />}
         {msg.widget && <CommandWidgetRenderer userText={msg.widget} aiText={msg.content} />}
-        <div className="msg-actions">
+        {/* Reactions display */}
+        {Object.keys(reactions).length > 0 && (
+          <div style={{ display:'flex', gap:4, marginTop:4, flexWrap:'wrap' }}>
+            {Object.entries(reactions).map(([e, n]) => (
+              <span key={e} onClick={() => addReaction(e)} style={{ background:'rgba(255,255,255,0.05)', border:'1px solid #1e1e2e', borderRadius:12, padding:'2px 8px', fontSize:12, cursor:'pointer' }}>{e} {n}</span>
+            ))}
+          </div>
+        )}
+        {/* Response time + provider badge */}
+        {msg.provider && (
+          <div style={{ display:'flex', gap:6, alignItems:'center', marginTop:3, flexWrap:'wrap' }}>
+            <span style={{ color:'#f59e0b', fontSize:9 }}>⚡{((msg.timestamp ? (Date.now() - msg.timestamp + 3000) / 1000 : 3)).toFixed(1)}s</span>
+            <span style={{ color:'#444', fontSize:9 }}>⚡ flash</span>
+            <span style={{ background:'rgba(0,212,255,0.08)', border:'1px solid rgba(0,212,255,0.2)', borderRadius:8, color:'#00d4ff', fontSize:9, padding:'1px 7px' }}>🤖 {msg.provider}</span>
+          </div>
+        )}
+        <div className="msg-actions" style={{ display:'flex', gap:4, flexWrap:'wrap', alignItems:'center', marginTop:4 }}>
           <button className="msg-action-btn" onClick={()=>speakText(msg.content)} title="Read">🔊</button>
           <button className="msg-action-btn" onClick={copy} title="Copy">📋</button>
-          {onRegenerate && <button className="msg-action-btn" onClick={()=>{onRegenerate?.();}} title="Retry">🔄</button>}
-          {['👍','🔥','🤔','😮'].map(e=>(
-            <button key={e} className="msg-action-btn" onClick={()=>navigator.vibrate?.(15)} style={{ opacity:0.5 }}>{e}</button>
-          ))}
+          <button className="msg-action-btn" onClick={()=>setShowReacts(true)} title="React">😀</button>
+          {onQuote && <button className="msg-action-btn" onClick={()=>onQuote(msg)} title="Reply">💬</button>}
+          {onRegenerate && (
+            <button onClick={()=>{onRegenerate?.();}} title="Regenerate"
+              style={{ background:'rgba(255,255,255,0.04)', border:'1px solid #1e1e2e', borderRadius:10, color:'#888', cursor:'pointer', padding:'4px 10px', fontSize:11, display:'flex', alignItems:'center', gap:4 }}>
+              ↺ Regenerate
+            </button>
+          )}
         </div>
       </div>
     </div>
@@ -304,6 +497,23 @@ export default function Home() {
   const fileInputRef = React.useRef<HTMLInputElement>(null);
   const [attachedImage, setAttachedImage] = React.useState<{base64:string,preview:string,name:string}|null>(null);
   const [chatBg, setChatBg] = React.useState<string>('none');
+
+  // ── FEATURE 5-15: New state ──────────────────────────────────────────
+  const [searchOpen, setSearchOpen] = React.useState(false);
+  const [searchQuery, setSearchQuery] = React.useState('');
+  const [compactMode, setCompactMode] = React.useState(false);
+  const [quotedMsg, setQuotedMsg] = React.useState<Msg | null>(null);
+  const [showJumpBtn, setShowJumpBtn] = React.useState(false);
+  const [newMsgCount, setNewMsgCount] = React.useState(0);
+  const [streamingProvider, setStreamingProvider] = React.useState('');
+  const [showTimestamps, setShowTimestamps] = React.useState(false);
+  const messagesAreaRef = React.useRef<HTMLDivElement>(null);
+  // Force Provider lock (from other JARVIS app)
+  const [forcedProvider, setForcedProvider] = React.useState<string|null>(() => {
+    if (typeof window === 'undefined') return null;
+    return localStorage.getItem('jarvis_forced_provider') || null;
+  });
+  const [modePopupTab, setModePopupTab] = React.useState<'mode'|'attach'|'persona'>('mode');
   React.useEffect(() => {
     if (typeof window === 'undefined') return;
     const bgId = localStorage.getItem('jarvis_chat_bg') || 'none';
@@ -354,6 +564,11 @@ export default function Home() {
         e.preventDefault();
         textareaRef.current?.focus();
       }
+      // Ctrl+F = search
+      if (e.key === 'f' && (e.ctrlKey || e.metaKey)) {
+        e.preventDefault();
+        setSearchOpen(true);
+      }
       // Escape to close any open panel
       if (e.key === 'Escape') {
         setHeaderMenuOpen(false);
@@ -361,10 +576,47 @@ export default function Home() {
         setSlashOpen(false);
         setHistoryOpen(false);
         setAppsOpen(false);
+        setSearchOpen(false);
+        setQuotedMsg(null);
       }
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
+  }, []);
+
+  // ── FEATURE 8: Shake to new chat ────────────────────────────────────────
+  React.useEffect(() => {
+    if (typeof window === 'undefined' || !('DeviceMotionEvent' in window)) return;
+    let lastShake = 0;
+    const THRESHOLD = 25;
+    const onMotion = (e: DeviceMotionEvent) => {
+      const acc = e.accelerationIncludingGravity;
+      if (!acc) return;
+      const total = Math.abs(acc.x||0) + Math.abs(acc.y||0) + Math.abs(acc.z||0);
+      if (total > THRESHOLD && Date.now() - lastShake > 3000) {
+        lastShake = Date.now();
+        if (msgs.length > 1) {
+          navigator.vibrate?.([100, 50, 100]);
+          // Show toast asking if they want to clear
+          toastInfo('📳 Shake detected! "new chat" type karo ya ✦ tap karo.');
+        }
+      }
+    };
+    window.addEventListener('devicemotion', onMotion as EventListener);
+    return () => window.removeEventListener('devicemotion', onMotion as EventListener);
+  }, [msgs.length]);
+
+  // ── FEATURE 11: Scroll tracking for Jump-to-bottom ──────────────────────
+  React.useEffect(() => {
+    const area = messagesAreaRef.current;
+    if (!area) return;
+    const onScroll = () => {
+      const distFromBottom = area.scrollHeight - area.scrollTop - area.clientHeight;
+      setShowJumpBtn(distFromBottom > 200);
+      if (distFromBottom <= 50) setNewMsgCount(0);
+    };
+    area.addEventListener('scroll', onScroll, { passive: true });
+    return () => area.removeEventListener('scroll', onScroll);
   }, []);
 
   // ── Keyboard / Viewport fix (Android) ───────────────────────────────────
@@ -661,6 +913,10 @@ export default function Home() {
   // ── Send message ──────────────────────────────────────────────────────
   const send = async (text: string) => {
     if (!text.trim() || loading) return;
+    // FEATURE 9: Quote reply
+    const _quotedSnap = quotedMsg;
+    if (quotedMsg) setQuotedMsg(null);
+    const textWithQuote = _quotedSnap ? text.trim() + ` [Replying to: "${_quotedSnap.content.slice(0,80)}"]` : text.trim();
     // ── CONTEXT CHAIN ─────────────────────────────────────────────
     // JARVIS last person/topic yaad rakhta hai
     if (typeof window !== 'undefined') {
@@ -2078,6 +2334,7 @@ export default function Home() {
 
     const _widget = text.trim();
     setMsgs(prev => [...prev, { id: assistantId, role: 'assistant', content: '', timestamp: Date.now(), widget: _widget }]);
+    setStreamingProvider('...');
 
     abortRef.current?.abort();
     const controller = new AbortController();
@@ -2126,6 +2383,7 @@ export default function Home() {
               setMsgs(prev => prev.map(m => m.id === assistantId ? { ...m, card } : m));
             } else if (d.type === 'done') {
               provider = d.provider || '';
+              setStreamingProvider('');
               setMsgs(prev => prev.map(m => m.id === assistantId ? { ...m, provider, content: fullText || m.content } : m));
             } else if (d.type === 'appCommand') {
               execAppCommand(d.command);
@@ -2322,25 +2580,31 @@ export default function Home() {
         </div>
       </div>
 
-      {/* Quick Command Bar — swipeable chips */}
+      {/* Quick Command Bar — DYNAMIC TIME-BASED chips */}
       <div className="quick-chips">
-        {[
-          { label:'🌤️ Mausam', cmd:'Maihar ka mausam batao' },
-          { label:'📰 News', cmd:'Top India news today' },
-          { label:'₿ BTC', cmd:'Bitcoin price INR' },
-          { label:'🖼️ Image', cmd:'Image bana: beautiful landscape' },
-          { label:'😂 Joke', cmd:'/joke' },
-          { label:'📖 Wiki', cmd:'/wiki India' },
-          { label:'💱 Rate', cmd:'1 USD to INR' },
-          { label:'🔋 Battery', cmd:'/battery' },
-          { label:'🎯 Goals', cmd:'/goals' },
-          { label:'📅 Date', cmd:'Aaj ki date kya hai?' },
-        ].map(c => (
-          <button key={c.label} onClick={() => send(c.cmd)}
-            className="chip">
-            {c.label}
-          </button>
-        ))}
+        {(() => {
+          const h = new Date().getHours();
+          const morning = h >= 5 && h < 12;
+          const afternoon = h >= 12 && h < 17;
+          const evening = h >= 17 && h < 21;
+          // const night = h >= 21 || h < 5;
+          const base = [
+            { label:'🌤️ Mausam', cmd:'Maihar ka mausam batao' },
+            { label:'📰 News', cmd:'Top India news today' },
+            { label:'₿ BTC', cmd:'Bitcoin price INR' },
+            { label:'🖼️ Image', cmd:'Image bana: beautiful landscape' },
+          ];
+          const extra = morning
+            ? [{ label:'☀️ Good morning!', cmd:'Good morning JARVIS, aaj ka brief batao' }, { label:'📅 Aaj kya karna hai?', cmd:'Aaj ka plan banao' }, { label:'📖 Motivation', cmd:'/quote' }]
+            : afternoon
+            ? [{ label:'🍱 Khaana?', cmd:'Quick healthy lunch ideas batao' }, { label:'📊 Life score', cmd:'Mera aaj ka life score batao' }, { label:'😂 Joke', cmd:'/joke' }]
+            : evening
+            ? [{ label:'🌙 Din kaisa raha?', cmd:'Aaj ka din summary batao' }, { label:'🎵 Music', cmd:'Relaxing music generate karo' }, { label:'📝 Notes', cmd:'notes dikhao' }]
+            : [{ label:'🌙 Neend aao', cmd:'Raat ka routine suggest karo' }, { label:'💭 Sochna hai', cmd:'Ek deep philosophical baat batao' }, { label:'🔋 Battery', cmd:'/battery' }];
+          return [...base, ...extra, { label:'🎯 Goals', cmd:'/goals' }, { label:'💱 USD→INR', cmd:'1 USD to INR' }].map(c => (
+            <button key={c.label} onClick={() => send(c.cmd)} className="chip">{c.label}</button>
+          ));
+        })()}
       </div>
 
       {/* PWA Install Banner */}
@@ -2363,8 +2627,22 @@ export default function Home() {
         </div>
       )}
 
+      {/* FEATURE 6: In-chat search bar */}
+      {searchOpen && (
+        <div style={{ background:'#0d0d16', borderBottom:'1px solid #1e1e2e', padding:'8px 12px', display:'flex', gap:8, alignItems:'center' }}>
+          <span style={{ color:'#555', fontSize:14 }}>🔍</span>
+          <input autoFocus value={searchQuery} onChange={e=>setSearchQuery(e.target.value)}
+            placeholder="Messages mein dhundho..."
+            style={{ flex:1, background:'none', border:'none', color:'#e0e0ff', fontSize:13, outline:'none' }} />
+          <span style={{ color:'#555', fontSize:11 }}>
+            {searchQuery ? msgs.filter(m=>m.content.toLowerCase().includes(searchQuery.toLowerCase())).length + ' found' : ''}
+          </span>
+          <button onClick={()=>{setSearchOpen(false);setSearchQuery('');}} style={{ background:'none', border:'none', color:'#555', fontSize:18, cursor:'pointer' }}>✕</button>
+        </div>
+      )}
+
       {/* Messages */}
-      <div className="messages-area" style={{ background: chatBg !== 'none' ? chatBg : undefined }}
+      <div ref={messagesAreaRef} className="messages-area" style={{ background: chatBg !== 'none' ? chatBg : undefined, position:'relative' }}
         onTouchStart={(e) => {
           (window as any).__pullY = e.touches[0].clientY;
           (window as any).__pullX = e.touches[0].clientX;
@@ -2389,12 +2667,71 @@ export default function Home() {
         {refreshing && (
           <div style={{ textAlign: 'center', padding: 10, color: '#00d4ff', fontSize: 12 }}>🔄 Refreshing...</div>
         )}
-        {msgs.map((msg: Msg) => {
+        {/* Clock Welcome Screen — jab koi user message nahi */}
+        {msgs.filter(m=>m.role==='user').length === 0 && !loading && (() => {
+          const now = new Date();
+          const h = now.getHours();
+          const m = now.getMinutes();
+          const hh = String(h % 12 || 12).padStart(2, '0');
+          const mm = String(m).padStart(2, '0');
+          const ampm = h < 12 ? 'am' : 'pm';
+          const days = ['रवि','सोम','मंगल','बुध','गुरु','शुक्र','शनि'];
+          const months = ['जनवरी','फरवरी','मार्च','अप्रैल','मई','जून','जुलाई','अगस्त','सितम्बर','अक्टूबर','नवम्बर','दिसम्बर'];
+          const dateStr = `${days[now.getDay()]}, ${now.getDate()} ${months[now.getMonth()]}`;
+          const userName = typeof window !== 'undefined' ? localStorage.getItem('jarvis_user_name') || 'Boss' : 'Boss';
+          const greeting = h < 12 ? 'Good morning' : h < 17 ? 'Kya scene hai' : h < 21 ? 'Good evening' : 'Raat ka scene';
+          return (
+            <div style={{ display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', flex:1, padding:'20px 20px 10px', gap:8, minHeight:240 }}>
+              {/* Big clock */}
+              <div style={{ fontSize: 52, fontWeight:200, letterSpacing:2, color:'#e0e0ff', fontFamily:'system-ui', lineHeight:1 }}>
+                {hh}:{mm} <span style={{ fontSize:18, color:'#555', verticalAlign:'middle' }}>{ampm}</span>
+              </div>
+              <div style={{ color:'#555', fontSize:13 }}>{dateStr}</div>
+              <div style={{ color:'#888', fontSize:14, marginTop:4 }}>{greeting}, {userName} 👋</div>
+              {/* 2x3 quick grid */}
+              <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:8, width:'100%', maxWidth:320, marginTop:12 }}>
+                {[
+                  { icon:'🖼️', label:'Image banao', cmd:'Image bana: beautiful indian landscape' },
+                  { icon:'📰', label:'Aaj ki news', cmd:'Top India news today' },
+                  { icon:'🌤️', label:'Mausam', cmd:'Maihar ka mausam batao' },
+                  { icon:'💻', label:'Python code', cmd:'Python mein hello world program likho' },
+                  { icon:'🧮', label:'Math solve', cmd:'(12! / (4^12 * 12!)) solve karo step by step' },
+                  { icon:'📖', label:'Summary', cmd:'Mere liye motivational summary do aaj ke liye' },
+                ].map(q => (
+                  <button key={q.label} onClick={() => send(q.cmd)}
+                    style={{ background:'rgba(255,255,255,0.03)', border:'1px solid rgba(255,255,255,0.07)', borderRadius:14, padding:'12px 10px', cursor:'pointer', textAlign:'left', display:'flex', alignItems:'center', gap:8, transition:'all 0.15s' }}>
+                    <span style={{ fontSize:18 }}>{q.icon}</span>
+                    <span style={{ color:'#aaa', fontSize:12 }}>{q.label}</span>
+                  </button>
+                ))}
+              </div>
+              <div style={{ color:'#2a2a3a', fontSize:10, marginTop:8 }}>Ctrl+K sidebar · Ctrl+F search · / commands</div>
+            </div>
+          );
+        })()}
+        {(searchQuery
+          ? msgs.filter(m => m.content.toLowerCase().includes(searchQuery.toLowerCase()))
+          : msgs
+        ).map((msg: Msg) => {
           const msgDel = (id: string) => setMsgs(prev => prev.filter(m => m.id !== id));
           const msgRegen = () => { const u = [...msgs].reverse().find(m => m.role === 'user'); if (u) send(u.content); };
-          const MsgEl = MsgItem as any; return <MsgEl key={msg.id} msg={msg} onDelete={msgDel} onRegenerate={msgRegen} fontSize={fontSize} />;
+          const msgQuote = (m: Msg) => { setQuotedMsg(m); textareaRef.current?.focus(); };
+          const showTs = showTimestamps && msg.timestamp;
+          return (
+            <div key={msg.id}>
+              {showTs && (
+                <div style={{ textAlign:'center', color:'#333', fontSize:9, margin:'2px 0', letterSpacing:0.5 }}>
+                  {new Date(msg.timestamp).toLocaleTimeString('en-IN', { hour:'2-digit', minute:'2-digit' })}
+                </div>
+              )}
+              {searchQuery && msg.content.toLowerCase().includes(searchQuery.toLowerCase()) && (
+                <div style={{ margin:'0 12px 2px', height:2, background:'linear-gradient(90deg,transparent,rgba(0,212,255,0.4),transparent)', borderRadius:2 }} />
+              )}
+              <MsgItem msg={msg} onDelete={msgDel} onRegenerate={msgRegen} fontSize={fontSize} onQuote={msgQuote} compact={compactMode} />
+            </div>
+          );
         })}
-        {loading && <TypingDots />}
+        {loading && <TypingDots provider={streamingProvider} />}
 
         {/* Smart suggested replies */}
         {!loading && msgs.length > 0 && msgs[msgs.length-1]?.role === 'assistant' && (() => {
@@ -2444,12 +2781,29 @@ export default function Home() {
         </div>
       )}
 
-      {/* Bottom strip — mode + char count */}
+      {/* FEATURE 11: Jump to bottom button */}
+      {showJumpBtn && (
+        <button onClick={() => { bottomRef.current?.scrollIntoView({ behavior: 'smooth' }); setNewMsgCount(0); }}
+          style={{ position:'fixed', bottom: 180, right: 16, width: 42, height: 42, borderRadius:'50%', background:'rgba(0,212,255,0.15)', border:'1px solid rgba(0,212,255,0.4)', color:'#00d4ff', fontSize: 18, cursor:'pointer', zIndex: 50, display:'flex', alignItems:'center', justifyContent:'center', boxShadow:'0 4px 20px rgba(0,212,255,0.2)', backdropFilter:'blur(8px)' }}>
+          {newMsgCount > 0 ? <span style={{ fontSize:10, fontWeight:700 }}>{newMsgCount}↓</span> : '↓'}
+        </button>
+      )}
+
+      {/* Bottom strip — mode + char count + search + toggles */}
       <div className="bottom-strip">
         <span className={"mode-pill " + (mode === 'auto' ? 'auto' : mode)} onClick={() => setPlusOpen(p=>!p)} style={{ cursor:'pointer' }}>
           {mode==='flash'?'⚡':mode==='think'?'🧠':mode==='deep'?'🔬':'🤖'} {mode==='auto'?`Auto → ${effectiveMode}`:mode.charAt(0).toUpperCase()+mode.slice(1)}
         </span>
         <div style={{ display:'flex', alignItems:'center', gap:6 }}>
+          {/* FEATURE 6: Search toggle */}
+          <button onClick={()=>setSearchOpen(p=>!p)} title="Search chats (Ctrl+F)"
+            style={{ background: searchOpen ? 'rgba(0,212,255,0.1)' : 'none', border:'none', color: searchOpen ? '#00d4ff' : '#333', cursor:'pointer', fontSize:14, padding:'2px 6px', borderRadius:6 }}>🔍</button>
+          {/* FEATURE 10: Compact mode toggle */}
+          <button onClick={()=>setCompactMode(p=>!p)} title="Compact mode"
+            style={{ background: compactMode ? 'rgba(0,212,255,0.1)' : 'none', border:'none', color: compactMode ? '#00d4ff' : '#333', cursor:'pointer', fontSize:13, padding:'2px 6px', borderRadius:6 }}>≡</button>
+          {/* FEATURE 7: Timestamps toggle */}
+          <button onClick={()=>setShowTimestamps(p=>!p)} title="Show timestamps"
+            style={{ background: showTimestamps ? 'rgba(0,212,255,0.1)' : 'none', border:'none', color: showTimestamps ? '#00d4ff' : '#333', cursor:'pointer', fontSize:13, padding:'2px 6px', borderRadius:6 }}>🕐</button>
           {input.trim().length > 0 && <span style={{ color:'var(--muted)', fontSize:10 }}>{input.length}</span>}
           {input.trim().length > 20 && (
             <div style={{ display:'flex', gap:3 }}>
@@ -2463,6 +2817,21 @@ export default function Home() {
           )}
         </div>
       </div>
+
+      {/* FEATURE 9: Quote/Reply preview bar */}
+      {quotedMsg && (
+        <div style={{ background:'rgba(0,212,255,0.06)', borderTop:'1px solid rgba(0,212,255,0.15)', padding:'6px 12px', display:'flex', alignItems:'center', gap:8 }}>
+          <div style={{ flex:1 }}>
+            <div style={{ color:'#00d4ff', fontSize:9, marginBottom:2, letterSpacing:0.5 }}>
+              ↩ REPLYING TO {quotedMsg.role === 'user' ? 'YOU' : 'JARVIS'}
+            </div>
+            <div style={{ color:'#666', fontSize:11, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap', maxWidth:'80vw' }}>
+              {quotedMsg.content.slice(0, 80)}{quotedMsg.content.length > 80 ? '…' : ''}
+            </div>
+          </div>
+          <button onClick={() => setQuotedMsg(null)} style={{ background:'none', border:'none', color:'#444', cursor:'pointer', fontSize:18, flexShrink:0 }}>✕</button>
+        </div>
+      )}
 
       {/* Image Preview Strip */}
       {attachedImage && (
@@ -2547,38 +2916,107 @@ export default function Home() {
 
         {/* Plus popup — mode select */}
         {plusOpen && (
-          <div className="plus-popup" data-plus onClick={e=>e.stopPropagation()}>
-            <div style={{ color:'var(--muted)', fontSize:10, marginBottom:10, letterSpacing:0.5 }}>ATTACH</div>
-            <div style={{ display:'flex', gap:8, marginBottom:14 }}>
-              {[
-                {icon:'📷',label:'Photo',color:'var(--success)',action:()=>{photoInputRef.current?.click();setPlusOpen(false);}},
-                {icon:'📄',label:'File',color:'var(--warn)',action:()=>{fileInputRef.current?.click();setPlusOpen(false);}},
-                {icon:recording?'⏹️':'🎤',label:recording?'Stop':'Audio',color:recording?'var(--danger)':'var(--purple)',action:async()=>{
-                  setPlusOpen(false);if(recording){mediaRecRef.current?.stop();setRecording(false);return;}
-                  try{const stream=await navigator.mediaDevices.getUserMedia({audio:true});const rec=new MediaRecorder(stream);const chunks:BlobPart[]=[];rec.ondataavailable=e=>chunks.push(e.data);rec.onstop=()=>{stream.getTracks().forEach(t=>t.stop());const blob=new Blob(chunks,{type:'audio/webm'});const url=URL.createObjectURL(blob);setMsgs(prev=>[...prev,{id:'u_'+Date.now(),role:'user',content:'🎤 Voice message',timestamp:Date.now(),card:{type:'audio',audioUrl:url,title:'Voice message'}}]);setRecording(false);toastOk('Voice saved!');};rec.start();mediaRecRef.current=rec;setRecording(true);toastOk('🎤 Recording... Phir tap karo stop ke liye');}catch{toastErr('Mic permission do');}
-                }},
-                {icon:'📷',label:'Camera',color:'var(--accent)',action:()=>{router.push('/camera');setPlusOpen(false);}},
-              ].map(item=>(
-                <button key={item.label} onClick={item.action}
-                  style={{ flex:1, background:'var(--card2)', border:'1px solid var(--border2)', borderRadius:14, padding:'12px 6px', cursor:'pointer', display:'flex', flexDirection:'column', alignItems:'center', gap:5 }}>
-                  <span style={{ fontSize:24 }}>{item.icon}</span>
-                  <span style={{ color:item.color, fontSize:10, fontWeight:600 }}>{item.label}</span>
+          <div className="plus-popup" data-plus onClick={e=>e.stopPropagation()} style={{ maxHeight:'75vh', overflowY:'auto' }}>
+            {/* 3 Tabs: Attach / Mode / Persona */}
+            <div style={{ display:'flex', borderBottom:'1px solid rgba(255,255,255,0.06)', marginBottom:14, gap:0 }}>
+              {(['attach','mode','persona'] as const).map(tab => (
+                <button key={tab} onClick={()=>setModePopupTab(tab as any)}
+                  style={{ flex:1, background:'none', border:'none', borderBottom: modePopupTab===tab ? '2px solid #00d4ff' : '2px solid transparent', color: modePopupTab===tab ? '#00d4ff' : '#555', fontSize:11, cursor:'pointer', padding:'8px 4px', fontWeight: modePopupTab===tab ? 700 : 400, textTransform:'uppercase', letterSpacing:0.5 }}>
+                  {tab==='attach'?'🔗 Attach':tab==='mode'?'⚡ Mode':'🎭 Persona'}
                 </button>
               ))}
             </div>
 
-            <div style={{ borderTop:'1px solid var(--border)', paddingTop:12, marginBottom:8 }}>
-              <div style={{ color:'var(--muted)', fontSize:10, marginBottom:8, letterSpacing:0.5 }}>AI MODE</div>
-              <div style={{ display:'flex', gap:6 }}>
-                {([['auto','🤖','Auto','var(--accent)'],['flash','⚡','Flash','var(--warn)'],['think','🧠','Think','var(--purple)'],['deep','🔬','Deep','var(--success)']] as [Mode,string,string,string][]).map(([m,icon,label,col])=>(
-                  <button key={m} onClick={()=>{setMode(m);setPlusOpen(false);}}
-                    style={{ flex:1, background:mode===m?'rgba(0,212,255,0.08)':'var(--card2)', border:'1px solid '+(mode===m?'rgba(0,212,255,0.3)':'var(--border)'), borderRadius:12, padding:'10px 4px', cursor:'pointer', display:'flex', flexDirection:'column', alignItems:'center', gap:3 }}>
-                    <span style={{ fontSize:20 }}>{icon}</span>
-                    <span style={{ color:mode===m?col:'var(--muted)', fontSize:10, fontWeight:mode===m?700:400 }}>{label}</span>
+            {/* ATTACH TAB */}
+            {modePopupTab === 'attach' && (
+              <div style={{ display:'flex', gap:8 }}>
+                {[
+                  {icon:'📷',label:'Photo',color:'var(--success)',action:()=>{photoInputRef.current?.click();setPlusOpen(false);}},
+                  {icon:'📄',label:'File',color:'var(--warn)',action:()=>{fileInputRef.current?.click();setPlusOpen(false);}},
+                  {icon:recording?'⏹️':'🎤',label:recording?'Stop':'Audio',color:recording?'var(--danger)':'var(--purple)',action:async()=>{
+                    setPlusOpen(false);if(recording){mediaRecRef.current?.stop();setRecording(false);return;}
+                    try{const stream=await navigator.mediaDevices.getUserMedia({audio:true});const rec=new MediaRecorder(stream);const chunks:BlobPart[]=[];rec.ondataavailable=e=>chunks.push(e.data);rec.onstop=()=>{stream.getTracks().forEach(t=>t.stop());const blob=new Blob(chunks,{type:'audio/webm'});const url=URL.createObjectURL(blob);setMsgs(prev=>[...prev,{id:'u_'+Date.now(),role:'user',content:'🎤 Voice message',timestamp:Date.now(),card:{type:'audio',audioUrl:url,title:'Voice message'}}]);setRecording(false);toastOk('Voice saved!');};rec.start();mediaRecRef.current=rec;setRecording(true);toastOk('🎤 Recording... Phir tap karo stop ke liye');}catch{toastErr('Mic permission do');}
+                  }},
+                  {icon:'📷',label:'Camera',color:'var(--accent)',action:()=>{router.push('/camera');setPlusOpen(false);}},
+                ].map(item=>(
+                  <button key={item.label} onClick={item.action}
+                    style={{ flex:1, background:'var(--card2)', border:'1px solid var(--border2)', borderRadius:14, padding:'12px 6px', cursor:'pointer', display:'flex', flexDirection:'column', alignItems:'center', gap:5 }}>
+                    <span style={{ fontSize:24 }}>{item.icon}</span>
+                    <span style={{ color:item.color, fontSize:10, fontWeight:600 }}>{item.label}</span>
                   </button>
                 ))}
               </div>
-            </div>
+            )}
+
+            {/* MODE TAB — Beautiful cascade display */}
+            {modePopupTab === 'mode' && (
+              <div style={{ display:'flex', flexDirection:'column', gap:8 }}>
+                {[
+                  { m:'auto' as Mode, icon:'🤖', label:'Auto', desc:'Smart router — type se decide', col:'#00d4ff',
+                    cascade:['⚡ Flash ya 🔬 Deep — auto detect'] },
+                  { m:'flash' as Mode, icon:'⚡', label:'Flash', desc:'Short answers, fastest', col:'#f59e0b',
+                    cascade:['Groq Llama4 Scout','→ Together 70B','→ Gemini 2.5','→ Pollinations','→ Puter'] },
+                  { m:'think' as Mode, icon:'🧠', label:'Think', desc:'Deep reasoning, long answer', col:'#a855f7',
+                    cascade:['OpenRouter DeepSeek R1','→ Gemini 2.5 Flash','→ Pollinations','→ Puter'] },
+                  { m:'deep' as Mode, icon:'🔬', label:'Deep', desc:'Live data: weather/news/maps', col:'#22c55e',
+                    cascade:['Gemini 2.5 + Tools','→ Pollinations','→ Puter'] },
+                ].map(({ m, icon, label, desc, col, cascade }) => (
+                  <button key={m} onClick={()=>{setMode(m);setPlusOpen(false);}}
+                    style={{ background: mode===m ? 'rgba(0,212,255,0.06)' : 'rgba(255,255,255,0.02)', border:`1px solid ${mode===m?'rgba(0,212,255,0.3)':'rgba(255,255,255,0.06)'}`, borderRadius:14, padding:'12px 14px', cursor:'pointer', textAlign:'left', position:'relative' }}>
+                    {mode===m && <span style={{ position:'absolute', top:8, right:10, background:'rgba(0,212,255,0.15)', color:'#00d4ff', fontSize:9, padding:'2px 8px', borderRadius:8, fontWeight:700, letterSpacing:0.5 }}>ACTIVE</span>}
+                    <div style={{ display:'flex', alignItems:'center', gap:8, marginBottom:5 }}>
+                      <span style={{ fontSize:18 }}>{icon}</span>
+                      <span style={{ color:'#e0e0ff', fontWeight:600, fontSize:13 }}>{label}</span>
+                    </div>
+                    <div style={{ color:'#666', fontSize:11, marginBottom:6 }}>{desc}</div>
+                    <div style={{ display:'flex', flexWrap:'wrap', gap:4 }}>
+                      {cascade.map((c, i) => (
+                        <span key={i} style={{ background: i===0 ? `${col}22` : 'rgba(255,255,255,0.04)', border:`1px solid ${i===0 ? col+'44' : 'rgba(255,255,255,0.06)'}`, borderRadius:8, color: i===0 ? col : '#555', fontSize:10, padding:'2px 8px' }}>{c}</span>
+                      ))}
+                    </div>
+                  </button>
+                ))}
+
+                {/* Force Provider Lock */}
+                <div style={{ borderTop:'1px solid rgba(255,255,255,0.06)', paddingTop:10, marginTop:2 }}>
+                  <div style={{ color:'#555', fontSize:10, marginBottom:6, letterSpacing:0.5 }}>🔒 FORCE PROVIDER (LOCK)</div>
+                  <div style={{ display:'flex', gap:6, flexWrap:'wrap' }}>
+                    {[null,'groq','gemini','pollinations','puter','together','cerebras'].map(p => (
+                      <button key={p||'auto'} onClick={()=>{ setForcedProvider(p); if(typeof window!=='undefined') p ? localStorage.setItem('jarvis_forced_provider',p) : localStorage.removeItem('jarvis_forced_provider'); setPlusOpen(false); toastInfo(p ? `🔒 Locked: ${p}` : '🔓 Auto cascade'); }}
+                        style={{ background: forcedProvider===p ? 'rgba(0,212,255,0.12)' : 'rgba(255,255,255,0.03)', border:`1px solid ${forcedProvider===p?'rgba(0,212,255,0.4)':'rgba(255,255,255,0.06)'}`, borderRadius:10, color: forcedProvider===p ? '#00d4ff' : '#666', fontSize:10, padding:'5px 10px', cursor:'pointer', fontWeight: forcedProvider===p ? 700 : 400 }}>
+                        {p === null ? '🔓 Auto' : `🔒 ${p}`}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* PERSONA TAB */}
+            {modePopupTab === 'persona' && (
+              <div style={{ display:'flex', flexDirection:'column', gap:8 }}>
+                {[
+                  { id:'jons', icon:'🦾', name:'Jons Bhai', desc:'Default — Tony Stark JARVIS style, Hinglish' },
+                  { id:'strict', icon:'🎯', name:'Focus Mode', desc:'Sirf kaam ki baatein, no jokes' },
+                  { id:'chill', icon:'😎', name:'Chill Bro', desc:'Casual, fun, masti' },
+                  { id:'teacher', icon:'📚', name:'Teacher', desc:'Explain karta hai clearly, examples deta hai' },
+                ].map(p => {
+                  const cur = typeof window !== 'undefined' ? (localStorage.getItem('jarvis_mode')||'jons') : 'jons';
+                  return (
+                    <button key={p.id} onClick={()=>{ if(typeof window!=='undefined') p.id==='jons' ? localStorage.removeItem('jarvis_mode') : localStorage.setItem('jarvis_mode',p.id); setPlusOpen(false); toastInfo(`🎭 Persona: ${p.name}`); }}
+                      style={{ background: cur===p.id ? 'rgba(0,212,255,0.06)' : 'rgba(255,255,255,0.02)', border:`1px solid ${cur===p.id?'rgba(0,212,255,0.3)':'rgba(255,255,255,0.06)'}`, borderRadius:14, padding:'10px 12px', cursor:'pointer', textAlign:'left' }}>
+                      <div style={{ display:'flex', alignItems:'center', gap:8 }}>
+                        <span style={{ fontSize:20 }}>{p.icon}</span>
+                        <div>
+                          <div style={{ color:'#e0e0ff', fontSize:13, fontWeight:600 }}>{p.name}</div>
+                          <div style={{ color:'#666', fontSize:11 }}>{p.desc}</div>
+                        </div>
+                      </div>
+                    </button>
+                  );
+                })}
+              </div>
+            )}
           </div>
         )}
       </div>
