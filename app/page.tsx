@@ -187,6 +187,7 @@ function ResponseTimeBadge({ startTime, done, mode, provider }: { startTime: num
 }
 
 
+function RichCard({ card }: { card: any }) {
   const [zoomed, setZoomed] = React.useState(false);
   if (zoomed && card.imageUrl) return (
     <div onClick={() => setZoomed(false)} style={{ position:'fixed', inset:0, background:'rgba(0,0,0,0.95)', zIndex:9999, display:'flex', alignItems:'center', justifyContent:'center', cursor:'zoom-out' }}>
