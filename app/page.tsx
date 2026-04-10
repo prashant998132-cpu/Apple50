@@ -2748,109 +2748,104 @@ export default function Home() {
       <ConnectedAppsPanel open={appsOpen} onClose={() => setAppsOpen(false)} />
       <MemoryPanel open={memoryOpen} onClose={() => setMemoryOpen(false)} />
 
-      {/* Header — Premium */}
-      <div className="jarvis-header">
-        <button className="header-logo" onClick={() => setNavOpen(true)}>J</button>
+      {/* ── HEADER — Reference app style ── */}
+      <div style={{ display:'flex', alignItems:'center', gap:8, padding:'10px 12px', borderBottom:'1px solid rgba(255,255,255,0.06)', background:'var(--bg)', flexShrink:0 }}>
+        {/* Hamburger */}
+        <button onClick={() => setNavOpen(true)}
+          style={{ background:'none', border:'none', color:'#888', cursor:'pointer', fontSize:20, padding:'4px 6px', lineHeight:1, display:'flex', flexDirection:'column', gap:4 }}>
+          <span style={{ display:'block', width:18, height:2, background:'#888', borderRadius:1 }}/>
+          <span style={{ display:'block', width:18, height:2, background:'#888', borderRadius:1 }}/>
+          <span style={{ display:'block', width:18, height:2, background:'#888', borderRadius:1 }}/>
+        </button>
 
-        <div className="header-title">
-          <div className="name">
+        {/* J Logo */}
+        <div style={{ width:34, height:34, borderRadius:10, background:'linear-gradient(135deg,#00aaff,#0055cc)', display:'flex', alignItems:'center', justifyContent:'center', color:'#fff', fontWeight:900, fontSize:18, flexShrink:0 }}>J</div>
+
+        {/* Title */}
+        <div style={{ flex:1 }}>
+          <div style={{ color:'#e0e0ff', fontWeight:700, fontSize:15, lineHeight:1.2 }}>
             JARVIS
-            {!online && <span style={{ fontSize:9, color:'#ef4444', marginLeft:6, WebkitTextFillColor:'#ef4444' }}>● Offline</span>}
-            {reconnected && <span style={{ fontSize:9, color:'#22c55e', marginLeft:6, WebkitTextFillColor:'#22c55e' }}>● Online</span>}
+            {!online && <span style={{ fontSize:9, color:'#ef4444', marginLeft:6 }}>● Offline</span>}
           </div>
-          <div className="sub">{location ? '📍 ' + location : online ? '● Connected' : '○ Offline'}</div>
+          <div style={{ color:'#555', fontSize:10 }}>
+            {location ? `📍 ${location}` : 'LIFE OS v25.14'}
+          </div>
         </div>
 
-        <div style={{ position: 'relative' }}>
-          <button className="header-menu-btn" onClick={() => setHeaderMenuOpen(p => !p)}>⋮</button>
-          {headerMenuOpen && (
-            <>
-              <div onClick={() => setHeaderMenuOpen(false)} style={{ position: 'fixed', inset: 0, zIndex: 9998 }} />
-              <div className="header-dropdown">
-                {[
-                  { icon: wakeActive ? '' : '', label: wakeActive ? 'Wake Word OFF' : 'Wake Word ON', action: () => {
-                    if (wakeActive) { stopWakeWord(); setWakeActive(false); toastInfo('Wake word off'); }
-                    else { const ok = startWakeWord(() => { toastOk(' Bol boss!'); navigator.vibrate?.(100); setInput(''); textareaRef.current?.focus(); }); if (ok) { setWakeActive(true); toastOk('Wake word ON'); } else toastErr('Mic permission chahiye'); }
-                    setHeaderMenuOpen(false);
-                  }, active: wakeActive },
-                  { icon: theme === 'dark' ? '' : theme === 'light' ? '' : theme === 'amoled' ? '' : '', label: 'Theme: ' + theme, action: () => { const t = toggleTheme(); setThemeState(t); setHeaderMenuOpen(false); }, active: false },
-                  { icon: '', label: 'Chat History', action: () => { setHistoryOpen(true); setHeaderMenuOpen(false); }, active: false },
-                  { icon: '', label: 'Connected Apps', action: () => { setAppsOpen(true); setHeaderMenuOpen(false); }, active: false },
-                  { icon: '', label: 'Stop Speaking', action: () => { stopSpeaking(); setHeaderMenuOpen(false); }, active: false },
-                  { icon: '', label: 'Agent Mode', action: () => { router.push('/agent'); setHeaderMenuOpen(false); }, active: false },
-                  { icon: '', label: 'Sakhi', action: () => { router.push('/sakhi'); setHeaderMenuOpen(false); }, active: false },
-                  { icon: '', label: 'Settings', action: () => { router.push('/settings'); setHeaderMenuOpen(false); }, active: false },
-                  { icon: '🧠', label: 'Memory', action: () => { setMemoryOpen(true); setHeaderMenuOpen(false); }, active: false },
-                ].map(item => (
-                  <button key={item.label} onClick={item.action}
-                    className={item.active ? 'active' : ''}>
-                    <span style={{ fontSize: 16 }}>{item.icon}</span>{item.label}
-                  </button>
-                ))}
-              </div>
-            </>
-          )}
+        {/* Action buttons — like reference: 🔍 TTS Clear 💾 ⋮ */}
+        <div style={{ display:'flex', gap:4, alignItems:'center' }}>
+          <button onClick={() => setSearchOpen(p=>!p)}
+            style={{ background: searchOpen ? 'rgba(0,212,255,0.12)' : 'none', border:'none', color: searchOpen ? '#00d4ff' : '#666', cursor:'pointer', fontSize:18, padding:'5px', borderRadius:8, lineHeight:1 }}>🔍</button>
+
+          <button onClick={() => { stopSpeaking(); toastInfo('TTS off'); }}
+            style={{ background:'rgba(239,68,68,0.1)', border:'1px solid rgba(239,68,68,0.2)', borderRadius:8, color:'#ef4444', cursor:'pointer', fontSize:10, padding:'4px 8px', fontWeight:600, display:'flex', alignItems:'center', gap:3 }}>
+            🔇 TTS
+          </button>
+
+          <button onClick={() => { setMsgs([]); setSessionId(''); setInput(''); setAttachedImage(null); }}
+            style={{ background:'rgba(0,212,255,0.1)', border:'1px solid rgba(0,212,255,0.2)', borderRadius:8, color:'#00d4ff', cursor:'pointer', fontSize:11, padding:'4px 10px', fontWeight:600 }}>
+            Clear
+          </button>
+
+          <button onClick={() => {
+            const chatText = msgs.map(m => (m.role==='user' ? 'You: ' : 'JARVIS: ') + m.content).join('\n\n');
+            const blob = new Blob([chatText], {type:'text/plain'});
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a'); a.href=url; a.download='jarvis-chat.txt'; a.click(); URL.revokeObjectURL(url);
+            toastOk('💾 Saved!');
+          }}
+            style={{ background:'none', border:'none', color:'#555', cursor:'pointer', fontSize:18, padding:'4px', lineHeight:1 }}>💾</button>
+
+          {/* ⋮ menu */}
+          <div style={{ position:'relative' }}>
+            <button onClick={() => setHeaderMenuOpen(p => !p)}
+              style={{ background:'none', border:'none', color:'#666', cursor:'pointer', fontSize:20, padding:'4px 6px', lineHeight:1 }}>⋮</button>
+            {headerMenuOpen && (
+              <>
+                <div onClick={() => setHeaderMenuOpen(false)} style={{ position:'fixed', inset:0, zIndex:9998 }} />
+                <div className="header-dropdown">
+                  {[
+                    { icon:'🧠', label:'Memory', action: () => { setMemoryOpen(true); setHeaderMenuOpen(false); } },
+                    { icon:'💬', label:'Chat History', action: () => { setHistoryOpen(true); setHeaderMenuOpen(false); } },
+                    { icon:'🔌', label:'Connected Apps', action: () => { setAppsOpen(true); setHeaderMenuOpen(false); } },
+                    { icon: wakeActive ? '🎤' : '🎤', label: wakeActive ? 'Wake OFF' : 'Wake ON', action: () => {
+                      if (wakeActive) { stopWakeWord(); setWakeActive(false); toastInfo('Wake word off'); }
+                      else { const ok = startWakeWord(() => { toastOk('Bol boss!'); navigator.vibrate?.(100); setInput(''); textareaRef.current?.focus(); }); if (ok) { setWakeActive(true); toastOk('Wake word ON'); } else toastErr('Mic permission chahiye'); }
+                      setHeaderMenuOpen(false);
+                    }},
+                    { icon:'🤖', label:'Agent Mode', action: () => { router.push('/agent'); setHeaderMenuOpen(false); } },
+                    { icon:'⚙️', label:'Settings', action: () => { router.push('/settings'); setHeaderMenuOpen(false); } },
+                  ].map(item => (
+                    <button key={item.label} onClick={item.action}>
+                      <span style={{ fontSize:16 }}>{item.icon}</span>{item.label}
+                    </button>
+                  ))}
+                </div>
+              </>
+            )}
+          </div>
         </div>
       </div>
 
-      {/* Quick Command Bar — DYNAMIC TIME-BASED chips */}
-      <div className="quick-chips">
-        {(() => {
-          const h = new Date().getHours();
-          const morning = h >= 5 && h < 12;
-          const afternoon = h >= 12 && h < 17;
-          const evening = h >= 17 && h < 21;
-          // const night = h >= 21 || h < 5;
-          const base = [
-            { label:'🌤️ Mausam', cmd:'Maihar ka mausam batao' },
-            { label:'📰 News', cmd:'Top India news today' },
-            { label:'₿ BTC', cmd:'Bitcoin price INR' },
-            { label:'🖼️ Image', cmd:'Image bana: beautiful landscape' },
-          ];
-          const extra = morning
-            ? [{ label:'☀️ Good morning!', cmd:'Good morning JARVIS, aaj ka brief batao' }, { label:'📅 Aaj kya karna hai?', cmd:'Aaj ka plan banao' }, { label:'📖 Motivation', cmd:'/quote' }]
-            : afternoon
-            ? [{ label:'🍱 Khaana?', cmd:'Quick healthy lunch ideas batao' }, { label:'📊 Life score', cmd:'Mera aaj ka life score batao' }, { label:'😂 Joke', cmd:'/joke' }]
-            : evening
-            ? [{ label:'🌙 Din kaisa raha?', cmd:'Aaj ka din summary batao' }, { label:'🎵 Music', cmd:'Relaxing music generate karo' }, { label:'📝 Notes', cmd:'notes dikhao' }]
-            : [{ label:'🌙 Neend aao', cmd:'Raat ka routine suggest karo' }, { label:'💭 Sochna hai', cmd:'Ek deep philosophical baat batao' }, { label:'🔋 Battery', cmd:'/battery' }];
-          return [...base, ...extra, { label:'🎯 Goals', cmd:'/goals' }, { label:'💱 USD→INR', cmd:'1 USD to INR' }].map(c => (
-            <button key={c.label} onClick={() => send(c.cmd)} className="chip">{c.label}</button>
-          ));
-        })()}
-      </div>
-
-      {/* PWA Install Banner */}
-      {canInstall && (
-        <div onClick={async () => {
-          if (isIOS) {
-            showToast('iOS: Share  "Add to Home Screen" karo ', 'info');
-          } else {
-            const r = await install();
-            if (r === 'accepted') toastOk(' JARVIS installed!');
-          }
-        }}
-          data-pwa-banner style={{ background: 'rgba(0,212,255,0.08)', borderBottom: '1px solid rgba(0,212,255,0.2)', padding: '8px 16px', display: 'flex', alignItems: 'center', gap: 10 }}>
-          <span style={{ fontSize: 20 }}>📲</span>
-          <div>
-            <div style={{ color: '#00d4ff', fontSize: 12, fontWeight: 600 }}>JARVIS Install karo</div>
-            <div style={{ color: '#555', fontSize: 10 }}>Home screen pe add karo — faster, offline ready</div>
-          </div>
-          <span style={{ marginLeft: 'auto', color: '#00d4ff', fontSize: 12 }}>Install →</span>
-        </div>
-      )}
-
-      {/* FEATURE 6: In-chat search bar */}
+      {/* Search bar — shown only when active */}
       {searchOpen && (
-        <div style={{ background:'#0d0d16', borderBottom:'1px solid #1e1e2e', padding:'8px 12px', display:'flex', gap:8, alignItems:'center' }}>
+        <div style={{ background:'rgba(255,255,255,0.03)', borderBottom:'1px solid rgba(255,255,255,0.06)', padding:'8px 12px', display:'flex', gap:8, alignItems:'center', flexShrink:0 }}>
           <span style={{ color:'#555', fontSize:14 }}>🔍</span>
           <input autoFocus value={searchQuery} onChange={e=>setSearchQuery(e.target.value)}
             placeholder="Messages mein dhundho..."
             style={{ flex:1, background:'none', border:'none', color:'#e0e0ff', fontSize:13, outline:'none' }} />
-          <span style={{ color:'#555', fontSize:11 }}>
-            {searchQuery ? msgs.filter(m=>m.content.toLowerCase().includes(searchQuery.toLowerCase())).length + ' found' : ''}
-          </span>
+          {searchQuery && <span style={{ color:'#555', fontSize:11 }}>{msgs.filter(m=>m.content.toLowerCase().includes(searchQuery.toLowerCase())).length} found</span>}
           <button onClick={()=>{setSearchOpen(false);setSearchQuery('');}} style={{ background:'none', border:'none', color:'#555', fontSize:18, cursor:'pointer' }}>✕</button>
+        </div>
+      )}
+
+      {/* PWA Install */}
+      {canInstall && (
+        <div onClick={async () => { if (isIOS) showToast('iOS: Share → "Add to Home Screen"','info'); else { const r=await install(); if(r==='accepted') toastOk('JARVIS installed!'); } }}
+          style={{ background:'rgba(0,212,255,0.06)', borderBottom:'1px solid rgba(0,212,255,0.15)', padding:'6px 14px', display:'flex', alignItems:'center', gap:10, cursor:'pointer', flexShrink:0 }}>
+          <span style={{ fontSize:18 }}>📲</span>
+          <span style={{ color:'#00d4ff', fontSize:11, fontWeight:600 }}>JARVIS install karo — Home screen pe add karo</span>
+          <span style={{ marginLeft:'auto', color:'#00d4ff', fontSize:12 }}>→</span>
         </div>
       )}
 
@@ -2880,45 +2875,78 @@ export default function Home() {
         {refreshing && (
           <div style={{ textAlign: 'center', padding: 10, color: '#00d4ff', fontSize: 12 }}>🔄 Refreshing...</div>
         )}
-        {/* Clock Welcome Screen — jab koi user message nahi */}
+        {/* Welcome Screen — Reference app style */}
         {msgs.filter(m=>m.role==='user').length === 0 && !loading && (() => {
-          const now = new Date();
-          const h = now.getHours();
-          const m = now.getMinutes();
-          const hh = String(h % 12 || 12).padStart(2, '0');
-          const mm = String(m).padStart(2, '0');
-          const ampm = h < 12 ? 'am' : 'pm';
-          const days = ['रवि','सोम','मंगल','बुध','गुरु','शुक्र','शनि'];
-          const months = ['जनवरी','फरवरी','मार्च','अप्रैल','मई','जून','जुलाई','अगस्त','सितम्बर','अक्टूबर','नवम्बर','दिसम्बर'];
-          const dateStr = `${days[now.getDay()]}, ${now.getDate()} ${months[now.getMonth()]}`;
-          const userName = typeof window !== 'undefined' ? localStorage.getItem('jarvis_user_name') || 'Boss' : 'Boss';
-          const greeting = h < 12 ? 'Good morning' : h < 17 ? 'Kya scene hai' : h < 21 ? 'Good evening' : 'Raat ka scene';
+          const userName = typeof window !== 'undefined' ? localStorage.getItem('jarvis_user_name') || 'Pranshu' : 'Pranshu';
+          const h = new Date().getHours();
+          const greeting = h < 12 ? 'Good morning' : h < 17 ? 'Namaste' : h < 21 ? 'Good evening' : 'Namaste';
+          const quickCmds = (() => {
+            const morning = h >= 5 && h < 12;
+            const afternoon = h >= 12 && h < 17;
+            const evening = h >= 17 && h < 21;
+            if (morning) return [
+              { icon:'🖼️', label:'Image banao',  cmd:'Image bana: beautiful sunrise landscape' },
+              { icon:'📰', label:'Aaj ki news',  cmd:'Top India news today' },
+              { icon:'🌤️', label:`${location||'Maihar'} mausam`, cmd:`${location||'Maihar'} ka mausam batao` },
+              { icon:'💻', label:'Python code',  cmd:'Python mein ek useful script likho' },
+              { icon:'🧮', label:'Math solve',   cmd:'Ek interesting math problem solve karo' },
+              { icon:'📖', label:'Motivation',   cmd:'Ek powerful motivational quote aur explanation do' },
+            ];
+            if (afternoon) return [
+              { icon:'🖼️', label:'Image banao',  cmd:'Image bana: beautiful portrait' },
+              { icon:'📰', label:'Aaj ki news',  cmd:'Top India news today' },
+              { icon:'🌤️', label:'Mausam',       cmd:`${location||'Maihar'} ka mausam batao` },
+              { icon:'💻', label:'Python code',  cmd:'Python mein ek useful program likho' },
+              { icon:'🧮', label:'Math solve',   cmd:'Ek math problem step by step solve karo' },
+              { icon:'📋', label:'Summary',      cmd:'Mere aaj ke kaam ka summary banao' },
+            ];
+            if (evening) return [
+              { icon:'🖼️', label:'Image banao',  cmd:'Image bana: beautiful night landscape' },
+              { icon:'📰', label:'News digest',  cmd:'Aaj ki top 5 India news batao' },
+              { icon:'🌙', label:'Din summary',  cmd:'Aaj ka din kaisa raha — summary batao' },
+              { icon:'💻', label:'Code review',  cmd:'Ek clean Python function example do' },
+              { icon:'🧮', label:'Math solve',   cmd:'Ek interesting physics formula explain karo' },
+              { icon:'📖', label:'Summary',      cmd:'Ek motivational story short mein batao' },
+            ];
+            return [
+              { icon:'🖼️', label:'Image banao',  cmd:'Image bana: beautiful galaxy' },
+              { icon:'📰', label:'Aaj ki news',  cmd:'Top India news today' },
+              { icon:'🌤️', label:'Mausam',       cmd:`${location||'Maihar'} ka mausam batao` },
+              { icon:'💻', label:'Python code',  cmd:'Python mein hello world program likho' },
+              { icon:'🧮', label:'Math solve',   cmd:'Ek interesting math problem solve karo' },
+              { icon:'📖', label:'Summary',      cmd:'Mere liye motivational summary do aaj ke liye' },
+            ];
+          })();
           return (
-            <div style={{ display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', flex:1, padding:'20px 20px 10px', gap:8, minHeight:240 }}>
-              {/* Big clock */}
-              <div style={{ fontSize: 52, fontWeight:200, letterSpacing:2, color:'#e0e0ff', fontFamily:'system-ui', lineHeight:1 }}>
-                {hh}:{mm} <span style={{ fontSize:18, color:'#555', verticalAlign:'middle' }}>{ampm}</span>
+            <div style={{ display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', flex:1, padding:'24px 16px 12px', gap:0 }}>
+              {/* J Avatar */}
+              <div style={{ width:80, height:80, borderRadius:22, background:'linear-gradient(135deg,#00aaff,#0055cc)', display:'flex', alignItems:'center', justifyContent:'center', color:'#fff', fontWeight:900, fontSize:40, marginBottom:16, boxShadow:'0 8px 32px rgba(0,150,255,0.3)' }}>J</div>
+
+              {/* Greeting */}
+              <div style={{ fontSize:22, fontWeight:700, color:'#e0e0ff', marginBottom:4 }}>
+                {greeting} {userName} 👋
               </div>
-              <div style={{ color:'#555', fontSize:13 }}>{dateStr}</div>
-              <div style={{ color:'#888', fontSize:14, marginTop:4 }}>{greeting}, {userName} 👋</div>
-              {/* 2x3 quick grid */}
-              <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:8, width:'100%', maxWidth:320, marginTop:12 }}>
-                {[
-                  { icon:'🖼️', label:'Image banao', cmd:'Image bana: beautiful indian landscape' },
-                  { icon:'📰', label:'Aaj ki news', cmd:'Top India news today' },
-                  { icon:'🌤️', label:'Mausam', cmd:'Maihar ka mausam batao' },
-                  { icon:'💻', label:'Python code', cmd:'Python mein hello world program likho' },
-                  { icon:'🧮', label:'Math solve', cmd:'(12! / (4^12 * 12!)) solve karo step by step' },
-                  { icon:'📖', label:'Summary', cmd:'Mere liye motivational summary do aaj ke liye' },
-                ].map(q => (
+              <div style={{ fontSize:12, color:'#555', marginBottom:20 }}>
+                JARVIS ready hai • Type <span style={{ color:'#00d4ff', fontFamily:'monospace' }}>/</span> for commands
+              </div>
+
+              {/* 2×3 Quick Action Grid */}
+              <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:10, width:'100%', maxWidth:360 }}>
+                {quickCmds.map(q => (
                   <button key={q.label} onClick={() => send(q.cmd)}
-                    style={{ background:'rgba(255,255,255,0.03)', border:'1px solid rgba(255,255,255,0.07)', borderRadius:14, padding:'12px 10px', cursor:'pointer', textAlign:'left', display:'flex', alignItems:'center', gap:8, transition:'all 0.15s' }}>
-                    <span style={{ fontSize:18 }}>{q.icon}</span>
-                    <span style={{ color:'#aaa', fontSize:12 }}>{q.label}</span>
+                    style={{ background:'rgba(255,255,255,0.04)', border:'1px solid rgba(255,255,255,0.08)', borderRadius:14, padding:'14px 12px', cursor:'pointer', textAlign:'left', display:'flex', alignItems:'center', gap:10, transition:'background 0.15s' }}
+                    onPointerEnter={e=>(e.currentTarget.style.background='rgba(255,255,255,0.07)')}
+                    onPointerLeave={e=>(e.currentTarget.style.background='rgba(255,255,255,0.04)')}>
+                    <span style={{ fontSize:20, flexShrink:0 }}>{q.icon}</span>
+                    <span style={{ color:'#bbb', fontSize:12, lineHeight:1.3 }}>{q.label}</span>
                   </button>
                 ))}
               </div>
-              <div style={{ color:'#2a2a3a', fontSize:10, marginTop:8 }}>Ctrl+K sidebar · Ctrl+F search · / commands</div>
+
+              {/* Hint bar */}
+              <div style={{ marginTop:16, color:'#2a2a3a', fontSize:10, textAlign:'center', lineHeight:1.8 }}>
+                Ctrl+K sidebar · Ctrl+F search · Paste image · Drag & drop
+              </div>
             </div>
           );
         })()}
@@ -2994,146 +3022,133 @@ export default function Home() {
         </div>
       )}
 
-      {/* FEATURE 11: Jump to bottom button */}
+      {/* Jump to bottom */}
       {showJumpBtn && (
         <button onClick={() => { bottomRef.current?.scrollIntoView({ behavior: 'smooth' }); setNewMsgCount(0); }}
-          style={{ position:'fixed', bottom: 180, right: 16, width: 42, height: 42, borderRadius:'50%', background:'rgba(0,212,255,0.15)', border:'1px solid rgba(0,212,255,0.4)', color:'#00d4ff', fontSize: 18, cursor:'pointer', zIndex: 50, display:'flex', alignItems:'center', justifyContent:'center', boxShadow:'0 4px 20px rgba(0,212,255,0.2)', backdropFilter:'blur(8px)' }}>
+          style={{ position:'fixed', bottom:130, right:14, width:40, height:40, borderRadius:'50%', background:'rgba(0,212,255,0.15)', border:'1px solid rgba(0,212,255,0.35)', color:'#00d4ff', fontSize:16, cursor:'pointer', zIndex:50, display:'flex', alignItems:'center', justifyContent:'center', boxShadow:'0 4px 16px rgba(0,212,255,0.2)', backdropFilter:'blur(8px)' }}>
           {newMsgCount > 0 ? <span style={{ fontSize:10, fontWeight:700 }}>{newMsgCount}↓</span> : '↓'}
         </button>
       )}
 
-      {/* ── CLEAN Bottom strip ── */}
-      <div className="bottom-strip">
-        {/* Mode pill — clean, like reference app */}
-        <button onClick={() => { setPlusOpen(p=>!p); setModePopupTab('mode'); }}
-          style={{ background:'rgba(255,255,255,0.05)', border:'1px solid rgba(255,255,255,0.1)', borderRadius:20, color:'#e0e0ff', fontSize:11, padding:'5px 12px', cursor:'pointer', display:'flex', alignItems:'center', gap:5, fontWeight:500 }}>
-          <span>{mode==='flash'?'⚡':mode==='think'?'🧠':mode==='deep'?'🔬':'🤖'}</span>
-          <span>{mode==='auto'?'Auto':mode.charAt(0).toUpperCase()+mode.slice(1)}</span>
-        </button>
-        {/* Force provider badge */}
-        {forcedProvider && (
-          <button onClick={() => { setForcedProvider(null); if(typeof window!=='undefined') localStorage.removeItem('jarvis_forced_provider'); toastInfo('🔓 Auto cascade'); }}
-            style={{ background:'rgba(245,158,11,0.1)', border:'1px solid rgba(245,158,11,0.3)', borderRadius:20, color:'#f59e0b', fontSize:11, padding:'5px 12px', cursor:'pointer', display:'flex', alignItems:'center', gap:4 }}>
-            🔒 {forcedProvider} ✕
-          </button>
-        )}
-        <div style={{ display:'flex', alignItems:'center', gap:4, marginLeft:'auto' }}>
-          <button onClick={()=>setSearchOpen(p=>!p)} style={{ background: searchOpen?'rgba(0,212,255,0.1)':'none', border:'none', color: searchOpen?'#00d4ff':'#333', cursor:'pointer', fontSize:14, padding:'3px 6px', borderRadius:6 }}>🔍</button>
-          <button onClick={()=>setCompactMode(p=>!p)} style={{ background: compactMode?'rgba(0,212,255,0.1)':'none', border:'none', color: compactMode?'#00d4ff':'#333', cursor:'pointer', fontSize:13, padding:'3px 6px', borderRadius:6 }}>≡</button>
-          <button onClick={()=>setShowTimestamps(p=>!p)} style={{ background: showTimestamps?'rgba(0,212,255,0.1)':'none', border:'none', color: showTimestamps?'#00d4ff':'#333', cursor:'pointer', fontSize:13, padding:'3px 6px', borderRadius:6 }}>🕐</button>
-          {input.length > 0 && <span style={{ color:'#333', fontSize:10 }}>{input.length}</span>}
-          {input.trim().length > 20 && (
-            <div style={{ display:'flex', gap:2 }}>
-              {(['tiny','short','medium'] as CompressLevel[]).map(level => (
-                <button key={level} onClick={() => { const c=compressUserMessage(input,level); setInput(c); toastInfo(`✂️ ${level}: ${c.split(' ').length}w`); }}
-                  style={{ background:'rgba(255,255,255,0.04)', border:'1px solid var(--border)', borderRadius:6, color:'var(--muted)', fontSize:9, padding:'2px 6px', cursor:'pointer' }}>
-                  {level}
-                </button>
-              ))}
-            </div>
-          )}
-        </div>
-      </div>
-
-      {/* FEATURE 9: Quote/Reply preview bar */}
+      {/* Quote preview */}
       {quotedMsg && (
-        <div style={{ background:'rgba(0,212,255,0.06)', borderTop:'1px solid rgba(0,212,255,0.15)', padding:'6px 12px', display:'flex', alignItems:'center', gap:8 }}>
+        <div style={{ background:'rgba(0,212,255,0.05)', borderTop:'1px solid rgba(0,212,255,0.12)', padding:'6px 14px', display:'flex', alignItems:'center', gap:8, flexShrink:0 }}>
           <div style={{ flex:1 }}>
-            <div style={{ color:'#00d4ff', fontSize:9, marginBottom:2, letterSpacing:0.5 }}>
-              ↩ REPLYING TO {quotedMsg.role === 'user' ? 'YOU' : 'JARVIS'}
-            </div>
-            <div style={{ color:'#666', fontSize:11, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap', maxWidth:'80vw' }}>
+            <div style={{ color:'#00d4ff', fontSize:9, marginBottom:1, letterSpacing:0.5 }}>↩ REPLYING TO {quotedMsg.role === 'user' ? 'YOU' : 'JARVIS'}</div>
+            <div style={{ color:'#555', fontSize:11, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>
               {quotedMsg.content.slice(0, 80)}{quotedMsg.content.length > 80 ? '…' : ''}
             </div>
           </div>
-          <button onClick={() => setQuotedMsg(null)} style={{ background:'none', border:'none', color:'#444', cursor:'pointer', fontSize:18, flexShrink:0 }}>✕</button>
+          <button onClick={() => setQuotedMsg(null)} style={{ background:'none', border:'none', color:'#444', cursor:'pointer', fontSize:18 }}>✕</button>
         </div>
       )}
 
-      {/* Image Preview Strip */}
+      {/* Image preview */}
       {attachedImage && (
-        <div className="img-preview-strip">
+        <div style={{ background:'rgba(0,212,255,0.04)', borderTop:'1px solid rgba(0,212,255,0.1)', padding:'8px 14px', display:'flex', gap:10, alignItems:'center', flexShrink:0 }}>
           <div style={{ position:'relative', flexShrink:0 }}>
-            <img src={attachedImage.preview} alt="attached" style={{ width:50,height:50,objectFit:'cover',borderRadius:10,border:'1px solid rgba(0,212,255,0.3)' }} />
-            <button onClick={() => setAttachedImage(null)} style={{ position:'absolute',top:-6,right:-6,width:18,height:18,borderRadius:'50%',background:'#ef4444',border:'none',color:'#fff',fontSize:10,cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',fontWeight:900 }}>×</button>
+            <img src={attachedImage.preview} alt="" style={{ width:44,height:44,objectFit:'cover',borderRadius:8,border:'1px solid rgba(0,212,255,0.3)' }} />
+            <button onClick={() => setAttachedImage(null)} style={{ position:'absolute',top:-5,right:-5,width:16,height:16,borderRadius:'50%',background:'#ef4444',border:'none',color:'#fff',fontSize:9,cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',fontWeight:900 }}>×</button>
           </div>
-          <div style={{ fontSize:11 }}>
-            <div style={{ color:'var(--accent)' }}>📷 {attachedImage.name}</div>
-            <div style={{ color:'var(--muted)', fontSize:10 }}>Question type karo → Send</div>
+          <div style={{ flex:1, fontSize:11 }}>
+            <div style={{ color:'#00d4ff' }}>📷 {attachedImage.name}</div>
+            <div style={{ color:'#555', fontSize:10 }}>Question type karo → Send</div>
           </div>
           <button onClick={async () => {
-            const imgCopy=attachedImage; setAttachedImage(null);
-            const ck: Record<string,string>={};
-            if(typeof window!=='undefined') ['GROQ_API_KEY','GEMINI_API_KEY','CEREBRAS_API_KEY','TOGETHER_API_KEY','MISTRAL_API_KEY','COHERE_API_KEY','FIREWORKS_API_KEY','OPENROUTER_API_KEY','DEEPINFRA_API_KEY','HUGGINGFACE_API_KEY'].forEach(k=>{const v=localStorage.getItem('jarvis_key_'+k);if(v)ck[k]=v;});
-            setMsgs(prev=>[...prev,{id:'u_'+Date.now(),role:'user',content:'📷 '+imgCopy.name,timestamp:Date.now(),card:{type:'image',imageUrl:imgCopy.preview,title:imgCopy.name}}]);
+            const ic=attachedImage; setAttachedImage(null);
+            const ck:Record<string,string>={};
+            if(typeof window!=='undefined')['GROQ_API_KEY','GEMINI_API_KEY'].forEach(k=>{const v=localStorage.getItem('jarvis_key_'+k);if(v)ck[k]=v;});
+            setMsgs(prev=>[...prev,{id:'u_'+Date.now(),role:'user',content:'📷 '+ic.name,timestamp:Date.now(),card:{type:'image',imageUrl:ic.preview,title:ic.name}}]);
             setLoading(true);
-            try{const res=await fetch('/api/vision',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({image:imgCopy.base64,question:'Is image mein kya hai? Detail mein Hinglish mein batao.',clientKeys:ck})});const d=await res.json();setMsgs(prev=>[...prev,{id:'a_'+Date.now(),role:'assistant',content:'🔍 '+(d.result||d.error||'Vision failed'),timestamp:Date.now()}]);}
-            catch{setMsgs(prev=>[...prev,{id:'a_'+Date.now(),role:'assistant',content:'🔍 Vision error. Settings mein Gemini key daalo.',timestamp:Date.now()}]);}
+            try{const res=await fetch('/api/vision',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({image:ic.base64,question:'Is image mein kya hai? Detail mein Hinglish mein batao.',clientKeys:ck})});const d=await res.json();setMsgs(prev=>[...prev,{id:'a_'+Date.now(),role:'assistant',content:'🔍 '+(d.result||d.error||'Vision failed'),timestamp:Date.now()}]);}
+            catch{setMsgs(prev=>[...prev,{id:'a_'+Date.now(),role:'assistant',content:'🔍 Vision error.',timestamp:Date.now()}]);}
             setLoading(false);
-          }} style={{ marginLeft:'auto',background:'rgba(0,212,255,0.1)',border:'1px solid rgba(0,212,255,0.3)',borderRadius:10,color:'var(--accent)',fontSize:11,padding:'6px 12px',cursor:'pointer',whiteSpace:'nowrap',flexShrink:0,fontWeight:600 }}>
+          }} style={{ background:'rgba(0,212,255,0.1)',border:'1px solid rgba(0,212,255,0.2)',borderRadius:8,color:'#00d4ff',fontSize:11,padding:'5px 10px',cursor:'pointer',fontWeight:600,flexShrink:0 }}>
             🔍 Analyze
           </button>
         </div>
       )}
 
-      {/* ── Premium Input Bar ── */}
-      <div className="input-area">
-        <div className="input-box">
-          {/* Plus button */}
-          <button onClick={() => setPlusOpen(p=>!p)} data-plus
-            className="input-icon-btn" style={{ color: plusOpen ? 'var(--accent)' : undefined, background: plusOpen ? 'rgba(0,212,255,0.1)' : undefined }}>
-            {plusOpen ? '✕' : '+'}
-          </button>
-
+      {/* ── CLEAN INPUT BAR — Reference app style ── */}
+      <div style={{ padding:'10px 12px', background:'var(--bg)', borderTop:'1px solid rgba(255,255,255,0.05)', paddingBottom:'max(10px,env(safe-area-inset-bottom))', flexShrink:0 }}>
+        {/* Main input box */}
+        <div style={{ background:'rgba(255,255,255,0.06)', borderRadius:18, border:'1px solid rgba(255,255,255,0.1)', display:'flex', alignItems:'flex-end', gap:0, padding:'4px 4px 4px 14px', transition:'border-color 0.2s' }}>
           <textarea ref={textareaRef} value={input} onChange={handleTextChange} onKeyDown={handleKeyDown}
-            placeholder={loading ? 'JARVIS soch raha hai...' : 'Kuch bhi poocho boss...'}
+            placeholder={loading ? 'JARVIS soch raha hai...' : 'Message JARVIS... (/ for commands)'}
             disabled={loading} rows={1}
+            style={{ flex:1, background:'none', border:'none', outline:'none', color:'#e0e0ff', fontSize:14, resize:'none', lineHeight:1.5, padding:'6px 0', maxHeight:100, fontFamily:'inherit', overflowY:'auto' }}
           />
-
+          {/* Camera */}
+          <button onClick={() => photoInputRef.current?.click()}
+            style={{ background:'none', border:'none', color:'#666', cursor:'pointer', fontSize:18, padding:'6px 8px', lineHeight:1, flexShrink:0 }}>📷</button>
           {/* Mic */}
-          <button className={"input-icon-btn" + (micActive ? " active" : "")}
-            onClick={async () => {
-              try { await navigator.mediaDevices?.getUserMedia({ audio: true }); } catch { toastErr('Mic permission do'); return; }
-              const SR=(window as any).SpeechRecognition||(window as any).webkitSpeechRecognition;
-              if(!SR){toastErr('Voice Voice page try karo.');return;}
-              const rec=new SR(); rec.lang='hi-IN'; rec.continuous=false; rec.interimResults=true;
-              let final=''; setMicActive(true); toastOk('🎙️ Bol boss...');
-              rec.onresult=(e:any)=>{final=Array.from(e.results).map((r:any)=>r[0].transcript).join('');setInput(final);};
-              rec.onerror=(e:any)=>{setMicActive(false);if(e.error==='not-allowed')toastErr('Mic permission nahi');else toastErr('Mic error: '+e.error);};
-              rec.onend=()=>{setMicActive(false);if(final.trim())setTimeout(()=>send(final),300);};
-              try{rec.start();}catch{toastErr('Mic start nahi hua');setMicActive(false);}
-            }}>
-            {micActive ? '🔴' : '🎙️'}
+          <button onClick={async () => {
+            try { await navigator.mediaDevices?.getUserMedia({ audio: true }); } catch { toastErr('Mic permission do'); return; }
+            const SR=(window as any).SpeechRecognition||(window as any).webkitSpeechRecognition;
+            if(!SR){toastErr('Voice page try karo.');return;}
+            const rec=new SR(); rec.lang='hi-IN'; rec.continuous=false; rec.interimResults=true;
+            let final=''; setMicActive(true); toastOk('🎙️ Bol...');
+            rec.onresult=(e:any)=>{final=Array.from(e.results).map((r:any)=>r[0].transcript).join('');setInput(final);};
+            rec.onerror=(e:any)=>{setMicActive(false);if(e.error==='not-allowed')toastErr('Mic permission nahi');else toastErr('Mic error');};
+            rec.onend=()=>{setMicActive(false);if(final.trim())setTimeout(()=>send(final),300);};
+            try{rec.start();}catch{toastErr('Mic start nahi hua');setMicActive(false);}
+          }} style={{ background:'none', border:'none', color: micActive ? '#ef4444' : '#666', cursor:'pointer', fontSize:18, padding:'6px 8px', lineHeight:1, flexShrink:0 }}>
+            {micActive ? '🔴' : '🎤'}
           </button>
-
           {/* Send */}
-          <button className="send-btn" onClick={() => { navigator.vibrate?.(30); send(input); }} disabled={!input.trim() || loading}>
-            {loading ? '⏳' : '↑'}
-          </button>
+          {(input.trim() || loading) && (
+            <button onClick={() => { navigator.vibrate?.(30); send(input); }} disabled={!input.trim() || loading}
+              style={{ background: input.trim() ? '#00d4ff' : 'rgba(0,212,255,0.3)', border:'none', borderRadius:14, color:'#000', cursor:'pointer', width:34, height:34, display:'flex', alignItems:'center', justifyContent:'center', fontSize:16, fontWeight:900, flexShrink:0, margin:'2px' }}>
+              {loading ? '⏳' : '↑'}
+            </button>
+          )}
         </div>
 
-        {/* Hidden file inputs */}
-        <input id="imgEditInput" type="file" accept="image/*" style={{ display:'none' }} onChange={async e => {
-          const f=e.target.files?.[0]; if(!f)return; e.currentTarget.value='';
-          const editPrompt=(window as any).__jarvisEditPrompt||'Remove background, make it clean';
-          const reader=new FileReader(); reader.onload=async ev=>{const dataUrl=ev.target?.result as string; const ck:Record<string,string>={}; if(typeof window!=='undefined')['GROQ_API_KEY','GEMINI_API_KEY'].forEach(k=>{const v=localStorage.getItem('jarvis_key_'+k);if(v)ck[k]=v;}); setMsgs(prev=>[...prev,{id:'u_'+Date.now(),role:'user',content:'🖼️ '+f.name,timestamp:Date.now(),card:{type:'image',imageUrl:dataUrl,title:f.name}}]); setLoading(true); try{const res=await fetch('/api/vision',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({image:dataUrl.split(',')[1],question:editPrompt,clientKeys:ck})});const d=await res.json();setMsgs(prev=>[...prev,{id:'a_'+Date.now(),role:'assistant',content:'✨ '+(d.result||d.error||'Done'),timestamp:Date.now()}]);}catch{}; setLoading(false);}; reader.readAsDataURL(f);
-        }} />
-        <input ref={photoInputRef} type="file" accept="image/*" style={{ display:'none' }} onChange={async e => {
-          const f=e.target.files?.[0]; if(!f)return; e.target.value='';
-          const reader=new FileReader(); reader.onload=async ev=>{const dataUrl=ev.target?.result as string; setAttachedImage({base64:dataUrl.split(',')[1],preview:dataUrl,name:f.name}); toastOk('📷 Photo attach ho gayi! Ab question type karo.'); textareaRef.current?.focus();}; reader.readAsDataURL(f);
-        }} />
-        <input ref={fileInputRef} type="file" accept="*/*" style={{ display:'none' }} onChange={async e => {
-          const f=e.target.files?.[0]; if(!f)return; e.target.value='';
-          const mb=(f.size/1024/1024).toFixed(1);
-          if(f.type.startsWith('image/')){photoInputRef.current?.click();return;}
-          setMsgs(prev=>[...prev,{id:'u_'+Date.now(),role:'user',content:'📄 '+f.name+' ('+mb+' MB)',timestamp:Date.now()}]);
-          if(f.type==='text/plain'||f.name.endsWith('.txt')||f.name.endsWith('.md')){const txt=await f.text();setMsgs(prev=>[...prev,{id:'a_'+Date.now(),role:'assistant',content:'📄 File padh li: '+f.name+'. Summarize karoon?',timestamp:Date.now()}]);setInput('Summarize karo: '+txt.slice(0,2000));}
-          else{setMsgs(prev=>[...prev,{id:'a_'+Date.now(),role:'assistant',content:'📄 File receive ki: '+f.name+' ('+mb+' MB).',timestamp:Date.now()}]);}
-        }} />
+        {/* Bottom bar — mode pill + toggles */}
+        <div style={{ display:'flex', alignItems:'center', gap:6, marginTop:8 }}>
+          {/* Mode pill — like reference app */}
+          <button onClick={() => { setPlusOpen(p=>!p); setModePopupTab('mode'); }}
+            style={{ background:'rgba(255,255,255,0.06)', border:'1px solid rgba(255,255,255,0.1)', borderRadius:20, color:'#e0e0ff', fontSize:11, padding:'4px 12px', cursor:'pointer', display:'flex', alignItems:'center', gap:5 }}>
+            <span>{mode==='flash'?'⚡':mode==='think'?'🧠':mode==='deep'?'🔬':'🤖'}</span>
+            <span style={{ fontWeight:600 }}>{mode==='auto'?'Auto':mode==='think'?'Think':mode.charAt(0).toUpperCase()+mode.slice(1)}</span>
+            <span style={{ color:'#444', fontSize:10 }}>▾</span>
+          </button>
+          {/* Force provider */}
+          {forcedProvider && (
+            <button onClick={() => { setForcedProvider(null); if(typeof window!=='undefined') localStorage.removeItem('jarvis_forced_provider'); toastInfo('🔓 Auto'); }}
+              style={{ background:'rgba(245,158,11,0.1)', border:'1px solid rgba(245,158,11,0.25)', borderRadius:20, color:'#f59e0b', fontSize:11, padding:'4px 10px', cursor:'pointer' }}>
+              🔒 {forcedProvider} ✕
+            </button>
+          )}
+          <div style={{ marginLeft:'auto', display:'flex', gap:2 }}>
+            <button onClick={()=>setSearchOpen(p=>!p)} style={{ background: searchOpen?'rgba(0,212,255,0.1)':'none', border:'none', color: searchOpen?'#00d4ff':'#333', cursor:'pointer', fontSize:14, padding:'3px 6px', borderRadius:6 }}>🔍</button>
+            <button onClick={()=>setCompactMode(p=>!p)} style={{ background: compactMode?'rgba(0,212,255,0.1)':'none', border:'none', color: compactMode?'#00d4ff':'#333', cursor:'pointer', fontSize:13, padding:'3px 6px', borderRadius:6 }}>≡</button>
+            <button onClick={()=>setShowTimestamps(p=>!p)} style={{ background: showTimestamps?'rgba(0,212,255,0.1)':'none', border:'none', color: showTimestamps?'#00d4ff':'#333', cursor:'pointer', fontSize:13, padding:'3px 6px', borderRadius:6 }}>🕐</button>
+          </div>
+        </div>
+      </div>
 
-        {/* Plus popup — mode select */}
-        {plusOpen && (
-          <div className="plus-popup" data-plus onClick={e=>e.stopPropagation()} style={{ maxHeight:'75vh', overflowY:'auto' }}>
+      {/* Hidden file inputs */}
+      <input id="imgEditInput" type="file" accept="image/*" style={{ display:'none' }} onChange={async e => {
+        const f=e.target.files?.[0]; if(!f)return; e.currentTarget.value='';
+        const editPrompt=(window as any).__jarvisEditPrompt||'Remove background, make it clean';
+        const reader=new FileReader(); reader.onload=async ev=>{const dataUrl=ev.target?.result as string; const ck:Record<string,string>={}; if(typeof window!=='undefined')['GROQ_API_KEY','GEMINI_API_KEY'].forEach(k=>{const v=localStorage.getItem('jarvis_key_'+k);if(v)ck[k]=v;}); setMsgs(prev=>[...prev,{id:'u_'+Date.now(),role:'user',content:'🖼️ '+f.name,timestamp:Date.now(),card:{type:'image',imageUrl:dataUrl,title:f.name}}]); setLoading(true); try{const res=await fetch('/api/vision',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({image:dataUrl.split(',')[1],question:editPrompt,clientKeys:ck})});const d=await res.json();setMsgs(prev=>[...prev,{id:'a_'+Date.now(),role:'assistant',content:'✨ '+(d.result||d.error||'Done'),timestamp:Date.now()}]);}catch{}; setLoading(false);}; reader.readAsDataURL(f);
+      }} />
+      <input ref={photoInputRef} type="file" accept="image/*" style={{ display:'none' }} onChange={async e => {
+        const f=e.target.files?.[0]; if(!f)return; e.target.value='';
+        const reader=new FileReader(); reader.onload=async ev=>{const dataUrl=ev.target?.result as string; setAttachedImage({base64:dataUrl.split(',')[1],preview:dataUrl,name:f.name}); toastOk('📷 Photo attached!'); textareaRef.current?.focus();}; reader.readAsDataURL(f);
+      }} />
+      <input ref={fileInputRef} type="file" accept="*/*" style={{ display:'none' }} onChange={async e => {
+        const f=e.target.files?.[0]; if(!f)return; e.target.value='';
+        const mb=(f.size/1024/1024).toFixed(1);
+        if(f.type.startsWith('image/')){photoInputRef.current?.click();return;}
+        setMsgs(prev=>[...prev,{id:'u_'+Date.now(),role:'user',content:'📄 '+f.name+' ('+mb+' MB)',timestamp:Date.now()}]);
+        if(f.type==='text/plain'||f.name.endsWith('.txt')||f.name.endsWith('.md')){const txt=await f.text();setInput('Summarize karo: '+txt.slice(0,2000));}
+      }} />
+
+      {/* Mode popup */}
+      {plusOpen && (
+        <div className="plus-popup" data-plus onClick={e=>e.stopPropagation()} style={{ maxHeight:'75vh', overflowY:'auto' }}>
             {/* 3 Tabs: Attach / Mode / Persona */}
             <div style={{ display:'flex', borderBottom:'1px solid rgba(255,255,255,0.06)', marginBottom:14, gap:0 }}>
               {(['attach','mode','persona'] as const).map(tab => (
