@@ -519,6 +519,186 @@ function ConnectedAppsPanel({ open, onClose }: { open: boolean; onClose: () => v
   );
 }
 
+// ── MEMORY PANEL — Claude-style visible memory ───────────────────────────
+const MEMORY_TYPE_META: Record<string, { icon: string; color: string; label: string }> = {
+  personal:   { icon:'👤', color:'#00d4ff', label:'Personal' },
+  goal:       { icon:'🎯', color:'#22c55e', label:'Goals' },
+  fact:       { icon:'📌', color:'#f59e0b', label:'Facts' },
+  preference: { icon:'❤️', color:'#ec4899', label:'Preferences' },
+  habit:      { icon:'🔥', color:'#f97316', label:'Habits' },
+  skill:      { icon:'⚡', color:'#a855f7', label:'Skills' },
+  correction: { icon:'✏️', color:'#ef4444', label:'Corrections' },
+};
+
+function MemoryPanel({ open, onClose }: { open: boolean; onClose: () => void }) {
+  const [memories, setMemories] = React.useState<any[]>([]);
+  const [filter, setFilter] = React.useState<string>('all');
+  const [editing, setEditing] = React.useState<string | null>(null);
+  const [editVal, setEditVal] = React.useState('');
+  const [addOpen, setAddOpen] = React.useState(false);
+  const [newContent, setNewContent] = React.useState('');
+  const [newType, setNewType] = React.useState<string>('fact');
+
+  const load = React.useCallback(() => {
+    import('@/lib/memory/smartMemory').then(m => setMemories(m.getAllMemories())).catch(() => {});
+  }, []);
+
+  React.useEffect(() => { if (open) load(); }, [open, load]);
+
+  const del = async (id: string) => {
+    const m = await import('@/lib/memory/smartMemory');
+    m.deleteMemory(id);
+    setMemories(prev => prev.filter(x => x.id !== id));
+  };
+
+  const saveEdit = async (id: string) => {
+    const m = await import('@/lib/memory/smartMemory');
+    m.updateMemory(id, editVal);
+    setMemories(prev => prev.map(x => x.id === id ? { ...x, content: editVal } : x));
+    setEditing(null);
+  };
+
+  const addNew = async () => {
+    if (!newContent.trim()) return;
+    const m = await import('@/lib/memory/smartMemory');
+    m.addMemory(newContent.trim(), newType as any);
+    setNewContent(''); setAddOpen(false); load();
+  };
+
+  const clearAll = async () => {
+    if (!confirm('Saari memories delete karein?')) return;
+    const m = await import('@/lib/memory/smartMemory');
+    m.clearAllMemory();
+    setMemories([]);
+  };
+
+  const filtered = filter === 'all' ? memories : memories.filter(m => m.type === filter);
+  const grouped = memories.reduce((acc: Record<string,number>, m) => {
+    acc[m.type] = (acc[m.type] || 0) + 1; return acc;
+  }, {});
+
+  if (!open) return null;
+
+  return (
+    <div style={{ position:'fixed', inset:0, zIndex:9990, background:'rgba(0,0,0,0.7)', backdropFilter:'blur(4px)' }} onClick={onClose}>
+      <div onClick={e=>e.stopPropagation()}
+        style={{ position:'absolute', top:0, right:0, width:'min(95vw,380px)', height:'100%', background:'#08080f', borderLeft:'1px solid #1e1e2e', display:'flex', flexDirection:'column', overflowY:'hidden' }}>
+
+        {/* Header */}
+        <div style={{ padding:'14px 16px', borderBottom:'1px solid #1e1e2e', display:'flex', alignItems:'center', gap:10, background:'#0a0a15' }}>
+          <span style={{ fontSize:20 }}>🧠</span>
+          <div style={{ flex:1 }}>
+            <div style={{ color:'#e0e0ff', fontWeight:700, fontSize:15 }}>JARVIS Memory</div>
+            <div style={{ color:'#444', fontSize:10 }}>{memories.length} memories saved · Auto-learning ON</div>
+          </div>
+          <button onClick={onClose} style={{ background:'none', border:'none', color:'#555', fontSize:20, cursor:'pointer', lineHeight:1 }}>✕</button>
+        </div>
+
+        {/* Category filter pills */}
+        <div style={{ padding:'10px 12px', borderBottom:'1px solid #1e1e2e', display:'flex', gap:6, overflowX:'auto', flexShrink:0 }}>
+          {(['all', ...Object.keys(MEMORY_TYPE_META)] as string[]).map(t => {
+            const meta = MEMORY_TYPE_META[t];
+            const cnt = t === 'all' ? memories.length : (grouped[t] || 0);
+            if (t !== 'all' && !cnt) return null;
+            return (
+              <button key={t} onClick={() => setFilter(t)}
+                style={{ background: filter===t ? (meta?.color||'#00d4ff')+'22' : 'rgba(255,255,255,0.03)', border:`1px solid ${filter===t ? (meta?.color||'#00d4ff')+'55' : '#1e1e2e'}`, borderRadius:20, padding:'4px 10px', cursor:'pointer', color: filter===t ? (meta?.color||'#00d4ff') : '#555', fontSize:10, whiteSpace:'nowrap', display:'flex', alignItems:'center', gap:4, flexShrink:0, fontWeight: filter===t ? 700 : 400 }}>
+                {t === 'all' ? '🧠 All' : `${meta?.icon} ${meta?.label}`} <span style={{ opacity:0.6 }}>{cnt}</span>
+              </button>
+            );
+          })}
+        </div>
+
+        {/* Memory list */}
+        <div style={{ flex:1, overflowY:'auto', padding:'10px 12px' }}>
+          {filtered.length === 0 && (
+            <div style={{ textAlign:'center', color:'#333', fontSize:12, marginTop:40 }}>
+              <div style={{ fontSize:32, marginBottom:8 }}>🧠</div>
+              Koi memory nahi abhi.<br/>
+              <span style={{ color:'#555', fontSize:11 }}>Baat karte raho — main auto-learn karta hoon!</span>
+            </div>
+          )}
+          {filtered.map(mem => {
+            const meta = MEMORY_TYPE_META[mem.type] || { icon:'📌', color:'#888', label:mem.type };
+            const isEditing = editing === mem.id;
+            return (
+              <div key={mem.id} style={{ background:'rgba(255,255,255,0.02)', border:'1px solid #1a1a2e', borderRadius:12, padding:'10px 12px', marginBottom:8, position:'relative' }}>
+                {/* Type badge */}
+                <div style={{ display:'flex', alignItems:'center', gap:6, marginBottom:isEditing ? 8 : 4 }}>
+                  <span style={{ fontSize:12 }}>{meta.icon}</span>
+                  <span style={{ background:`${meta.color}15`, border:`1px solid ${meta.color}30`, color:meta.color, fontSize:9, padding:'1px 7px', borderRadius:10, fontWeight:600 }}>{meta.label}</span>
+                  <span style={{ color:'#2a2a3a', fontSize:9, marginLeft:'auto' }}>
+                    {mem.source === 'ai' ? '🤖 auto' : mem.source === 'manual' ? '✏️ manual' : '🔍 auto'}
+                  </span>
+                </div>
+                {/* Content / edit */}
+                {isEditing ? (
+                  <div style={{ display:'flex', gap:6 }}>
+                    <input value={editVal} onChange={e=>setEditVal(e.target.value)}
+                      style={{ flex:1, background:'#111118', border:'1px solid #2a2a4a', borderRadius:8, padding:'6px 10px', color:'#e0e0ff', fontSize:12, outline:'none' }}
+                      autoFocus onKeyDown={e => e.key==='Enter' && saveEdit(mem.id)} />
+                    <button onClick={()=>saveEdit(mem.id)} style={{ background:'#22c55e', border:'none', borderRadius:8, color:'#000', padding:'0 10px', cursor:'pointer', fontSize:12, fontWeight:700 }}>✓</button>
+                    <button onClick={()=>setEditing(null)} style={{ background:'none', border:'1px solid #333', borderRadius:8, color:'#555', padding:'0 8px', cursor:'pointer', fontSize:12 }}>✕</button>
+                  </div>
+                ) : (
+                  <div style={{ color:'#ccc', fontSize:12, lineHeight:1.5 }}>{mem.content}</div>
+                )}
+                {/* Actions */}
+                {!isEditing && (
+                  <div style={{ display:'flex', gap:4, marginTop:6 }}>
+                    <button onClick={()=>{ setEditing(mem.id); setEditVal(mem.content); }}
+                      style={{ background:'none', border:'1px solid #1e1e2e', borderRadius:8, color:'#555', fontSize:10, padding:'2px 8px', cursor:'pointer' }}>✏️ Edit</button>
+                    <button onClick={()=>del(mem.id)}
+                      style={{ background:'none', border:'1px solid #1e1e2e', borderRadius:8, color:'#444', fontSize:10, padding:'2px 8px', cursor:'pointer' }}>🗑️ Del</button>
+                    <span style={{ color:'#2a2a3a', fontSize:9, marginLeft:'auto', alignSelf:'center' }}>
+                      {new Date(mem.timestamp).toLocaleDateString('en-IN', { day:'numeric', month:'short' })}
+                    </span>
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </div>
+
+        {/* Add memory */}
+        {addOpen ? (
+          <div style={{ padding:'12px', borderTop:'1px solid #1e1e2e', background:'#0a0a15' }}>
+            <div style={{ display:'flex', gap:6, marginBottom:8 }}>
+              {Object.entries(MEMORY_TYPE_META).map(([t, m]) => (
+                <button key={t} onClick={()=>setNewType(t)}
+                  style={{ flex:1, background: newType===t ? `${m.color}20` : 'rgba(255,255,255,0.03)', border:`1px solid ${newType===t ? m.color+'44' : '#1e1e2e'}`, borderRadius:10, padding:'5px 2px', cursor:'pointer', color: newType===t ? m.color : '#555', fontSize:9, display:'flex', flexDirection:'column', alignItems:'center', gap:1 }}>
+                  {m.icon}<span>{m.label}</span>
+                </button>
+              ))}
+            </div>
+            <div style={{ display:'flex', gap:6 }}>
+              <input autoFocus value={newContent} onChange={e=>setNewContent(e.target.value)}
+                placeholder="Kya yaad karna hai..."
+                onKeyDown={e => e.key==='Enter' && addNew()}
+                style={{ flex:1, background:'#111118', border:'1px solid #2a2a4a', borderRadius:10, padding:'9px 12px', color:'#e0e0ff', fontSize:13, outline:'none' }} />
+              <button onClick={addNew} style={{ background:'#00d4ff', border:'none', borderRadius:10, color:'#000', padding:'0 14px', cursor:'pointer', fontWeight:700, fontSize:13 }}>Save</button>
+              <button onClick={()=>setAddOpen(false)} style={{ background:'none', border:'1px solid #333', borderRadius:10, color:'#555', padding:'0 10px', cursor:'pointer' }}>✕</button>
+            </div>
+          </div>
+        ) : (
+          <div style={{ padding:'12px', borderTop:'1px solid #1e1e2e', background:'#0a0a15', display:'flex', gap:8 }}>
+            <button onClick={()=>setAddOpen(true)}
+              style={{ flex:1, background:'rgba(0,212,255,0.08)', border:'1px solid rgba(0,212,255,0.2)', borderRadius:12, padding:'10px', cursor:'pointer', color:'#00d4ff', fontSize:12, fontWeight:600 }}>
+              ➕ Memory Add karo
+            </button>
+            {memories.length > 0 && (
+              <button onClick={clearAll}
+                style={{ background:'rgba(239,68,68,0.08)', border:'1px solid rgba(239,68,68,0.2)', borderRadius:12, padding:'10px 12px', cursor:'pointer', color:'#ef4444', fontSize:12 }}>
+                🗑️
+              </button>
+            )}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
 // ── Main Page ─────────────────────────────────────────────────────────────
 export default function Home() {
   const router = useRouter();
@@ -530,6 +710,7 @@ export default function Home() {
   const [plusOpen, setPlusOpen]   = useState(false);
   const [historyOpen, setHistoryOpen] = useState(false);
   const [appsOpen, setAppsOpen]   = useState(false);
+  const [memoryOpen, setMemoryOpen] = useState(false);
   const [sessionId, setSessionId] = useState('');
   const [showPin, setShowPin]     = useState(false);
   const [location, setLocation]   = useState('');
@@ -688,6 +869,13 @@ export default function Home() {
     return () => window.removeEventListener('jarvis:newchat', handler as EventListener);
   }, []);
 
+  // ── BottomNav Memory button event
+  React.useEffect(() => {
+    const handler = () => setMemoryOpen(true);
+    window.addEventListener('jarvis:openmemory', handler as EventListener);
+    return () => window.removeEventListener('jarvis:openmemory', handler as EventListener);
+  }, []);
+
   // ── Init ─────────────────────────────────────────────────────────────────
   useEffect(() => {
     // PIN check
@@ -818,42 +1006,28 @@ export default function Home() {
       });
     }, 30000);
 
-    // Proactive check (once on load)
-    // Smart contextual greeting on load
+    // Smart greeting on load — single clean version, no backtick code blocks
     const initGreeting = async () => {
-      try {
-        const { getSmartGreeting } = await import('@/lib/db');
-        const smart = await getSmartGreeting();
-        if (smart) {
-          setMsgs([{ id: 'init_smart', role: 'assistant', content: smart, timestamp: Date.now() }]);
-          return;
-        }
-      } catch {}
       const h = new Date().getHours();
-      const hour = h;
-      const greetLine = hour < 5 ? ' Raat gehra hai boss. Kya chal raha hai?' :
-        hour < 12 ? ' Good morning boss! Aaj kya plan hai?' :
-        hour < 14 ? ' Lunch time boss! Khaana khaya?' :
-        hour < 17 ? ' Kya haal hai boss?' :
-        hour < 20 ? ' Shaam ho gayi. Din kaisa raha?' :
-        ' Raat ho gayi boss. Kya chal raha hai?';
+      const userName = typeof window !== 'undefined' ? localStorage.getItem('jarvis_user_name') || 'boss' : 'boss';
+      const greet = h < 5 ? `Raat gehra hai ${userName}. Kya soch raha hai?` :
+        h < 12 ? `Good morning ${userName}! ☀️ Aaj kya plan hai?` :
+        h < 14 ? `Lunch time ${userName}! Khaana khaya?` :
+        h < 17 ? `Kya haal hai ${userName}?` :
+        h < 21 ? `Shaam ho gayi ${userName}. Din kaisa raha?` :
+        `Raat ho gayi ${userName}. Kya chal raha hai?`;
 
-      // Get user name from onboarding
-      const userName = typeof window !== 'undefined' ? localStorage.getItem('jarvis_user_name') || '' : '';
-      const greeting = userName ? greetLine.replace('boss', userName + ' boss') : greetLine;
-
-      // Check pending reminders
       const todayStr = new Date().toDateString();
       const habits = typeof window !== 'undefined' ? JSON.parse(localStorage.getItem('jarvis_habits') || '{}') : {};
       const habitCount = Object.keys(habits).length;
       const todayHabits = Object.values(habits as Record<string,any>).filter((h:any) => h.lastDate === todayStr).length;
-      
-      let proactive = '';
-      if (habitCount > 0 && todayHabits < habitCount) {
-        proactive = '\n\n _' + (habitCount - todayHabits) + ' habits pending aaj  "habit dikhao" type karo_';
-      }
+      const habitNote = habitCount > 0 && todayHabits < habitCount
+        ? `\n\n_${habitCount - todayHabits} habits pending aaj — "habit dikhao" bol_` : '';
 
-      setMsgs([{ id: 'init_greet', role: 'assistant', content: greeting + '\n\nKuch bhi bol  main hoon.' + proactive + '\n\n`mausam`  `battery`  `image bana: kuch`  `/` sab commands', timestamp: Date.now() }]);
+      // No backticks — use plain text hints
+      const hint = '\n\nKuch bhi poocho — mausam, news, image bana, ya / se commands dekho.';
+
+      setMsgs([{ id: 'init_greet', role: 'assistant', content: greet + habitNote + hint, timestamp: Date.now() }]);
     };
     initGreeting();
 
@@ -868,29 +1042,10 @@ export default function Home() {
       }
     }).catch(() => {});
 
-    // Time-based suggestion from personality
     const timeSug = getTimeSuggestion();
-    if (timeSug) {
-      setTimeout(() => toastInfo(timeSug), 4000);
-    }
-
-
-    // Smart context-aware greeting
-    getSmartGreeting().then(smartGreet => {
-      const baseWelcome = `Kya haal hai! Main **JARVIS** hun 🤖\n\nHinglish mein bol, main samajh lunga. Slash commands: \`/nasa\` \`/joke\` \`/wiki topic\` \`/shayari\``;
-      setMsgs([{
-        id: 'welcome', role: 'assistant', timestamp: Date.now(),
-        content: smartGreet ? `${smartGreet}\n\n_Kuch naya poochna ho toh bhi bol._` : baseWelcome,
-      }]);
-    }).catch(() => {
-      setMsgs([{
-        id: 'welcome', role: 'assistant', timestamp: Date.now(),
-        content: `Kya haal hai! Main **JARVIS** hun 🤖\n\nHinglish mein bol, main samajh lunga. \`/nasa\` \`/joke\` \`/wiki topic\` try karo!`,
-      }]);
-    });
+    if (timeSug) setTimeout(() => toastInfo(timeSug), 4000);
 
     return () => clearInterval(ri);
-  }, []);
 
   // Auto-scroll
   useEffect(() => { bottomRef.current?.scrollIntoView({ behavior: 'smooth' }); }, [msgs, loading]);
@@ -2331,10 +2486,18 @@ export default function Home() {
       return;
     }
 
-    // Rich personality system prompt (Jons Bhai + memory + time context)
-    const systemPrompt = await buildSystemPrompt().catch(() =>
+    // Rich personality system prompt + injecting memories
+    let systemPrompt = await buildSystemPrompt().catch(() =>
       `You are JARVIS — "Jons Bhai". Hinglish mein baat karo. Short answers. Never "As an AI".`
     );
+    // Inject smart memories (Claude-style)
+    try {
+      const { buildMemoryContext } = await import('@/lib/memory/smartMemory');
+      const memCtx = buildMemoryContext();
+      if (memCtx) systemPrompt = systemPrompt + '\n\n' + memCtx;
+    } catch {}
+    // Tell AI to emit [MEMORY: type | fact] tags when it learns something
+    systemPrompt += '\n\nJab user koi important fact bataye (naam, goal, preference, habit), silently add: [MEMORY: fact | description]. No explanation needed.';
 
     // Load user-saved API keys from localStorage → send to server
     const clientKeys: Record<string, string> = {}
@@ -2467,19 +2630,19 @@ export default function Home() {
     setLoading(false);
     if (activeSessionId && fullText) saveMessage({ sessionId: activeSessionId, role: 'assistant', content: fullText, timestamp: Date.now(), provider, card });
 
-    // Post-response: [LEARN:] tags + cache for offline + processAndSave + RESULT SAVE
+    // Post-response: auto-learn + cache + processAndSave
     if (fullText && fullText.length > 10) {
       const clean = cleanResponse(fullText);
       if (clean !== fullText) {
         setMsgs(prev => prev.map(m => m.id === assistantId ? { ...m, content: clean } : m));
       }
       cacheAIResponse(text.trim(), clean || fullText, eMode);
+      // ── AUTO MEMORY: Claude-style auto-extract from every exchange ──
+      import('@/lib/memory/smartMemory').then(m => {
+        m.autoLearn(text.trim(), fullText);
+      }).catch(() => {});
       processAndSave(text.trim(), fullText).catch(() => {});
-      // Save substantial responses (plans, scripts, research etc) to result storage
-      if (fullText.length > 150) {
-        saveResult(text.trim(), clean || fullText).catch(() => {});
-      }
-      // Track user behavior
+      if (fullText.length > 150) saveResult(text.trim(), clean || fullText).catch(() => {});
       trackInteraction(text.trim(), eMode).catch(() => {});
       // Proactive suggestion — JARVIS suggests without being asked
       const suggestion = getProactiveSuggestion(text.trim());
@@ -2583,6 +2746,7 @@ export default function Home() {
 
       {/* Connected Apps Panel */}
       <ConnectedAppsPanel open={appsOpen} onClose={() => setAppsOpen(false)} />
+      <MemoryPanel open={memoryOpen} onClose={() => setMemoryOpen(false)} />
 
       {/* Header — Premium */}
       <div className="jarvis-header">
@@ -2616,7 +2780,7 @@ export default function Home() {
                   { icon: '', label: 'Agent Mode', action: () => { router.push('/agent'); setHeaderMenuOpen(false); }, active: false },
                   { icon: '', label: 'Sakhi', action: () => { router.push('/sakhi'); setHeaderMenuOpen(false); }, active: false },
                   { icon: '', label: 'Settings', action: () => { router.push('/settings'); setHeaderMenuOpen(false); }, active: false },
-                  { icon: '🧠', label: 'Memory', action: () => { router.push('/settings'); setHeaderMenuOpen(false); }, active: false },
+                  { icon: '🧠', label: 'Memory', action: () => { setMemoryOpen(true); setHeaderMenuOpen(false); }, active: false },
                 ].map(item => (
                   <button key={item.label} onClick={item.action}
                     className={item.active ? 'active' : ''}>
