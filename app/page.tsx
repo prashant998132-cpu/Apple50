@@ -129,7 +129,18 @@ function TypingDots({ provider }: { provider?: string }) {
   );
 }
 
-// ── IMPROVED MATH RENDERER: supports $$, $, \[...\], \(...\) ────────────
+// ── PRE-PROCESS: convert \[...\] multiline blocks BEFORE ReactMarkdown ──
+function preprocessMath(content: string): string {
+  return content
+    // \[ ... \] multiline block → $$...$$
+    .replace(/\\\[\s*\n([\s\S]+?)\n\s*\\\]/g, (_, m) => `\n\n$$${m.trim()}$$\n\n`)
+    // \[inline\] → $$inline$$
+    .replace(/\\\[([^\n]{1,300})\\\]/g, (_, m) => `$$${m.trim()}$$`)
+    // \( inline \) → $inline$
+    .replace(/\\\(([^)\n]{1,200})\\\)/g, (_, m) => `$${m.trim()}$`);
+}
+
+
 function prettifyMath(s: string): string {
   // Replace common LaTeX symbols with unicode for readable display
   return s
@@ -357,7 +368,7 @@ function MsgItem({ msg, onDelete, onRegenerate, fontSize = 15, onQuote, compact 
               return <p {...props}>{kids}</p>;
             },
             text({ value }: any) { return <>{renderMathContent(value)}</>; },
-          }}>{msg.content}</ReactMarkdown>
+          }}>{preprocessMath(msg.content)}</ReactMarkdown>
         </div>
         {msg.card && <RichCard card={msg.card} />}
         {msg.widget && <CommandWidgetRenderer userText={msg.widget} aiText={msg.content} />}
