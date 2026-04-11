@@ -1046,6 +1046,7 @@ export default function Home() {
     if (timeSug) setTimeout(() => toastInfo(timeSug), 4000);
 
     return () => clearInterval(ri);
+  }, []);
 
   // Auto-scroll
   useEffect(() => { bottomRef.current?.scrollIntoView({ behavior: 'smooth' }); }, [msgs, loading]);
